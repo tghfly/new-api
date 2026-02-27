@@ -17,9 +17,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-import React, { useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Avatar, Button, Dropdown, Typography } from '@douyinfe/semi-ui';
+import { Avatar, Button, Popover, Typography } from '@douyinfe/semi-ui';
 import { ChevronDown } from 'lucide-react';
 import {
   IconExit,
@@ -39,7 +39,24 @@ const UserArea = ({
   navigate,
   t,
 }) => {
-  const dropdownRef = useRef(null);
+  const [visible, setVisible] = useState(false);
+  const pendingVisibleChange = useRef(null);
+
+  // 使用 useEffect 来处理状态更新，避免在渲染周期中同步调用 setState
+  useEffect(() => {
+    if (pendingVisibleChange.current !== null) {
+      setVisible(pendingVisibleChange.current);
+      pendingVisibleChange.current = null;
+    }
+  }, []);
+
+  const handleVisibleChange = (newVisible) => {
+    // 延迟到下一个 tick 执行，避免在 Popover 的渲染周期中同步调用 setState
+    setTimeout(() => {
+      setVisible(newVisible);
+    }, 0);
+  };
+
   if (isLoading) {
     return (
       <SkeletonWrapper
@@ -52,94 +69,110 @@ const UserArea = ({
   }
 
   if (userState.user) {
-    return (
-      <div className='relative' ref={dropdownRef}>
-        <Dropdown
-          position='bottomRight'
-          getPopupContainer={() => dropdownRef.current}
-          render={
-            <Dropdown.Menu className='!bg-semi-color-bg-overlay !border-semi-color-border !shadow-lg !rounded-lg dark:!bg-gray-700 dark:!border-gray-600'>
-              <Dropdown.Item
-                onClick={() => {
-                  navigate('/console/personal');
-                }}
-                className='!px-3 !py-1.5 !text-sm !text-semi-color-text-0 hover:!bg-semi-color-fill-1 dark:!text-gray-200 dark:hover:!bg-blue-500 dark:hover:!text-white'
-              >
-                <div className='flex items-center gap-2'>
-                  <IconUserSetting
-                    size='small'
-                    className='text-gray-500 dark:text-gray-400'
-                  />
-                  <span>{t('个人设置')}</span>
-                </div>
-              </Dropdown.Item>
-              <Dropdown.Item
-                onClick={() => {
-                  navigate('/console/token');
-                }}
-                className='!px-3 !py-1.5 !text-sm !text-semi-color-text-0 hover:!bg-semi-color-fill-1 dark:!text-gray-200 dark:hover:!bg-blue-500 dark:hover:!text-white'
-              >
-                <div className='flex items-center gap-2'>
-                  <IconKey
-                    size='small'
-                    className='text-gray-500 dark:text-gray-400'
-                  />
-                  <span>{t('令牌管理')}</span>
-                </div>
-              </Dropdown.Item>
-              <Dropdown.Item
-                onClick={() => {
-                  navigate('/console/topup');
-                }}
-                className='!px-3 !py-1.5 !text-sm !text-semi-color-text-0 hover:!bg-semi-color-fill-1 dark:!text-gray-200 dark:hover:!bg-blue-500 dark:hover:!text-white'
-              >
-                <div className='flex items-center gap-2'>
-                  <IconCreditCard
-                    size='small'
-                    className='text-gray-500 dark:text-gray-400'
-                  />
-                  <span>{t('钱包管理')}</span>
-                </div>
-              </Dropdown.Item>
-              <Dropdown.Item
-                onClick={logout}
-                className='!px-3 !py-1.5 !text-sm !text-semi-color-text-0 hover:!bg-semi-color-fill-1 dark:!text-gray-200 dark:hover:!bg-red-500 dark:hover:!text-white'
-              >
-                <div className='flex items-center gap-2'>
-                  <IconExit
-                    size='small'
-                    className='text-gray-500 dark:text-gray-400'
-                  />
-                  <span>{t('退出')}</span>
-                </div>
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          }
-        >
-          <Button
-            theme='borderless'
-            type='tertiary'
-            className='flex items-center gap-1.5 !p-1 !rounded-full hover:!bg-semi-color-fill-1 dark:hover:!bg-gray-700 !bg-semi-color-fill-0 dark:!bg-semi-color-fill-1 dark:hover:!bg-semi-color-fill-2'
+    const menuItems = [
+      {
+        key: 'personal',
+        icon: (
+          <IconUserSetting
+            size='small'
+            className='text-gray-500 dark:text-gray-400'
+          />
+        ),
+        label: t('个人设置'),
+        onClick: () => navigate('/console/personal'),
+      },
+      {
+        key: 'token',
+        icon: (
+          <IconKey
+            size='small'
+            className='text-gray-500 dark:text-gray-400'
+          />
+        ),
+        label: t('令牌管理'),
+        onClick: () => navigate('/console/token'),
+      },
+      {
+        key: 'topup',
+        icon: (
+          <IconCreditCard
+            size='small'
+            className='text-gray-500 dark:text-gray-400'
+          />
+        ),
+        label: t('钱包管理'),
+        onClick: () => navigate('/console/topup'),
+      },
+      {
+        key: 'logout',
+        icon: (
+          <IconExit
+            size='small'
+            className='text-gray-500 dark:text-gray-400'
+          />
+        ),
+        label: t('退出'),
+        onClick: logout,
+        danger: true,
+      },
+    ];
+
+    const content = (
+      <div className='!bg-semi-color-bg-overlay !border-semi-color-border !shadow-lg !rounded-lg dark:!bg-gray-700 dark:!border-gray-600 min-w-[140px]'>
+        {menuItems.map((item) => (
+          <div
+            key={item.key}
+            onClick={() => {
+              item.onClick();
+              setVisible(false);
+            }}
+            className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer rounded-md mx-1 my-0.5 !text-sm !text-semi-color-text-0 dark:!text-gray-200 ${
+              item.danger
+                ? 'hover:!bg-red-500 hover:!text-white'
+                : 'hover:!bg-semi-color-fill-1 dark:hover:!bg-gray-600'
+            }`}
           >
-            <Avatar
-              size='extra-small'
-              color={stringToColor(userState.user.username)}
-              className='mr-1'
-            >
-              {userState.user.username[0].toUpperCase()}
-            </Avatar>
-            <span className='hidden md:inline'>
-              <Typography.Text className='!text-xs !font-medium !text-semi-color-text-1 dark:!text-gray-300 mr-1'>
-                {userState.user.username}
-              </Typography.Text>
-            </span>
-            <ChevronDown
-              size={14}
-              className='text-xs text-semi-color-text-2 dark:text-gray-400'
-            />
-          </Button>
-        </Dropdown>
+            {item.icon}
+            <span>{item.label}</span>
+          </div>
+        ))}
       </div>
+    );
+
+    return (
+      <Popover
+        visible={visible}
+        onVisibleChange={handleVisibleChange}
+        position='bottomRight'
+        trigger='click'
+        content={content}
+        showArrow={false}
+        spacing={4}
+      >
+        <Button
+          theme='borderless'
+          type='tertiary'
+          onClick={() => setVisible((v) => !v)}
+          className='flex items-center gap-1.5 !p-1 !rounded-full hover:!bg-semi-color-fill-1 dark:hover:!bg-gray-700 !bg-semi-color-fill-0 dark:!bg-semi-color-fill-1 dark:hover:!bg-semi-color-fill-2'
+        >
+          <Avatar
+            size='extra-small'
+            color={stringToColor(userState.user.username)}
+            className='mr-1'
+          >
+            {userState.user.username[0].toUpperCase()}
+          </Avatar>
+          <span className='hidden md:inline'>
+            <Typography.Text className='!text-xs !font-medium !text-semi-color-text-1 dark:!text-gray-300 mr-1'>
+              {userState.user.username}
+            </Typography.Text>
+          </span>
+          <ChevronDown
+            size={14}
+            className='text-xs text-semi-color-text-2 dark:text-gray-400'
+          />
+        </Button>
+      </Popover>
     );
   } else {
     const showRegisterButton = !isSelfUseMode;

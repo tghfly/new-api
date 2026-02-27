@@ -430,6 +430,13 @@ export const useDashboardCharts = (
   useEffect(() => {
     initVChartSemiTheme({
       isWatchingThemeSwitch: true,
+      // 覆盖默认背景色为透明
+      theme: {
+        background: 'transparent',
+        panel: {
+          background: 'transparent',
+        },
+      },
     });
   }, []);
 

@@ -12,7 +12,7 @@ import (
 )
 
 func SetApiRouter(router *gin.Engine) {
-	apiRouter := router.Group("/api")
+	apiRouter := router.Group("/llmapi/api")
 	apiRouter.Use(middleware.RouteTag("api"))
 	apiRouter.Use(gzip.Gzip(gzip.DefaultCompression))
 	apiRouter.Use(middleware.BodyStorageCleanup()) // 清理请求体存储

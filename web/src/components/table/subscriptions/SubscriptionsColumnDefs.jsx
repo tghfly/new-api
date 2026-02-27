@@ -286,19 +286,19 @@ export const getSubscriptionsColumns = ({
   return [
     {
       title: 'ID',
-      dataIndex: ['plan', 'id'],
+      dataIndex: 'plan.id',
       width: 60,
       render: (text) => <Text type='tertiary'>#{text}</Text>,
     },
     {
       title: t('套餐'),
-      dataIndex: ['plan', 'title'],
+      dataIndex: 'plan.title',
       width: 200,
       render: (text, record) => renderPlanTitle(text, record, t),
     },
     {
       title: t('价格'),
-      dataIndex: ['plan', 'price_amount'],
+      dataIndex: 'plan.price_amount',
       width: 100,
       render: (text) => renderPrice(text),
     },
@@ -309,7 +309,7 @@ export const getSubscriptionsColumns = ({
     },
     {
       title: t('优先级'),
-      dataIndex: ['plan', 'sort_order'],
+      dataIndex: 'plan.sort_order',
       width: 80,
       render: (text) => <Text type='tertiary'>{Number(text || 0)}</Text>,
     },
@@ -325,7 +325,7 @@ export const getSubscriptionsColumns = ({
     },
     {
       title: t('状态'),
-      dataIndex: ['plan', 'enabled'],
+      dataIndex: 'plan.enabled',
       width: 80,
       render: (text, record) => renderEnabled(text, record, t),
     },

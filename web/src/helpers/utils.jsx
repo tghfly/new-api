@@ -54,7 +54,7 @@ export function getSystemName() {
 
 export function getLogo() {
   let logo = localStorage.getItem('logo');
-  if (!logo) return '/logo.png';
+  if (!logo) return '/llmapi/logo.png';
   return logo;
 }
 
@@ -128,7 +128,7 @@ export function showError(error) {
           // 清除用户状态
           localStorage.removeItem('user');
           // toast.error('错误：未登录或登录已过期，请重新登录！', showErrorOptions);
-          window.location.href = '/login?expired=true';
+          window.location.href = '/llmapi/login?expired=true';
           break;
         case 429:
           Toast.error('错误：请求次数过多，请稍后再试！');
@@ -332,9 +332,14 @@ export function compareObjects(oldObject, newObject) {
 
 // playground message
 
-// 生成唯一ID
-let messageId = 4;
-export const generateMessageId = () => `${messageId++}`;
+// 生成唯一ID - 使用时间戳和随机数确保唯一性
+let messageIdCounter = 0;
+export const generateMessageId = () => {
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 9);
+  messageIdCounter++;
+  return `${timestamp}-${random}-${messageIdCounter}`;
+};
 
 // 提取消息中的文本内容
 export const getTextContent = (message) => {

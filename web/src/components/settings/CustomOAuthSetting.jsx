@@ -606,7 +606,7 @@ const CustomOAuthSetting = ({ serverAddress }) => {
                 '配置自定义 OAuth 提供商，支持 GitHub Enterprise、GitLab、Gitea、Nextcloud、Keycloak、ORY 等兼容 OAuth 2.0 协议的身份提供商'
               )}
               <br />
-              {t('回调 URL 格式')}: {serverAddress || t('网站地址')}/oauth/
+              {t('回调 URL 格式')}: {serverAddress || t('网站地址')}/llmapi/oauth/
               {'{slug}'}
             </>
           }

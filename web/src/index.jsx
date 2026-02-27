@@ -35,13 +35,13 @@ import en_GB from '@douyinfe/semi-ui/lib/es/locale/source/en_GB';
 
 // 欢迎信息（二次开发者未经允许不准将此移除）
 // Welcome message (Do not remove this without permission from the original developer)
-if (typeof window !== 'undefined') {
-  console.log(
-    '%cWE ❤ NEWAPI%c Github: https://github.com/QuantumNous/new-api',
-    'color: #10b981; font-weight: bold; font-size: 24px;',
-    'color: inherit; font-size: 14px;',
-  );
-}
+// if (typeof window !== 'undefined') {
+//   console.log(
+//     '%cWE ❤ NEWAPI%c Github: https://github.com/QuantumNous/new-api',
+//     'color: #10b981; font-weight: bold; font-size: 24px;',
+//     'color: inherit; font-size: 14px;',
+//   );
+// }
 
 function SemiLocaleWrapper({ children }) {
   const { i18n } = useTranslation();
@@ -56,22 +56,21 @@ function SemiLocaleWrapper({ children }) {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
-    <StatusProvider>
-      <UserProvider>
-        <BrowserRouter
-          future={{
-            v7_startTransition: true,
-            v7_relativeSplatPath: true,
-          }}
-        >
-          <ThemeProvider>
-            <SemiLocaleWrapper>
-              <PageLayout />
-            </SemiLocaleWrapper>
-          </ThemeProvider>
-        </BrowserRouter>
-      </UserProvider>
-    </StatusProvider>
-  </React.StrictMode>,
+  <StatusProvider>
+    <UserProvider>
+      <BrowserRouter
+        basename="/llmapi"
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
+        <ThemeProvider>
+          <SemiLocaleWrapper>
+            <PageLayout />
+          </SemiLocaleWrapper>
+        </ThemeProvider>
+      </BrowserRouter>
+    </UserProvider>
+  </StatusProvider>,
 );

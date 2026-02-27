@@ -99,41 +99,48 @@ export const updateChartSpec = (
   }));
 };
 
-export const getTrendSpec = (data, color) => ({
-  type: 'line',
-  data: [{ id: 'trend', values: data.map((val, idx) => ({ x: idx, y: val })) }],
-  xField: 'x',
-  yField: 'y',
-  height: 40,
-  width: 100,
-  axes: [
-    {
-      orient: 'bottom',
+export const getTrendSpec = (data, color, bgColorClass) => {
+  return {
+    type: 'line',
+    data: [{ id: 'trend', values: data.map((val, idx) => ({ x: idx, y: val })) }],
+    xField: 'x',
+    yField: 'y',
+    height: 40,
+    width: 100,
+    axes: [
+      {
+        orient: 'bottom',
+        visible: false,
+      },
+      {
+        orient: 'left',
+        visible: false,
+      },
+    ],
+    padding: 0,
+    autoFit: false,
+    legends: { visible: false },
+    tooltip: { visible: false },
+    crosshair: { visible: false },
+    line: {
+      style: {
+        stroke: color,
+        lineWidth: 2,
+      },
+    },
+    point: {
       visible: false,
     },
-    {
-      orient: 'left',
+    // 使用字符串形式设置透明背景
+    background: 'transparent',
+    // 禁用面板背景
+    panel: {
       visible: false,
     },
-  ],
-  padding: 0,
-  autoFit: false,
-  legends: { visible: false },
-  tooltip: { visible: false },
-  crosshair: { visible: false },
-  line: {
-    style: {
-      stroke: color,
-      lineWidth: 2,
-    },
-  },
-  point: {
-    visible: false,
-  },
-  background: {
-    fill: 'transparent',
-  },
-});
+    // 禁用整体背景渲染
+    disableTriggerEvent: true,
+  };
+};
 
 // ========== UI 工具函数 ==========
 export const createSectionTitle = (Icon, text) => (

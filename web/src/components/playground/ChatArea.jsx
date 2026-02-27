@@ -52,7 +52,7 @@ const ChatArea = ({
       bordered={false}
       bodyStyle={{
         padding: 0,
-        height: 'calc(100vh - 66px)',
+        height: 'calc(100vh - 110px)',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -120,6 +120,9 @@ const ChatArea = ({
           onClear={onClearMessages}
           className='h-full'
           placeholder={t('请输入您的问题...')}
+          uploadProps={{
+            action: '/llmapi/api/upload',
+          }}
         />
       </div>
     </Card>

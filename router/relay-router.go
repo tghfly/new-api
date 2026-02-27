@@ -66,6 +66,14 @@ func SetRelayRouter(router *gin.Engine) {
 	{
 		playgroundRouter.POST("/chat/completions", controller.Playground)
 	}
+	// 前端生产环境构建后请求 /llmapi/pg，需要兼容处理
+	playgroundRouterWithPrefix := router.Group("/llmapi/pg")
+	playgroundRouterWithPrefix.Use(middleware.RouteTag("relay"))
+	playgroundRouterWithPrefix.Use(middleware.SystemPerformanceCheck())
+	playgroundRouterWithPrefix.Use(middleware.UserAuth(), middleware.Distribute())
+	{
+		playgroundRouterWithPrefix.POST("/chat/completions", controller.Playground)
+	}
 	relayV1Router := router.Group("/v1")
 	relayV1Router.Use(middleware.RouteTag("relay"))
 	relayV1Router.Use(middleware.SystemPerformanceCheck())
