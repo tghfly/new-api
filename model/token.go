@@ -25,10 +25,13 @@ type Token struct {
 	ModelLimitsEnabled bool           `json:"model_limits_enabled"`
 	ModelLimits        string         `json:"model_limits" gorm:"type:varchar(1024);default:''"`
 	AllowIps           *string        `json:"allow_ips" gorm:"default:''"`
-	UsedQuota          int            `json:"used_quota" gorm:"default:0"` // used quota
-	Group              string         `json:"group" gorm:"default:''"`
-	CrossGroupRetry    bool           `json:"cross_group_retry"` // 跨分组重试，仅auto分组有效
+	UsedQuota          int            `json:"used_quota" gorm:"default:0"`               // used quota
+	Group              string         `json:"group" gorm:"type:varchar(128);default:''"` // 扩展长度以支持 tenant_dept_project 格式
+	CrossGroupRetry    bool           `json:"cross_group_retry"`                         // 跨分组重试，仅auto分组有效
 	DeletedAt          gorm.DeletedAt `gorm:"index"`
+	// TODO: 算力平台 集成字段
+	TenantId       string `json:"tenant_id" gorm:"type:varchar(12);index;default:''"` // 租户ID
+	ExternalUserId int64  `json:"external_user_id" gorm:"index;default:0"`            // 算力平台 用户ID
 }
 
 func (token *Token) Clean() {

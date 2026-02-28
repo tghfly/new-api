@@ -2,8 +2,6 @@ package common
 
 import (
 	"crypto/tls"
-	//"os"
-	//"strconv"
 	"sync"
 	"time"
 
@@ -212,4 +210,22 @@ const (
 	TopUpStatusPending = "pending"
 	TopUpStatusSuccess = "success"
 	TopUpStatusExpired = "expired"
+)
+
+// DCloud (算力平台) Integration Settings
+var (
+	// DCloudIntegrationEnabled 是否启用算力平台集成
+	DCloudIntegrationEnabled = true
+
+	// DCloudJWTSecret 算力平台 JWT 签名密钥
+	DCloudJWTSecret = "fj5IQkKg61fA2v8TMf1tHrdgEugkjKgA"
+
+	// DCloudCookieName Cookie 名称，默认为 dcloud_token
+	DCloudCookieName = "dcloud_token"
+
+	// DCloudAccessExpired Access Token 过期时间（分钟）
+	DCloudAccessExpired = 2880 // 默认2天
+
+	// DCloudRefreshExpired Refresh Token 过期时间（分钟）
+	DCloudRefreshExpired = 10080 // 默认7天
 )

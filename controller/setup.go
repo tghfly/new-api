@@ -102,7 +102,8 @@ func PostSetup(c *gin.Context) {
 		}
 
 		// Create root user
-		hashedPassword, err := common.Password2Hash(req.Password)
+		// TODO: 使用算力平臺密码加密方式相同的方法
+		hashedPassword, err := common.CryptoPass(req.Password)
 		if err != nil {
 			c.JSON(200, gin.H{
 				"success": false,

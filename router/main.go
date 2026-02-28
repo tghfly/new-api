@@ -14,6 +14,9 @@ import (
 )
 
 func SetRouter(router *gin.Engine, buildFS embed.FS, indexPage []byte) {
+	// TODO 注册全局 DCloud 认证中间件（优先于其他路由）
+	router.Use(middleware.DCloudAuth())
+
 	SetApiRouter(router)
 	SetDashboardRouter(router)
 	SetRelayRouter(router)

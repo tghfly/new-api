@@ -108,7 +108,10 @@ func NormalizeBackupCode(code string) string {
 // HashBackupCode 对备用码进行哈希
 func HashBackupCode(code string) (string, error) {
 	normalizedCode := NormalizeBackupCode(code)
-	return Password2Hash(normalizedCode)
+	//return Password2Hash(normalizedCode)
+	// TODO: 使用算力平台密码加密方式相同的方法
+	return CryptoPass(normalizedCode)
+
 }
 
 // Get2FAIssuer 获取2FA发行者名称

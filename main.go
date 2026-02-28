@@ -174,7 +174,7 @@ func main() {
 		Secure:   false,
 		SameSite: http.SameSiteStrictMode,
 	})
-	server.Use(sessions.Sessions("session", store))
+	server.Use(sessions.Sessions("llmapi_session", store))
 
 	InjectUmamiAnalytics()
 	InjectGoogleAnalytics()

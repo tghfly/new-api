@@ -173,4 +173,29 @@ func initConstantEnv() {
 		}
 	}
 	constant.TrustedRedirectDomains = trustedDomains
+
+	// Initialize DCloud (算力平台) integration settings
+	initDCloudSettings()
+}
+
+// initDCloudSettings 初始化算力平台集成配置
+func initDCloudSettings() {
+	// DCloudIntegrationEnabled 是否启用算力平台集成
+	DCloudIntegrationEnabled = GetEnvOrDefaultBool("DCLOUD_INTEGRATION_ENABLED", true)
+
+	// DCloudJWTSecret 算力平台 JWT 签名密钥
+	DCloudJWTSecret = GetEnvOrDefaultString("DCLOUD_JWT_SECRET", "fj5IQkKg61fA2v8TMf1tHrdgEugkjKgA")
+
+	// DCloudCookieName Cookie 名称
+	DCloudCookieName = GetEnvOrDefaultString("DCLOUD_COOKIE_NAME", "dcloud_token")
+
+	// DCloudAccessExpired Access Token 过期时间（分钟）
+	DCloudAccessExpired = GetEnvOrDefault("DCLOUD_ACCESS_EXPIRED", 2880)
+
+	// DCloudRefreshExpired Refresh Token 过期时间（分钟）
+	DCloudRefreshExpired = GetEnvOrDefault("DCLOUD_REFRESH_EXPIRED", 10080)
+
+	if DCloudIntegrationEnabled {
+		log.Println("DCloud integration enabled")
+	}
 }

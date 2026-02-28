@@ -39,7 +39,7 @@ type User struct {
 	Quota            int            `json:"quota" gorm:"type:int;default:0"`
 	UsedQuota        int            `json:"used_quota" gorm:"type:int;default:0;column:used_quota"` // used quota
 	RequestCount     int            `json:"request_count" gorm:"type:int;default:0;"`               // request number
-	Group            string         `json:"group" gorm:"type:varchar(64);default:'default'"`
+	Group            string         `json:"group" gorm:"type:varchar(128);default:'default'"`
 	AffCode          string         `json:"aff_code" gorm:"type:varchar(32);column:aff_code;uniqueIndex"`
 	AffCount         int            `json:"aff_count" gorm:"type:int;default:0;column:aff_count"`
 	AffQuota         int            `json:"aff_quota" gorm:"type:int;default:0;column:aff_quota"`           // 邀请剩余额度
@@ -50,6 +50,10 @@ type User struct {
 	Setting          string         `json:"setting" gorm:"type:text;column:setting"`
 	Remark           string         `json:"remark,omitempty" gorm:"type:varchar(255)" validate:"max=255"`
 	StripeCustomer   string         `json:"stripe_customer" gorm:"type:varchar(64);column:stripe_customer;index"`
+	// TODO: 算力平台 集成字段
+	TenantId       string `json:"tenant_id" gorm:"type:varchar(12);index;default:''"` // 租户ID
+	DeptId         string `json:"dept_id" gorm:"type:varchar(64);index;default:''"`   // 部门ID
+	ExternalUserId string `json:"external_user_id" gorm:"index;default:0"`
 }
 
 func (user *User) ToBaseUser() *UserBase {
@@ -379,7 +383,7 @@ func (user *User) TransferAffQuotaToQuota(quota int) error {
 func (user *User) Insert(inviterId int) error {
 	var err error
 	if user.Password != "" {
-		user.Password, err = common.Password2Hash(user.Password)
+		user.Password, err = common.CryptoPass(user.Password)
 		if err != nil {
 			return err
 		}
@@ -438,7 +442,7 @@ func (user *User) Insert(inviterId int) error {
 func (user *User) InsertWithTx(tx *gorm.DB, inviterId int) error {
 	var err error
 	if user.Password != "" {
-		user.Password, err = common.Password2Hash(user.Password)
+		user.Password, err = common.CryptoPass(user.Password)
 		if err != nil {
 			return err
 		}
@@ -494,7 +498,7 @@ func (user *User) FinalizeOAuthUserCreation(inviterId int) {
 func (user *User) Update(updatePassword bool) error {
 	var err error
 	if updatePassword {
-		user.Password, err = common.Password2Hash(user.Password)
+		user.Password, err = common.CryptoPass(user.Password)
 		if err != nil {
 			return err
 		}
@@ -512,7 +516,7 @@ func (user *User) Update(updatePassword bool) error {
 func (user *User) Edit(updatePassword bool) error {
 	var err error
 	if updatePassword {
-		user.Password, err = common.Password2Hash(user.Password)
+		user.Password, err = common.CryptoPass(user.Password)
 		if err != nil {
 			return err
 		}
@@ -602,8 +606,15 @@ func (user *User) ValidateAndFill() (err error) {
 	}
 	// find buy username or email
 	DB.Where("username = ? OR email = ?", username, username).First(user)
-	okay := common.ValidatePasswordAndHash(password, user.Password)
-	if !okay || user.Status != common.UserStatusEnabled {
+	//okay := common.ValidatePasswordAndHash(password, user.Password)
+	//if !okay || user.Status != common.UserStatusEnabled {
+	//	return errors.New("用户名或密码错误，或用户已被封禁")
+	//}
+	loginPass, err := common.CryptoPass(password)
+	if err != nil {
+		return err
+	}
+	if loginPass != user.Password || user.Status != common.UserStatusEnabled {
 		return errors.New("用户名或密码错误，或用户已被封禁")
 	}
 	return nil
@@ -704,7 +715,7 @@ func ResetUserPasswordByEmail(email string, password string) error {
 	if email == "" || password == "" {
 		return errors.New("邮箱地址或密码为空！")
 	}
-	hashedPassword, err := common.Password2Hash(password)
+	hashedPassword, err := common.CryptoPass(password)
 	if err != nil {
 		return err
 	}
@@ -1036,4 +1047,40 @@ func RootUserExists() bool {
 		return false
 	}
 	return true
+}
+
+// GetUserByExternalUserId 根据外部用户ID获取用户（cloud-web同步）
+func GetUserByExternalUserId(externalUserId string) (*User, error) {
+	var user User
+	err := DB.Where("external_user_id = ?", externalUserId).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// GetUserByTenantAndExternalId 根据租户ID和外部用户ID获取用户
+func GetUserByTenantAndExternalId(tenantId string, externalUserId string) (*User, error) {
+	var user User
+	err := DB.Where("tenant_id = ? AND external_user_id = ?", tenantId, externalUserId).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func GetUserByUsername(username string) (*User, error) {
+	var user User
+	err := DB.Where("username = ?", username).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// GetUsersByTenantId 根据租户ID获取所有用户
+func GetUsersByTenantId(tenantId string) ([]*User, error) {
+	var users []*User
+	err := DB.Where("tenant_id = ?", tenantId).Find(&users).Error
+	return users, err
 }

@@ -37,6 +37,49 @@ func authHelper(c *gin.Context, minRole int) {
 	id := session.Get("id")
 	status := session.Get("status")
 	useAccessToken := false
+
+	// TODO 如果未登录且启用了算力平台集成，尝试 用算力平台认证
+	dcloudAuth := false
+	if session.Get("dcloud_auth") != nil {
+		dcloudAuth = session.Get("dcloud_auth").(bool)
+	}
+	if username == nil && common.DCloudIntegrationEnabled {
+		// 尝试从 Cookie 中获取 dcloud_token
+		tokenString, err := c.Cookie(common.DCloudCookieName)
+		if err != nil || tokenString == "" {
+			// 尝试从 Cookie 中获取 名称为 "token"
+			tokenString, _ = c.Cookie("token")
+		}
+
+		if tokenString != "" {
+			// 验证 JWT
+			claims, err := ValidateDCloudToken(tokenString)
+			if err == nil {
+				// 同步用戶信息
+				user, err := SyncDCloudUser(claims)
+				if err == nil {
+					// 写入 Session
+					session.Set("username", user.Username)
+					session.Set("role", user.Role)
+					session.Set("id", user.Id)
+					session.Set("status", user.Status)
+					session.Set("group", user.Group)
+					session.Set("tenant_id", user.TenantId)
+					session.Set("external_user_id", user.ExternalUserId)
+					session.Set("dcloud_auth", true)
+					_ = session.Save()
+
+					// 设置上下文
+					username = user.Username
+					role = user.Role
+					id = user.Id
+					status = user.Status
+					dcloudAuth = true
+				}
+			}
+		}
+	}
+
 	if username == nil {
 		// Check access token
 		accessToken := c.Request.Header.Get("Authorization")
@@ -74,32 +117,35 @@ func authHelper(c *gin.Context, minRole int) {
 		}
 	}
 	// get header New-Api-User
-	apiUserIdStr := c.Request.Header.Get("New-Api-User")
-	if apiUserIdStr == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"success": false,
-			"message": "无权进行此操作，未提供 New-Api-User",
-		})
-		c.Abort()
-		return
-	}
-	apiUserId, err := strconv.Atoi(apiUserIdStr)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"success": false,
-			"message": "无权进行此操作，New-Api-User 格式错误",
-		})
-		c.Abort()
-		return
+	// 注意：DCloud 认证不需要 New-Api-User header
+	if !dcloudAuth {
+		apiUserIdStr := c.Request.Header.Get("New-Api-User")
+		if apiUserIdStr == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"success": false,
+				"message": "无权进行此操作，未提供 New-Api-User",
+			})
+			c.Abort()
+			return
+		}
+		apiUserId, err := strconv.Atoi(apiUserIdStr)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"success": false,
+				"message": "无权进行此操作，New-Api-User 格式错误",
+			})
+			c.Abort()
+			return
 
-	}
-	if id != apiUserId {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"success": false,
-			"message": "无权进行此操作，New-Api-User 与登录用户不匹配",
-		})
-		c.Abort()
-		return
+		}
+		if id != apiUserId {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"success": false,
+				"message": "无权进行此操作，New-Api-User 与登录用户不匹配",
+			})
+			c.Abort()
+			return
+		}
 	}
 	if status.(int) == common.UserStatusDisabled {
 		c.JSON(http.StatusOK, gin.H{
