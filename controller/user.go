@@ -269,6 +269,7 @@ func GetUser(c *gin.Context) {
 		return
 	}
 	myRole := c.GetInt("role")
+	// if myRole <= user.Role && myRole != common.RoleAdminUser && myRole != common.RoleRootUser {
 	if myRole <= user.Role && myRole != common.RoleRootUser {
 		common.ApiErrorI18n(c, i18n.MsgUserNoPermissionSameLevel)
 		return
@@ -519,15 +520,35 @@ func GetUserModels(c *gin.Context) {
 		common.ApiError(c, err)
 		return
 	}
-	groups := service.GetUserUsableGroups(user.Group)
+
+	// 获取 group 查询参数
+	groupParam := c.Query("group")
 	var models []string
-	for group := range groups {
-		for _, g := range model.GetGroupEnabledModels(group) {
-			if !common.StringsContains(models, g) {
-				models = append(models, g)
+
+	if groupParam != "" {
+		// 当提供 group 参数时，只返回该分组的模型
+		// 检查该分组是否在用户的可用分组中
+		groups := service.GetUserUsableGroups(user.Group, id)
+		if _, ok := groups[groupParam]; ok {
+			// 只添加指定分组的模型
+			for _, g := range model.GetGroupEnabledModels(groupParam) {
+				if !common.StringsContains(models, g) {
+					models = append(models, g)
+				}
+			}
+		}
+	} else {
+		// 当不提供 group 参数时，返回所有分组的模型
+		groups := service.GetUserUsableGroups(user.Group, id)
+		for group := range groups {
+			for _, g := range model.GetGroupEnabledModels(group) {
+				if !common.StringsContains(models, g) {
+					models = append(models, g)
+				}
 			}
 		}
 	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
@@ -556,6 +577,7 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 	myRole := c.GetInt("role")
+	// if myRole <= originUser.Role && myRole != common.RoleAdminUser && myRole != common.RoleRootUser {
 	if myRole <= originUser.Role && myRole != common.RoleRootUser {
 		common.ApiErrorI18n(c, i18n.MsgUserNoPermissionHigherLevel)
 		return

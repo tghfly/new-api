@@ -339,6 +339,35 @@ export const getUsersColumns = ({
       },
     },
     {
+      title: t('限速配置'),
+      dataIndex: 'rate_limit',
+      render: (text, record, index) => {
+        const hasUserLimit = record.api_rate_total > 0 || record.api_rate_success > 0;
+        if (!hasUserLimit) {
+          return (
+            <Tag color='grey' shape='circle' size='small'>
+              {t('使用组配置')}
+            </Tag>
+          );
+        }
+        return (
+          <Tooltip
+            content={
+              <div className='text-xs'>
+                <div>{t('总请求')}: {record.api_rate_total || t('无限制')}</div>
+                <div>{t('成功请求')}: {record.api_rate_success || t('无限制')}</div>
+              </div>
+            }
+            position='top'
+          >
+            <Tag color='blue' shape='circle' size='small'>
+              {t('自定义')}
+            </Tag>
+          </Tooltip>
+        );
+      },
+    },
+    {
       title: t('角色'),
       dataIndex: 'role',
       render: (text, record, index) => {

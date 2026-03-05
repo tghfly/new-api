@@ -92,7 +92,12 @@ const EditUserModal = (props) => {
   const fetchGroups = async () => {
     try {
       let res = await API.get(`/api/group/`);
-      setGroupOptions(res.data.data.map((g) => ({ label: g, value: g })));
+      setGroupOptions(
+        res.data.data.map((g) => ({
+          label: g.name || g.symbol,
+          value: g.symbol,
+        })),
+      );
     } catch (e) {
       showError(e.message);
     }
@@ -324,6 +329,39 @@ const EditUserModal = (props) => {
                         </Form.Slot>
                       </Col>
                     </Row>
+
+                    {/* 用户限速配置 */}
+                    <div className='mt-4 pt-4 border-t border-gray-100'>
+                      <Text className='text-sm font-medium text-gray-700 mb-2 block'>
+                        {t('用户限速配置')}
+                      </Text>
+                      <div className='text-xs text-gray-500 mb-3'>
+                        {t('设置为 0 表示使用用户组配置')}
+                      </div>
+                      <Row gutter={12}>
+                        <Col span={12}>
+                          <Form.InputNumber
+                            field='api_rate_total'
+                            label={t('总请求限速')}
+                            placeholder={t('每周期最大请求数')}
+                            min={0}
+                            extraText={t('包括成功和失败的请求')}
+                            style={{ width: '100%' }}
+                          />
+                        </Col>
+
+                        <Col span={12}>
+                          <Form.InputNumber
+                            field='api_rate_success'
+                            label={t('成功请求限速')}
+                            placeholder={t('每周期最大成功请求数')}
+                            min={0}
+                            extraText={t('仅统计成功的请求')}
+                            style={{ width: '100%' }}
+                          />
+                        </Col>
+                      </Row>
+                    </div>
                   </Card>
                 )}
 

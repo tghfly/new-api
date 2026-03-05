@@ -295,6 +295,31 @@ func SetApiRouter(router *gin.Engine) {
 			groupRoute.GET("/", controller.GetGroups)
 		}
 
+		// 用户组管理路由
+		userGroupRoute := apiRouter.Group("/user_group")
+		userGroupRoute.Use(middleware.AdminAuth())
+		{
+			userGroupRoute.GET("/", controller.GetUserGroupsList)
+			userGroupRoute.GET("/:id", controller.GetUserGroupById)
+			userGroupRoute.POST("/", controller.AddUserGroup)
+			userGroupRoute.PUT("/", controller.UpdateUserGroup)
+			userGroupRoute.DELETE("/:id", controller.DeleteUserGroup)
+			userGroupRoute.PUT("/:id", controller.ChangeUserGroupEnable)
+			userGroupRoute.POST("/upgrade", controller.UpgradeUserGroup)
+		}
+
+		// 批量同步用户组（cloud-web集成）
+		apiRouter.POST("/user-groups/sync", middleware.UserAuth(), controller.BatchSyncUserGroupsFromExternal)
+
+		// 获取当前用户所属的所有项目（用户组）
+		apiRouter.GET("/user/my-groups", middleware.UserAuth(), controller.GetMyUserGroups)
+
+		// 公开的用户组列表（供令牌选择）
+		apiRouter.GET("/public/user_groups", middleware.UserAuth(), controller.GetPublicUserGroups)
+
+		// 管理员获取所有用户组映射
+		apiRouter.GET("/admin/user_groups/all", middleware.AdminAuth(), controller.GetAllUserGroupsMap)
+
 		prefillGroupRoute := apiRouter.Group("/prefill_group")
 		prefillGroupRoute.Use(middleware.AdminAuth())
 		{

@@ -27,6 +27,7 @@ import {
   renderQuotaWithPrompt,
   getModelCategories,
   selectFilter,
+  setGroupNameMap,
 } from '../../../../helpers';
 import { useIsMobile } from '../../../../hooks/common/useIsMobile';
 import {
@@ -62,6 +63,7 @@ const EditTokenModal = (props) => {
   const formApiRef = useRef(null);
   const [models, setModels] = useState([]);
   const [groups, setGroups] = useState([]);
+  const [currentGroup, setCurrentGroup] = useState('');
   const isEdit = props.editingToken.id !== undefined;
 
   const getInitValues = () => ({
@@ -97,32 +99,49 @@ const EditTokenModal = (props) => {
     }
   };
 
-  const loadModels = async () => {
-    let res = await API.get(`/api/user/models`);
-    const { success, message, data } = res.data;
-    if (success) {
-      const categories = getModelCategories(t);
-      let localModelOptions = data.map((model) => {
-        let icon = null;
-        for (const [key, category] of Object.entries(categories)) {
-          if (key !== 'all' && category.filter({ model_name: model })) {
-            icon = category.icon;
-            break;
-          }
-        }
-        return {
-          label: (
-            <span className='flex items-center gap-1'>
-              {icon}
-              {model}
-            </span>
-          ),
-          value: model,
-        };
-      });
-      setModels(localModelOptions);
-    } else {
-      showError(t(message));
+  const loadModels = async (group) => {
+    try {
+      const params = {};
+      if (group) {
+        params.group = group;
+      }
+      let res = await API.get(`/api/user/models`, { params });
+      const { success, message, data } = res.data;
+      if (success) {
+        const categories = getModelCategories(t);
+        let localModelOptions = data
+          ? data.map((model) => {
+              let icon = null;
+              for (const [key, category] of Object.entries(categories)) {
+                if (key !== 'all' && category.filter({ model_name: model })) {
+                  icon = category.icon;
+                  break;
+                }
+              }
+              return {
+                label: (
+                  <span className='flex items-center gap-1'>
+                    {icon}
+                    {model}
+                  </span>
+                ),
+                value: model,
+              };
+            })
+          : [];
+        // 无论 data 是否为空，都更新模型列表
+        setModels(localModelOptions);
+      } else {
+        // 优化错误提示，避免直接弹出红色错误
+        console.warn('加载模型失败:', message);
+        // 清空模型列表，避免显示错误的模型
+        setModels([]);
+      }
+    } catch (error) {
+      // 优化错误提示，避免直接弹出红色错误
+      console.warn('加载模型失败:', error);
+      // 清空模型列表，避免显示错误的模型
+      setModels([]);
     }
   };
 
@@ -130,20 +149,40 @@ const EditTokenModal = (props) => {
     let res = await API.get(`/api/user/self/groups`);
     const { success, message, data } = res.data;
     if (success) {
-      let localGroupOptions = Object.entries(data).map(([group, info]) => ({
-        label: info.desc,
-        value: group,
-        ratio: info.ratio,
-      }));
+      let localGroupOptions = Array.isArray(data)
+        ? data.map((item) => ({
+            label: item.name,
+            value: item.symbol,
+            desc: item.desc,
+            ratio: item.ratio,
+          }))
+        : data ? Object.entries(data).map(([group, info]) => ({
+            label: info.desc || info.name || group,
+            value: group,
+            ratio: info.ratio,
+          })) : [];
       if (statusState?.status?.default_use_auto_group) {
         if (localGroupOptions.some((group) => group.value === 'auto')) {
           localGroupOptions.sort((a, b) => (a.value === 'auto' ? -1 : 1));
         }
       }
-      setGroups(localGroupOptions);
-      // if (statusState?.status?.default_use_auto_group && formApiRef.current) {
-      //   formApiRef.current.setValue('group', 'auto');
-      // }
+      if (data) {
+        setGroups(localGroupOptions);
+        // 合并现有 localStorage 数据
+        const existingMapStr = localStorage.getItem('user_group_names');
+        const existingMap = existingMapStr ? JSON.parse(existingMapStr) : {};
+        const groupNameMap = { ...existingMap };
+        if (Array.isArray(data)) {
+          data.forEach(item => {
+            if (item.symbol && item.name) {
+              groupNameMap[item.symbol] = item.name;
+            }
+          });
+        }
+        if (Object.keys(groupNameMap).length > 0) {
+          setGroupNameMap(groupNameMap);
+        }
+      }
     } else {
       showError(t(message));
     }
@@ -164,6 +203,8 @@ const EditTokenModal = (props) => {
       }
       if (formApiRef.current) {
         formApiRef.current.setValues({ ...getInitValues(), ...data });
+        // 设置当前分组并加载对应模型
+        setCurrentGroup(data.group);
       }
     } else {
       showError(message);
@@ -180,6 +221,15 @@ const EditTokenModal = (props) => {
     loadModels();
     loadGroups();
   }, [props.editingToken.id]);
+
+  // 当分组变化时重新加载模型
+  useEffect(() => {
+    if (currentGroup) {
+      loadModels(currentGroup);
+    } else {
+      loadModels();
+    }
+  }, [currentGroup]);
 
   useEffect(() => {
     if (props.visiable) {
@@ -368,6 +418,9 @@ const EditTokenModal = (props) => {
                         renderOptionItem={renderGroupOption}
                         showClear
                         style={{ width: '100%' }}
+                        onChange={(value) => {
+                          setCurrentGroup(value);
+                        }}
                       />
                     ) : (
                       <Form.Select

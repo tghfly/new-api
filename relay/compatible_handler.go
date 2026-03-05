@@ -35,6 +35,14 @@ func TextHelper(c *gin.Context, info *relaycommon.RelayInfo) (newAPIError *types
 		return types.NewErrorWithStatusCode(fmt.Errorf("invalid request type, expected dto.GeneralOpenAIRequest, got %T", info.Request), types.ErrorCodeInvalidRequest, http.StatusBadRequest, types.ErrOptionWithSkipRetry())
 	}
 
+	// 记录输入的 messages 字段
+	if textReq.Messages != nil {
+		messagesJson, err := common.Marshal(textReq.Messages)
+		if err == nil {
+			c.Set("input_messages", string(messagesJson))
+		}
+	}
+
 	request, err := common.DeepCopy(textReq)
 	if err != nil {
 		return types.NewError(fmt.Errorf("failed to copy request to GeneralOpenAIRequest: %w", err), types.ErrorCodeInvalidRequest, types.ErrOptionWithSkipRetry())
@@ -442,6 +450,17 @@ func postConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, usage 
 	other := service.GenerateTextOtherInfo(ctx, relayInfo, modelRatio, groupRatio, completionRatio, cacheTokens, cacheRatio, modelPrice, relayInfo.PriceData.GroupRatioInfo.GroupSpecialRatio)
 	if adminRejectReason != "" {
 		other["reject_reason"] = adminRejectReason
+	}
+	// 记录输入的 messages 字段
+	if inputMessages, exists := ctx.Get("input_messages"); exists {
+		other["input_messages"] = inputMessages
+	}
+	// 记录输出的 id 和 message 字段
+	if outputId, exists := ctx.Get("output_id"); exists {
+		other["output_id"] = outputId
+	}
+	if outputMessage, exists := ctx.Get("output_message"); exists {
+		other["output_message"] = outputMessage
 	}
 	// For chat-based calls to the Claude model, tagging is required. Using Claude's rendering logs, the two approaches handle input rendering differently.
 	if isClaudeUsageSemantic {

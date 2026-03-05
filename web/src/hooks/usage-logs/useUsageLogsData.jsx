@@ -352,7 +352,7 @@ export const useLogsData = () => {
       }
       if (logs[i].request_id) {
         expandDataLocal.push({
-          key: t('Request ID'),
+          key: t('请求 ID'),
           value: logs[i].request_id,
         });
       }
@@ -624,6 +624,33 @@ export const useLogsData = () => {
         expandDataLocal.push({
           key: t('计费模式'),
           value: localCountMode,
+        });
+      }
+      // 展示输入输出信息
+      if (other?.input_messages) {
+        expandDataLocal.push({
+          key: t('输入信息'),
+          value: (
+            <div style={{ maxWidth: '90%', whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: 1.6 }}>
+              {other.input_messages}
+            </div>
+          ),
+        });
+      }
+      if (other?.output_id) {
+        expandDataLocal.push({
+          key: t('输出ID'),
+          value: other.output_id,
+        });
+      }
+      if (other?.output_message) {
+        expandDataLocal.push({
+          key: t('输出信息'),
+          value: (
+            <div style={{ maxWidth: '90%', whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: 1.6 }}>
+              {other.output_message}
+            </div>
+          ),
         });
       }
       expandDatesLocal[logs[i].key] = expandDataLocal;

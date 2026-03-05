@@ -179,20 +179,36 @@ export const processModelsData = (data, currentModel) => {
   const selectedModel =
     hasCurrentModel && modelOptions.length > 0
       ? currentModel
-      : modelOptions[0]?.value;
+      : modelOptions.length > 0
+      ? modelOptions[0]?.value
+      : '';
 
   return { modelOptions, selectedModel };
 };
 
-// 处理分组数据
+// 处理分组数据 - 支持新旧两种格式
 export const processGroupsData = (data, userGroup) => {
-  let groupOptions = Object.entries(data).map(([group, info]) => ({
-    label:
-      info.desc.length > 20 ? info.desc.substring(0, 20) + '...' : info.desc,
-    value: group,
-    ratio: info.ratio,
-    fullLabel: info.desc,
-  }));
+  let groupOptions = [];
+  
+  // 判断是否为新格式（数组格式）还是旧格式（对象格式）
+  if (Array.isArray(data)) {
+    // 新格式：[{ id, symbol, name, ratio, desc, ... }, ...]
+    groupOptions = data.map((group) => ({
+      label: group.name || group.symbol,  // 显示 name
+      value: group.symbol,                 // 实际值用 symbol
+      ratio: group.ratio,
+      fullLabel: group.name || group.desc || group.symbol,
+    }));
+  } else if (typeof data === 'object' && data !== null) {
+    // 旧格式：{ "default": { desc, ratio }, ... }
+    groupOptions = Object.entries(data).map(([group, info]) => ({
+      label:
+        info.desc && info.desc.length > 20 ? info.desc.substring(0, 20) + '...' : (info.desc || group),
+      value: group,
+      ratio: info.ratio,
+      fullLabel: info.desc || group,
+    }));
+  }
 
   if (groupOptions.length === 0) {
     groupOptions = [

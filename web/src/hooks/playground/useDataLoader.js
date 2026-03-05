@@ -19,7 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 
 import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { API, processModelsData, processGroupsData } from '../../helpers';
+import { API, processModelsData, processGroupsData, showError } from '../../helpers';
 import { API_ENDPOINTS } from '../../constants/playground.constants';
 
 export const useDataLoader = (
@@ -33,7 +33,12 @@ export const useDataLoader = (
 
   const loadModels = useCallback(async () => {
     try {
-      const res = await API.get(API_ENDPOINTS.USER_MODELS);
+      // 添加分组参数到请求
+      const params = {};
+      if (inputs.group) {
+        params.group = inputs.group;
+      }
+      const res = await API.get(API_ENDPOINTS.USER_MODELS, { params });
       const { success, message, data } = res.data;
 
       if (success) {
@@ -47,12 +52,20 @@ export const useDataLoader = (
           handleInputChange('model', selectedModel);
         }
       } else {
-        showError(t(message));
+        // 优化错误提示，避免直接弹出红色错误
+        console.warn('加载模型失败:', message);
+        // 清空模型列表，避免显示错误的模型
+        setModels([]);
+        handleInputChange('model', '');
       }
     } catch (error) {
-      showError(t('加载模型失败'));
+      // 优化错误提示，避免直接弹出红色错误
+      console.warn('加载模型失败:', error);
+      // 清空模型列表，避免显示错误的模型
+      setModels([]);
+      handleInputChange('model', '');
     }
-  }, [inputs.model, handleInputChange, setModels, t]);
+  }, [inputs.model, inputs.group, handleInputChange, setModels, t]);
 
   const loadGroups = useCallback(async () => {
     try {
@@ -87,6 +100,13 @@ export const useDataLoader = (
       loadGroups();
     }
   }, [userState?.user, loadModels, loadGroups]);
+
+  // 当分组变化时重新加载模型
+  useEffect(() => {
+    if (userState?.user && inputs.group) {
+      loadModels();
+    }
+  }, [userState?.user, inputs.group, loadModels]);
 
   return {
     loadModels,

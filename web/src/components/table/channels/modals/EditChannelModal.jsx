@@ -893,8 +893,9 @@ const EditChannelModal = (props) => {
       }
       setGroupOptions(
         res.data.data.map((group) => ({
-          label: group,
-          value: group,
+          label: group.name || group.symbol,  // 显示 name
+          value: group.symbol,                // 实际值用 symbol
+          ratio: group.ratio,
         })),
       );
     } catch (error) {

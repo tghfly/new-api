@@ -159,8 +159,8 @@ const PersonalSetting = () => {
         gotifyPriority:
           settings.gotify_priority !== undefined ? settings.gotify_priority : 5,
         acceptUnsetModelRatioModel:
-          settings.accept_unset_model_ratio_model || true,
-        recordIpLog: settings.record_ip_log || true,
+          settings.accept_unset_model_ratio_model !== undefined ? settings.accept_unset_model_ratio_model : false,
+        recordIpLog: settings.record_ip_log !== undefined ? settings.record_ip_log : false,
       });
     }
   }, [userState?.user?.setting]);

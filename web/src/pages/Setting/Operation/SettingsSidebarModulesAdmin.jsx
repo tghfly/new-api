@@ -272,6 +272,11 @@ export default function SettingsSidebarModulesAdmin(props) {
         },
         { key: 'user', title: t('用户管理'), description: t('用户账户管理') },
         {
+          key: 'userGroup',
+          title: t('用户组管理'),
+          description: t('用户分组管理'),
+        },
+        {
           key: 'setting',
           title: t('系统设置'),
           description: t('系统参数配置'),

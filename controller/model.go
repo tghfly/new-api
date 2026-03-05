@@ -177,8 +177,21 @@ func ListModels(c *gin.Context, modelType int) {
 					}
 				}
 			}
-		} else {
+		} else if tokenGroup != "" {
+			// 当指定了令牌分组时，只获取该分组的模型
 			models = model.GetGroupEnabledModels(group)
+		} else {
+			// 当未指定令牌分组时，获取所有用户可用分组的模型
+			userId := c.GetInt("id")
+			userUsableGroups := service.GetUserUsableGroups(userGroup, userId)
+			for g := range userUsableGroups {
+				groupModels := model.GetGroupEnabledModels(g)
+				for _, m := range groupModels {
+					if !common.StringsContains(models, m) {
+						models = append(models, m)
+					}
+				}
+			}
 		}
 		for _, modelName := range models {
 			if !acceptUnsetRatioModel {

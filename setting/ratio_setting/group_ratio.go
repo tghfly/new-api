@@ -64,11 +64,42 @@ func GetGroupRatioSetting() *GroupRatioSetting {
 	return &groupRatioSetting
 }
 
+// 数据库用户组回调函数（由 model 包通过 setting.RegisterDBUserGroupCallbacks 注册）
+var (
+	dbUserGroupRatioProvider    func(symbol string) float64
+	dbUserGroupRatioMapProvider func() map[string]float64
+	dbUserGroupSymbolChecker    func(symbol string) bool
+)
+
+// RegisterDBUserGroupCallbacks 注册数据库用户组回调函数
+func RegisterDBUserGroupCallbacks(
+	ratioProvider func(symbol string) float64,
+	ratioMapProvider func() map[string]float64,
+	symbolChecker func(symbol string) bool,
+) {
+	dbUserGroupRatioProvider = ratioProvider
+	dbUserGroupRatioMapProvider = ratioMapProvider
+	dbUserGroupSymbolChecker = symbolChecker
+}
+
 func GetGroupRatioCopy() map[string]float64 {
+	// 优先从数据库缓存读取（通过回调）
+	if dbUserGroupRatioMapProvider != nil {
+		dbRatios := dbUserGroupRatioMapProvider()
+		if len(dbRatios) > 0 {
+			return dbRatios
+		}
+	}
+	// 回退到内存配置
 	return groupRatioMap.ReadAll()
 }
 
 func ContainsGroupRatio(name string) bool {
+	// 优先检查数据库缓存（通过回调）
+	if dbUserGroupSymbolChecker != nil && dbUserGroupSymbolChecker(name) {
+		return true
+	}
+	// 回退检查内存配置
 	_, ok := groupRatioMap.Get(name)
 	return ok
 }
@@ -82,6 +113,14 @@ func UpdateGroupRatioByJSONString(jsonStr string) error {
 }
 
 func GetGroupRatio(name string) float64 {
+	// 优先从数据库缓存读取（通过回调）
+	if dbUserGroupRatioProvider != nil {
+		ratio := dbUserGroupRatioProvider(name)
+		if ratio > 0 {
+			return ratio
+		}
+	}
+	// 回退到内存配置
 	ratio, ok := groupRatioMap.Get(name)
 	if !ok {
 		common.SysLog("group ratio not found: " + name)

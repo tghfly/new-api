@@ -51,6 +51,10 @@ export async function checkSessionStatus() {
     const { success, data } = res.data;
     if (success && data) {
       setUserData(data);
+
+      // DCloud 登录后同步项目信息
+      await syncDCloudProjects();
+
       return true;
     }
   } catch (error) {
@@ -58,6 +62,81 @@ export async function checkSessionStatus() {
     console.debug('Session check failed:', error?.message);
   }
   return false;
+}
+
+// syncDCloudProjects 从 localStorage 读取算力平台项目信息并同步到后端
+async function syncDCloudProjects() {
+  try {
+    // 读取算力平台用户信息
+    const userInfoStr = localStorage.getItem('saber-userInfo');
+    const currentProjectStr = localStorage.getItem('saber-currentProject');
+
+    if (!userInfoStr) {
+      return;
+    }
+
+    let userInfo;
+    try {
+      userInfo = JSON.parse(userInfoStr);
+    } catch (e) {
+      return;
+    }
+
+    const content = userInfo?.content;
+    if (!content) {
+      return;
+    }
+
+    // 解析项目列表
+    const projectIds = content.projectId?.split(',') || [];
+    const projectCodes = content.project_code?.split(',') || content.projectCode?.split(',') || [];
+    const projectNames = content.projectName?.split(',') || [];
+
+    if (projectIds.length === 0 || projectCodes.length === 0) {
+      return;
+    }
+
+    // 构建项目列表
+    const filteredProjects = projectIds.map((id, index) => ({
+      external_id: parseInt(id, 10),
+      project_code: projectCodes[index] || '',
+      project_name: projectNames[index] || projectCodes[index] || '',
+    })).filter(p => p.project_code);
+
+    if (filteredProjects.length === 0) {
+      return;
+    }
+
+    // 解析当前项目
+    let currentProjectCode = '';
+    if (currentProjectStr) {
+      try {
+        const currentProject = JSON.parse(currentProjectStr);
+        currentProjectCode = currentProject?.content?.project_code || '';
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    // 如果没有当前项目，使用第一个
+    if (!currentProjectCode && filteredProjects.length > 0) {
+      currentProjectCode = filteredProjects[0].project_code;
+    }
+
+    // 调用后端同步接口
+    try {
+      await API.post('/api/user-groups/sync', {
+        tenant_id: content.tenantId || '',
+        vdc_code: content.vdcCode || '',
+        projects: filteredProjects,
+        current_project_code: currentProjectCode,
+      }, { skipErrorHandler: true });
+    } catch (error) {
+      console.error('Sync DCloud projects failed:', error?.message);
+    }
+  } catch (error) {
+    console.debug('Sync DCloud projects failed:', error?.message);
+  }
 }
 
 function PrivateRoute({ children }) {
@@ -69,6 +148,8 @@ function PrivateRoute({ children }) {
     if (user) {
       setAuthenticated(true);
       setChecking(false);
+      // 即使有 user 信息，也尝试同步项目信息（处理从算力平台跳转的情况）
+      syncDCloudProjects();
       return;
     }
 
@@ -108,6 +189,8 @@ export function AdminRoute({ children }) {
         if (user && typeof user.role === 'number' && user.role >= 10) {
           setAuthorized(true);
           setChecking(false);
+          // 尝试同步项目信息
+          syncDCloudProjects();
           return;
         }
       } catch (e) {

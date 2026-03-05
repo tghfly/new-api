@@ -3,12 +3,27 @@ package service
 import (
 	"strings"
 
+	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/setting"
 	"github.com/QuantumNous/new-api/setting/ratio_setting"
 )
 
-func GetUserUsableGroups(userGroup string) map[string]string {
+// GetUserUsableGroups 获取用户可用的所有分组
+// userGroup: 用户的默认分组（对应 project_code）
+// userId: 用户ID，用于查询 user_group_mappings 表获取关联的所有用户组
+func GetUserUsableGroups(userGroup string, userId int) map[string]string {
 	groupsCopy := setting.GetUserUsableGroupsCopy()
+
+	// 添加用户关联的所有用户组（通过 user_group_mappings 表）
+	if userId > 0 {
+		userGroups, err := model.GetUserGroupsByUserId(userId)
+		if err == nil {
+			for _, g := range userGroups {
+				groupsCopy[g.Symbol] = g.Name
+			}
+		}
+	}
+
 	if userGroup != "" {
 		specialSettings, b := ratio_setting.GetGroupRatioSetting().GroupSpecialUsableGroup.Get(userGroup)
 		if b {
@@ -36,14 +51,14 @@ func GetUserUsableGroups(userGroup string) map[string]string {
 	return groupsCopy
 }
 
-func GroupInUserUsableGroups(userGroup, groupName string) bool {
-	_, ok := GetUserUsableGroups(userGroup)[groupName]
+func GroupInUserUsableGroups(userGroup string, userId int, groupName string) bool {
+	_, ok := GetUserUsableGroups(userGroup, userId)[groupName]
 	return ok
 }
 
 // GetUserAutoGroup 根据用户分组获取自动分组设置
 func GetUserAutoGroup(userGroup string) []string {
-	groups := GetUserUsableGroups(userGroup)
+	groups := GetUserUsableGroups(userGroup, 0)
 	autoGroups := make([]string, 0)
 	for _, group := range setting.GetAutoGroups() {
 		if _, ok := groups[group]; ok {

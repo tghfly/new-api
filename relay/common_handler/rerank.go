@@ -69,6 +69,12 @@ func RerankHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.Respo
 		jinaResp.Usage.PromptTokens = jinaResp.Usage.TotalTokens
 	}
 
+	// 记录输出的结果字段
+	resultsJson, err := common.Marshal(jinaResp.Results)
+	if err == nil {
+		c.Set("output_message", string(resultsJson))
+	}
+
 	c.Writer.Header().Set("Content-Type", "application/json")
 	c.JSON(http.StatusOK, jinaResp)
 	return &jinaResp.Usage, nil

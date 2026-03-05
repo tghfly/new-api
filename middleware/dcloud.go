@@ -130,7 +130,7 @@ func ValidateDCloudToken(tokenString string) (*DCloudJWTClaims, error) {
 
 // SyncDCloudUser 同步算力平台用戶到本地
 func SyncDCloudUser(claims *DCloudJWTClaims) (*model.User, error) {
-	// 1. 嘗試通過 external_user_id + tenant_id 查找用戶
+	// 1. 尝试通过 external_user_id + tenant_id 查找用戶
 	user, err := model.GetUserByTenantAndExternalId(claims.TenantId, claims.UserId)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
@@ -140,7 +140,7 @@ func SyncDCloudUser(claims *DCloudJWTClaims) (*model.User, error) {
 
 	if user == nil {
 		// 2. 用戶不存在，創建新用戶
-		// 檢查用戶名是否已存在
+		// 检查用戶名是否已存在
 		existingUser, _ := model.GetUserByUsername(claims.UserName)
 		if existingUser != nil {
 			// 如果用戶名已存在，添加後綴
@@ -152,10 +152,11 @@ func SyncDCloudUser(claims *DCloudJWTClaims) (*model.User, error) {
 			DisplayName:    claims.UserName,
 			Role:           role,
 			Status:         common.UserStatusEnabled,
+			Quota:          100000000,
 			TenantId:       claims.TenantId,
 			DeptId:         claims.VdcCode,
 			ExternalUserId: claims.UserId,
-			Group:          "default",
+			Group:          "default", // 默认分组，后续可以通过同步项目列表来更新
 		}
 		err = user.Insert(0)
 	} else {
@@ -176,6 +177,38 @@ func SyncDCloudUser(claims *DCloudJWTClaims) (*model.User, error) {
 	}
 
 	return user, err
+}
+
+// SyncDCloudUserWithProjects 同步算力平台用戶及項目列表到本地
+// projects: 項目列表，每個項目包含 external_id, project_code, project_name
+func SyncDCloudUserWithProjects(claims *DCloudJWTClaims, projects []map[string]interface{}) (*model.User, error) {
+	// 1. 先同步用戶基本信息
+	user, err := SyncDCloudUser(claims)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. 如果有項目列表，同步項目到用戶組
+	if len(projects) > 0 {
+		_, _, err := model.BatchSyncUserGroups(claims.TenantId, claims.VdcCode, projects)
+		if err != nil {
+			common.SysError("Failed to sync user groups: " + err.Error())
+			// 不返回錯誤，繼續處理
+		}
+
+		// 3. 設置用戶的默認分組為第一個項目的 project_code
+		if firstProject, ok := projects[0]["project_code"].(string); ok && firstProject != "" {
+			if user.Group == "" || user.Group == "default" {
+				user.Group = firstProject
+				err = user.Update(false)
+				if err != nil {
+					common.SysError("Failed to update user group: " + err.Error())
+				}
+			}
+		}
+	}
+
+	return user, nil
 }
 
 // DCloudAuth 算力平台认证中间件

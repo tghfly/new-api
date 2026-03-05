@@ -54,6 +54,9 @@ type User struct {
 	TenantId       string `json:"tenant_id" gorm:"type:varchar(12);index;default:''"` // 租户ID
 	DeptId         string `json:"dept_id" gorm:"type:varchar(64);index;default:''"`   // 部门ID
 	ExternalUserId string `json:"external_user_id" gorm:"index;default:0"`
+	// 用户限速配置字段
+	APIRateTotal   int `json:"api_rate_total" gorm:"column:api_rate_total;default:0"`     // 用户总请求限速，0表示使用用户组配置
+	APIRateSuccess int `json:"api_rate_success" gorm:"column:api_rate_success;default:0"` // 用户成功请求限速，0表示使用用户组配置
 }
 
 func (user *User) ToBaseUser() *UserBase {
@@ -388,7 +391,10 @@ func (user *User) Insert(inviterId int) error {
 			return err
 		}
 	}
-	user.Quota = common.QuotaForNewUser
+	// 只有当用户没有设置配额时，才使用默认值
+	if user.Quota == 0 {
+		user.Quota = common.QuotaForNewUser
+	}
 	//user.SetAccessToken(common.GetUUID())
 	user.AffCode = common.GetRandomString(4)
 
@@ -524,11 +530,13 @@ func (user *User) Edit(updatePassword bool) error {
 
 	newUser := *user
 	updates := map[string]interface{}{
-		"username":     newUser.Username,
-		"display_name": newUser.DisplayName,
-		"group":        newUser.Group,
-		"quota":        newUser.Quota,
-		"remark":       newUser.Remark,
+		"username":         newUser.Username,
+		"display_name":     newUser.DisplayName,
+		"group":            newUser.Group,
+		"quota":            newUser.Quota,
+		"remark":           newUser.Remark,
+		"api_rate_total":   newUser.APIRateTotal,
+		"api_rate_success": newUser.APIRateSuccess,
 	}
 	if updatePassword {
 		updates["password"] = newUser.Password
@@ -1083,4 +1091,13 @@ func GetUsersByTenantId(tenantId string) ([]*User, error) {
 	var users []*User
 	err := DB.Where("tenant_id = ?", tenantId).Find(&users).Error
 	return users, err
+}
+
+// GetUserRateLimit 获取用户的限速配置
+// 返回值: (是否配置了用户限速, total限速值, success限速值)
+func (user *User) GetUserRateLimit() (bool, int, int) {
+	if user.APIRateTotal > 0 || user.APIRateSuccess > 0 {
+		return true, user.APIRateTotal, user.APIRateSuccess
+	}
+	return false, 0, 0
 }

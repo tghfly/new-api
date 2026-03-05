@@ -468,12 +468,13 @@ export const useChannelsData = () => {
     const { success, message } = res.data;
     if (success) {
       showSuccess(t('操作成功完成！'));
-      let channel = res.data.data;
-      let newChannels = [...channels];
-      if (action !== 'delete') {
-        record.status = channel.status;
+      let updatedChannel = res.data.data;
+      if (action !== 'delete' && updatedChannel) {
+        // 使用 updateChannelProperty 正确更新渠道状态
+        updateChannelProperty(record.id, (channel) => {
+          channel.status = updatedChannel.status;
+        });
       }
-      setChannels(newChannels);
     } else {
       showError(message);
     }

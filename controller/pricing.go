@@ -30,7 +30,12 @@ func GetPricing(c *gin.Context) {
 		}
 	}
 
-	usableGroup = service.GetUserUsableGroups(group)
+	// 传入 userId 以查询 user_group_mappings 表获取用户关联的所有用户组
+	userIdInt := 0
+	if exists {
+		userIdInt = userId.(int)
+	}
+	usableGroup = service.GetUserUsableGroups(group, userIdInt)
 	// check groupRatio contains usableGroup
 	for group := range ratio_setting.GetGroupRatioCopy() {
 		if _, ok := usableGroup[group]; !ok {

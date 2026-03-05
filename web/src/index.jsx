@@ -22,6 +22,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import '@douyinfe/semi-ui/dist/css/semi.css';
 import { UserProvider } from './context/User';
+import { UserGroupProvider } from './context/UserGroup';
 import 'react-toastify/dist/ReactToastify.css';
 import { StatusProvider } from './context/Status';
 import { ThemeProvider } from './context/Theme';
@@ -58,19 +59,21 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <StatusProvider>
     <UserProvider>
-      <BrowserRouter
-        basename="/llmapi"
-        future={{
-          v7_startTransition: true,
-          v7_relativeSplatPath: true,
-        }}
-      >
-        <ThemeProvider>
-          <SemiLocaleWrapper>
-            <PageLayout />
-          </SemiLocaleWrapper>
-        </ThemeProvider>
-      </BrowserRouter>
+      <UserGroupProvider>
+        <BrowserRouter
+          basename="/llmapi"
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
+          <ThemeProvider>
+            <SemiLocaleWrapper>
+              <PageLayout />
+            </SemiLocaleWrapper>
+          </ThemeProvider>
+        </BrowserRouter>
+      </UserGroupProvider>
     </UserProvider>
   </StatusProvider>,
 );

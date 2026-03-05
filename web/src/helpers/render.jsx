@@ -23,6 +23,28 @@ import { copy, showSuccess } from './utils';
 import { MOBILE_BREAKPOINT } from '../hooks/common/useIsMobile';
 import { visit } from 'unist-util-visit';
 import * as LobeIcons from '@lobehub/icons';
+
+const GROUP_NAME_STORAGE_KEY = 'user_group_names';
+
+export function getGroupNameMap() {
+  try {
+    const stored = localStorage.getItem(GROUP_NAME_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function setGroupNameMap(groupMap) {
+  localStorage.setItem(GROUP_NAME_STORAGE_KEY, JSON.stringify(groupMap));
+}
+
+export function getGroupNameBySymbol(symbol) {
+  if (!symbol) return '';
+  // 优先从 localStorage 获取
+  const groupMap = getGroupNameMap();
+  return groupMap[symbol] || symbol;
+}
 import {
   OpenAI,
   Claude,
@@ -70,6 +92,7 @@ import {
   Layers,
   Gift,
   User,
+  Users,
   Settings,
   CircleUser,
   Package,
@@ -139,6 +162,8 @@ export function getLucideIcon(key, selected = false) {
     case 'user':
     case 'personal':
       return <User {...commonProps} color={iconColor} />;
+    case 'userGroup':
+      return <Users {...commonProps} color={iconColor} />;
     case 'models':
       return <Package {...commonProps} color={iconColor} />;
     case 'deployment':
@@ -771,12 +796,12 @@ export function renderText(text, limit) {
 }
 
 /**
- * Render group tags based on the input group string
- * @param {string} group - The input group string
+ * Render group tags based on the input group string or group object
+ * @param {string|Array|object} group - The input group (string, array of objects, or object)
  * @returns {JSX.Element} - The rendered group tags
  */
 export function renderGroup(group) {
-  if (group === '') {
+  if (!group || group === '') {
     return (
       <Tag key='default' color='white' shape='circle'>
         {i18next.t('用户分组')}
@@ -791,30 +816,58 @@ export function renderGroup(group) {
     premium: 'red',
   };
 
-  const groups = group.split(',').sort();
+  let groups = [];
+  
+  // 判断是否为新格式（数组格式：[{ id, symbol, name, ratio, ... }, ...]）
+  if (Array.isArray(group)) {
+    groups = group.map(g => ({
+      name: g.name || '',
+      symbol: g.symbol || ''
+    })).sort((a, b) => a.symbol.localeCompare(b.symbol));
+  } 
+  // 判断是否为单个对象（新格式单个分组）
+  else if (typeof group === 'object' && group !== null) {
+    groups = [{ name: group.name || '', symbol: group.symbol || '' }];
+  }
+  // 旧格式：字符串 "default,vip,pro"
+  else if (typeof group === 'string') {
+    groups = group.split(',').sort().map(symbol => {
+      const trimmedSymbol = symbol.trim();
+      return {
+        name: getGroupNameBySymbol(trimmedSymbol),
+        symbol: trimmedSymbol
+      };
+    });
+  }
 
   return (
-    <span key={group}>
-      {groups.map((group) => (
-        <Tag
-          color={tagColors[group] || stringToColor(group)}
-          key={group}
-          shape='circle'
-          onClick={async (event) => {
-            event.stopPropagation();
-            if (await copy(group)) {
-              showSuccess(i18next.t('已复制：') + group);
-            } else {
-              Modal.error({
-                title: i18next.t('无法复制到剪贴板，请手动复制'),
-                content: group,
-              });
-            }
-          }}
-        >
-          {group}
-        </Tag>
-      ))}
+    <span key={String(group)}>
+      {groups.map((item, index) => {
+        const { name, symbol } = item;
+        const displayText = name || symbol;
+        const tagKey = symbol || `group-${index}`;
+        
+        return (
+          <Tag
+            color={tagColors[symbol] || stringToColor(symbol || name)}
+            key={tagKey}
+            shape='circle'
+            onClick={async (event) => {
+              event.stopPropagation();
+              if (await copy(symbol)) {
+                showSuccess(i18next.t('已复制：') + symbol);
+              } else {
+                Modal.error({
+                  title: i18next.t('无法复制到剪贴板，请手动复制'),
+                  content: symbol,
+                });
+              }
+            }}
+          >
+            {name ? `${name} (${symbol})` : symbol}
+          </Tag>
+        );
+      })}
     </span>
   );
 }
@@ -957,6 +1010,11 @@ export const renderGroupOption = (item) => {
     }
   };
 
+  // 新格式：label 是 name，value 是 symbol
+  // 需要显示：name 在上方（主标题），symbol 在下方（副标题）
+  const displayName = label;  // name
+  const displaySymbol = value; // symbol
+
   return (
     <div
       style={baseStyle}
@@ -965,10 +1023,10 @@ export const renderGroupOption = (item) => {
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
         <Typography.Text strong type={disabled ? 'tertiary' : undefined}>
-          {value}
+          {displayName}
         </Typography.Text>
         <Typography.Text type='secondary' size='small'>
-          {label}
+          {displaySymbol}
         </Typography.Text>
       </div>
       {item.ratio && renderRatio(item.ratio)}

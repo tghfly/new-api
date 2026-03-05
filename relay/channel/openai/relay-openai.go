@@ -121,7 +121,8 @@ func OaiStreamHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.Re
 	var usage = &dto.Usage{}
 	var streamItems []string // store stream items
 	var lastStreamData string
-	var secondLastStreamData string // 存储倒数第二个stream data，用于音频模型
+	var secondLastStreamData string                    // 存储倒数第二个stream data，用于音频模型
+	var fullResponse dto.ChatCompletionsStreamResponse // 收集完整的响应
 
 	// 检查是否为音频模型
 	isAudioModel := strings.Contains(strings.ToLower(model), "audio")
@@ -141,6 +142,36 @@ func OaiStreamHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.Re
 
 			lastStreamData = data
 			streamItems = append(streamItems, data)
+
+			// 解析并收集 delta 内容
+			var streamResponse dto.ChatCompletionsStreamResponse
+			if err := common.UnmarshalJsonStr(data, &streamResponse); err == nil {
+				if len(streamResponse.Choices) > 0 {
+					if responseId == "" {
+						responseId = streamResponse.Id
+					}
+					if createAt == 0 {
+						createAt = streamResponse.Created
+					}
+					if systemFingerprint == "" && streamResponse.SystemFingerprint != nil {
+						systemFingerprint = *streamResponse.SystemFingerprint
+					}
+					// 收集 delta 内容
+					if fullResponse.Choices == nil {
+						fullResponse.Choices = make([]dto.ChatCompletionsStreamResponseChoice, len(streamResponse.Choices))
+					}
+					for i, choice := range streamResponse.Choices {
+						// 合并 delta 内容
+						if choice.Delta.Content != nil {
+							if fullResponse.Choices[i].Delta.Content == nil {
+								fullResponse.Choices[i].Delta.Content = new(string)
+							}
+							*fullResponse.Choices[i].Delta.Content += *choice.Delta.Content
+						}
+						fullResponse.Choices[i].FinishReason = choice.FinishReason
+					}
+				}
+			}
 		}
 		return true
 	})
@@ -187,6 +218,25 @@ func OaiStreamHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.Re
 	}
 
 	applyUsagePostProcessing(info, usage, common.StringToByteSlice(lastStreamData))
+
+	// 记录输出的 id 和 message 字段
+	if responseId != "" {
+		c.Set("output_id", responseId)
+	}
+	// 使用收集到的完整响应记录 message 字段
+	if len(fullResponse.Choices) > 0 {
+		// 将收集到的 delta 转换为 message 格式
+		message := &dto.Message{
+			Role: "assistant",
+		}
+		if fullResponse.Choices[0].Delta.Content != nil {
+			message.Content = *fullResponse.Choices[0].Delta.Content
+		}
+		messageJson, err := common.Marshal(message)
+		if err == nil {
+			c.Set("output_message", string(messageJson))
+		}
+	}
 
 	HandleFinalResponse(c, info, lastStreamData, responseId, createAt, model, systemFingerprint, usage, containStreamUsage)
 
@@ -293,6 +343,17 @@ func OpenaiHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.Respo
 			return nil, types.NewError(err, types.ErrorCodeBadResponseBody)
 		}
 		responseBody = geminiRespStr
+	}
+
+	// 记录输出的 id 和 message 字段
+	if simpleResponse.Id != "" {
+		c.Set("output_id", simpleResponse.Id)
+	}
+	if len(simpleResponse.Choices) > 0 {
+		messageJson, err := common.Marshal(simpleResponse.Choices[0].Message)
+		if err == nil {
+			c.Set("output_message", string(messageJson))
+		}
 	}
 
 	service.IOCopyBytesGracefully(c, resp, responseBody)
