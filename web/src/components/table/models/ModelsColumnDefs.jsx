@@ -30,6 +30,7 @@ import {
   timestamp2string,
   getLobeHubIcon,
   stringToColor,
+  renderGroup,
 } from '../../../helpers';
 import {
   renderLimitedItems,
@@ -72,14 +73,17 @@ const renderVendorTag = (vendorId, vendorMap, t) => {
 // Render groups (enable_groups)
 const renderGroups = (groups) => {
   if (!groups || groups.length === 0) return '-';
-  return renderLimitedItems({
-    items: groups,
-    renderItem: (g, idx) => (
-      <Tag key={idx} size='small' shape='circle' color={stringToColor(g)}>
-        {g}
-      </Tag>
-    ),
-  });
+  return (
+    <Space spacing={2}>
+      {groups
+        .sort((a, b) => {
+          if (a === 'default') return -1;
+          if (b === 'default') return 1;
+          return a.localeCompare(b);
+        })
+        .map((item, index) => renderGroup(item))}
+    </Space>
+  );
 };
 
 // Render tags

@@ -49,8 +49,11 @@ import DrawingSetting from '../../components/settings/DrawingSetting';
 import PaymentSetting from '../../components/settings/PaymentSetting';
 import ModelDeploymentSetting from '../../components/settings/ModelDeploymentSetting';
 import PerformanceSetting from '../../components/settings/PerformanceSetting';
+import { useEmbeddedMode } from '../../hooks/common/useEmbeddedMode';
 
 const Setting = () => {
+  const isEmbedded = useEmbeddedMode();
+  const topMarginClass = isEmbedded ? '' : 'mt-[60px]';
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -193,7 +196,7 @@ const Setting = () => {
     }
   }, [location.search]);
   return (
-    <div className='mt-[60px] px-2'>
+    <div className={`${topMarginClass} px-2`}>
       <Layout>
         <Layout.Content>
           <Tabs

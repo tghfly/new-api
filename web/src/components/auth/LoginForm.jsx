@@ -66,8 +66,10 @@ import LinuxDoIcon from '../common/logo/LinuxDoIcon';
 import TwoFAVerification from './TwoFAVerification';
 import { useTranslation } from 'react-i18next';
 import { SiDiscord } from 'react-icons/si';
+import { useEmbeddedMode } from '../../hooks/common/useEmbeddedMode';
 
 const LoginForm = () => {
+  const isEmbedded = useEmbeddedMode();
   let navigate = useNavigate();
   const { t } = useTranslation();
   const githubButtonTextKeyByState = {
@@ -957,7 +959,7 @@ const LoginForm = () => {
         className='blur-ball blur-ball-teal'
         style={{ top: '50%', left: '-120px' }}
       />
-      <div className='w-full max-w-sm mt-[60px]'>
+      <div className={`w-full max-w-sm ${isEmbedded ? '' : 'mt-[60px]'}`}>
         {showEmailLogin ||
         !hasOAuthLoginOptions
           ? renderEmailLoginForm()

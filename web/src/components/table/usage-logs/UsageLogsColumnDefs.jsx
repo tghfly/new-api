@@ -567,6 +567,34 @@ export const getLogsColumns = ({
       },
     },
     {
+      key: COLUMN_KEYS.GENERATION_SPEED,
+      title: (
+        <div className='flex items-center gap-1'>
+          {t('生成速度')}
+          <Tooltip
+            content={t(
+              't/s：输出Token的数量除以总生成时间，表示生成速度',
+            )}
+          >
+            <IconHelpCircle className='text-gray-400 cursor-help' />
+          </Tooltip>
+        </div>
+      ),
+      dataIndex: 'completion_tokens',
+      render: (text, record, index) => {
+        if (!(record.type === 2 || record.type === 5)) {
+          return <></>;
+        }
+        const completionTokens = parseInt(text) || 0;
+        const useTime = parseInt(record.use_time) || 0;
+        if (useTime <= 0 || completionTokens <= 0) {
+          return '-';
+        }
+        const speed = (completionTokens / useTime).toFixed(2);
+        return <span>{speed} t/s</span>;
+      },
+    },
+    {
       key: COLUMN_KEYS.PROMPT,
       title: (
         <div className='flex items-center gap-1'>

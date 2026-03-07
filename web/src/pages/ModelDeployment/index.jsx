@@ -21,8 +21,11 @@ import React from 'react';
 import DeploymentsTable from '../../components/table/model-deployments';
 import DeploymentAccessGuard from '../../components/model-deployments/DeploymentAccessGuard';
 import { useModelDeploymentSettings } from '../../hooks/model-deployments/useModelDeploymentSettings';
+import { useEmbeddedMode } from '../../hooks/common/useEmbeddedMode';
 
 const ModelDeploymentPage = () => {
+  const isEmbedded = useEmbeddedMode();
+  const topMarginClass = isEmbedded ? '' : 'mt-[60px]';
   const {
     loading,
     isIoNetEnabled,
@@ -41,7 +44,7 @@ const ModelDeploymentPage = () => {
       connectionError={connectionError}
       onRetry={() => testConnection()}
     >
-      <div className='mt-[60px] px-2'>
+      <div className={`${topMarginClass} px-2`}>
         <DeploymentsTable />
       </div>
     </DeploymentAccessGuard>

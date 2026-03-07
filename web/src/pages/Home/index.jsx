@@ -40,6 +40,7 @@ import {
 } from '@douyinfe/semi-icons';
 import { Link } from 'react-router-dom';
 import NoticeModal from '../../components/layout/NoticeModal';
+import { useEmbeddedMode } from '../../hooks/common/useEmbeddedMode';
 import {
   Moonshot,
   OpenAI,
@@ -66,6 +67,8 @@ import {
 const { Text } = Typography;
 
 const Home = () => {
+  const isEmbedded = useEmbeddedMode();
+  const topMarginClass = isEmbedded ? '' : 'mt-[60px]';
   const { t, i18n } = useTranslation();
   const [statusState] = useContext(StatusContext);
   const actualTheme = useActualTheme();
@@ -343,7 +346,7 @@ const Home = () => {
             />
           ) : (
             <div
-              className='mt-[60px]'
+              className={topMarginClass}
               dangerouslySetInnerHTML={{ __html: homePageContent }}
             />
           )}

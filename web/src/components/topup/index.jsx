@@ -38,8 +38,11 @@ import InvitationCard from './InvitationCard';
 import TransferModal from './modals/TransferModal';
 import PaymentConfirmModal from './modals/PaymentConfirmModal';
 import TopupHistoryModal from './modals/TopupHistoryModal';
+import { useEmbeddedMode } from '../../hooks/common/useEmbeddedMode';
 
 const TopUp = () => {
+  const isEmbedded = useEmbeddedMode();
+  const topMarginClass = isEmbedded ? '' : 'mt-[60px]';
   const { t } = useTranslation();
   const [userState, userDispatch] = useContext(UserContext);
   const [statusState] = useContext(StatusContext);
@@ -665,7 +668,7 @@ const TopUp = () => {
   };
 
   return (
-    <div className='w-full max-w-7xl mx-auto relative min-h-screen lg:min-h-0 mt-[60px] px-2'>
+    <div className={`w-full max-w-7xl mx-auto relative min-h-screen lg:min-h-0 ${topMarginClass} px-2`}>
       {/* 划转模态框 */}
       <TransferModal
         t={t}

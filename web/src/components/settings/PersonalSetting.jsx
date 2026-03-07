@@ -45,8 +45,11 @@ import EmailBindModal from './personal/modals/EmailBindModal';
 import WeChatBindModal from './personal/modals/WeChatBindModal';
 import AccountDeleteModal from './personal/modals/AccountDeleteModal';
 import ChangePasswordModal from './personal/modals/ChangePasswordModal';
+import { useEmbeddedMode } from '../../hooks/common/useEmbeddedMode';
 
 const PersonalSetting = () => {
+  const isEmbedded = useEmbeddedMode();
+  const topMarginClass = isEmbedded ? '' : 'mt-[60px]';
   const [userState, userDispatch] = useContext(UserContext);
   let navigate = useNavigate();
   const { t } = useTranslation();
@@ -448,7 +451,7 @@ const PersonalSetting = () => {
   };
 
   return (
-    <div className='mt-[60px]'>
+    <div className={topMarginClass}>
       <div className='flex justify-center'>
         <div className='w-full max-w-7xl mx-auto px-2'>
           {/* 顶部用户信息区域 */}

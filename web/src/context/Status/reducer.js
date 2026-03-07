@@ -29,6 +29,11 @@ export const reducer = (state, action) => {
         ...state,
         status: undefined,
       };
+    case 'setEmbedded':
+      return {
+        ...state,
+        isEmbedded: action.payload,
+      };
     default:
       return state;
   }
@@ -36,4 +41,5 @@ export const reducer = (state, action) => {
 
 export const initialState = {
   status: undefined,
+  isEmbedded: false,
 };

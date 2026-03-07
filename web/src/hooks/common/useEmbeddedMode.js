@@ -16,19 +16,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import React from 'react';
-import ModelsTable from '../../components/table/models';
-import { useEmbeddedMode } from '../../hooks/common/useEmbeddedMode';
 
-const ModelPage = () => {
-  const isEmbedded = useEmbeddedMode();
-  const topMarginClass = isEmbedded ? '' : 'mt-[60px]';
+import { useContext } from 'react';
+import { StatusContext } from '../../context/Status';
 
-  return (
-    <div className={`${topMarginClass} px-2`}>
-      <ModelsTable />
-    </div>
-  );
+/**
+ * 获取嵌入式模式状态
+ * @returns {boolean} 是否为嵌入式模式
+ */
+export const useEmbeddedMode = () => {
+  const [statusState] = useContext(StatusContext);
+  return statusState?.isEmbedded || false;
 };
-
-export default ModelPage;

@@ -22,6 +22,7 @@ import { Card, Button, Typography } from '@douyinfe/semi-ui';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Settings, Server, AlertCircle, WifiOff } from 'lucide-react';
+import { useEmbeddedMode } from '../../hooks/common/useEmbeddedMode';
 
 const { Title, Text } = Typography;
 
@@ -34,6 +35,8 @@ const DeploymentAccessGuard = ({
   connectionError,
   onRetry,
 }) => {
+  const isEmbedded = useEmbeddedMode();
+  const topMarginClass = isEmbedded ? '' : 'mt-[60px]';
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -43,7 +46,7 @@ const DeploymentAccessGuard = ({
 
   if (loading) {
     return (
-      <div className='mt-[60px] px-2'>
+      <div className={`${topMarginClass} px-2`}>
         <Card loading={true} style={{ minHeight: '400px' }}>
           <div style={{ textAlign: 'center', padding: '50px 0' }}>
             <Text type='secondary'>{t('加载设置中...')}</Text>
@@ -56,7 +59,7 @@ const DeploymentAccessGuard = ({
   if (!isEnabled) {
     return (
       <div
-        className='mt-[60px] px-4'
+        className={`${topMarginClass} px-4`}
         style={{
           minHeight: 'calc(100vh - 60px)',
           display: 'flex',
@@ -282,7 +285,7 @@ const DeploymentAccessGuard = ({
 
   if (connectionLoading || (connectionOk === null && !connectionError)) {
     return (
-      <div className='mt-[60px] px-2'>
+      <div className={`${topMarginClass} px-2`}>
         <Card loading={true} style={{ minHeight: '400px' }}>
           <div style={{ textAlign: 'center', padding: '50px 0' }}>
             <Text type='secondary'>{t('正在检查 io.net 连接...')}</Text>
@@ -302,7 +305,7 @@ const DeploymentAccessGuard = ({
 
     return (
       <div
-        className='mt-[60px] px-4'
+        className={`${topMarginClass} px-4`}
         style={{
           minHeight: 'calc(100vh - 60px)',
           display: 'flex',

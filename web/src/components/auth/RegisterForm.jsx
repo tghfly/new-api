@@ -64,8 +64,10 @@ import { UserContext } from '../../context/User';
 import { StatusContext } from '../../context/Status';
 import { useTranslation } from 'react-i18next';
 import { SiDiscord } from 'react-icons/si';
+import { useEmbeddedMode } from '../../hooks/common/useEmbeddedMode';
 
 const RegisterForm = () => {
+  const isEmbedded = useEmbeddedMode();
   let navigate = useNavigate();
   const { t } = useTranslation();
   const githubButtonTextKeyByState = {
@@ -780,7 +782,7 @@ const RegisterForm = () => {
         className='blur-ball blur-ball-teal'
         style={{ top: '50%', left: '-120px' }}
       />
-      <div className='w-full max-w-sm mt-[60px]'>
+      <div className={`w-full max-w-sm ${isEmbedded ? '' : 'mt-[60px]'}`}>
         {showEmailRegister ||
         !hasOAuthRegisterOptions
           ? renderEmailRegisterForm()

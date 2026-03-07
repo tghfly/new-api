@@ -22,8 +22,11 @@ import { useTokenKeys } from '../../hooks/chat/useTokenKeys';
 import { Spin } from '@douyinfe/semi-ui';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useEmbeddedMode } from '../../hooks/common/useEmbeddedMode';
 
 const ChatPage = () => {
+  const isEmbedded = useEmbeddedMode();
+  const topMarginClass = isEmbedded ? '' : 'mt-[60px]';
   const { t } = useTranslation();
   const { id } = useParams();
   const { keys, serverAddress, isLoading } = useTokenKeys(id);
@@ -66,7 +69,7 @@ const ChatPage = () => {
       allow='camera;microphone'
     />
   ) : (
-    <div className='fixed inset-0 w-screen h-screen flex items-center justify-center bg-white/80 z-[1000] mt-[60px]'>
+    <div className={`fixed inset-0 w-screen h-screen flex items-center justify-center bg-white/80 z-[1000] ${topMarginClass}`}>
       <div className='flex flex-col items-center'>
         <Spin size='large' spinning={true} tip={null} />
         <span

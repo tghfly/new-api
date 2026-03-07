@@ -19,8 +19,11 @@ For commercial licensing, please contact support@quantumnous.com
 
 import React from 'react';
 import { useTokenKeys } from '../../hooks/chat/useTokenKeys';
+import { useEmbeddedMode } from '../../hooks/common/useEmbeddedMode';
 
 const chat2page = () => {
+  const isEmbedded = useEmbeddedMode();
+  const topMarginClass = isEmbedded ? '' : 'mt-[60px]';
   const { keys, chatLink, serverAddress, isLoading } = useTokenKeys();
 
   const comLink = (key) => {
@@ -36,7 +39,7 @@ const chat2page = () => {
   }
 
   return (
-    <div className='mt-[60px] px-2'>
+    <div className={`${topMarginClass} px-2`}>
       <h3>正在加载，请稍候...</h3>
     </div>
   );

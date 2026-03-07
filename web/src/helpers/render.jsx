@@ -23,6 +23,7 @@ import { copy, showSuccess } from './utils';
 import { MOBILE_BREAKPOINT } from '../hooks/common/useIsMobile';
 import { visit } from 'unist-util-visit';
 import * as LobeIcons from '@lobehub/icons';
+import LocalIcons from '../assets/icons';
 
 const GROUP_NAME_STORAGE_KEY = 'user_group_names';
 
@@ -455,7 +456,14 @@ export function getLobeHubIcon(iconName, size = 14) {
   // 解析组件路径与点号链式属性
   const segments = String(iconName).split('.');
   const baseKey = segments[0];
-  const BaseIcon = LobeIcons[baseKey];
+  
+  // 优先使用本地图标
+  let BaseIcon = LocalIcons[baseKey];
+  
+  // 如果本地没有，使用 LobeIcons
+  if (!BaseIcon) {
+    BaseIcon = LobeIcons[baseKey];
+  }
 
   let IconComponent = undefined;
   let propStartIndex = 1;
@@ -464,7 +472,7 @@ export function getLobeHubIcon(iconName, size = 14) {
     IconComponent = BaseIcon[segments[1]];
     propStartIndex = 2;
   } else {
-    IconComponent = LobeIcons[baseKey];
+    IconComponent = BaseIcon;
     propStartIndex = 1;
   }
 
@@ -490,7 +498,7 @@ export function getLobeHubIcon(iconName, size = 14) {
     // 去除引号
     if (
       (v.startsWith('"') && v.endsWith('"')) ||
-      (v.startsWith("'") && v.endsWith("'"))
+      (v.startsWith("'") && v.endsWith("'") )
     ) {
       return v.slice(1, -1);
     }

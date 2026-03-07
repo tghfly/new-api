@@ -26,8 +26,11 @@ import {
   IllustrationConstructionDark,
 } from '@douyinfe/semi-illustrations';
 import { useTranslation } from 'react-i18next';
+import { useEmbeddedMode } from '../../hooks/common/useEmbeddedMode';
 
 const About = () => {
+  const isEmbedded = useEmbeddedMode();
+  const topMarginClass = isEmbedded ? '' : 'mt-[60px]';
   const { t } = useTranslation();
   const [about, setAbout] = useState('');
   const [aboutLoaded, setAboutLoaded] = useState(false);
@@ -133,7 +136,7 @@ const About = () => {
   );
 
   return (
-    <div className='mt-[60px] px-2'>
+    <div className={`${topMarginClass} px-2`}>
       {aboutLoaded && about === '' ? (
         <div className='flex justify-center items-center h-screen p-8'>
           <Empty

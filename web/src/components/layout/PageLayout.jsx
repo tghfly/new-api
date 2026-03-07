@@ -40,12 +40,15 @@ const { Sider, Content, Header } = Layout;
 
 const PageLayout = () => {
   const [, userDispatch] = useContext(UserContext);
-  const [, statusDispatch] = useContext(StatusContext);
+  const [statusState, statusDispatch] = useContext(StatusContext);
   const isMobile = useIsMobile();
   const [collapsed, , setCollapsed] = useSidebarCollapsed();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { i18n } = useTranslation();
   const location = useLocation();
+
+  // 获取嵌入式模式状态
+  const isEmbedded = statusState?.isEmbedded || false;
 
   const shouldInnerPadding =
     location.pathname.includes('/console') &&
@@ -53,7 +56,8 @@ const PageLayout = () => {
     location.pathname !== '/console/playground';
 
   const isConsoleRoute = location.pathname.startsWith('/console');
-  const showSider = isConsoleRoute && (!isMobile || drawerOpen);
+  // 嵌入式模式下隐藏侧边栏
+  const showSider = !isEmbedded && isConsoleRoute && (!isMobile || drawerOpen);
 
   useEffect(() => {
     if (isMobile && drawerOpen && collapsed) {
@@ -113,22 +117,25 @@ const PageLayout = () => {
         overflow: isMobile ? 'visible' : 'hidden',
       }}
     >
-      <Header
-        style={{
-          padding: 0,
-          height: 'auto',
-          lineHeight: 'normal',
-          position: 'fixed',
-          width: '100%',
-          top: 0,
-          zIndex: 100,
-        }}
-      >
-        <HeaderBar
-          onMobileMenuToggle={() => setDrawerOpen((prev) => !prev)}
-          drawerOpen={drawerOpen}
-        />
-      </Header>
+      {/* 嵌入式模式下隐藏顶部导航栏 */}
+      {!isEmbedded && (
+        <Header
+          style={{
+            padding: 0,
+            height: 'auto',
+            lineHeight: 'normal',
+            position: 'fixed',
+            width: '100%',
+            top: 0,
+            zIndex: 100,
+          }}
+        >
+          <HeaderBar
+            onMobileMenuToggle={() => setDrawerOpen((prev) => !prev)}
+            drawerOpen={drawerOpen}
+          />
+        </Header>
+      )}
       <Layout
         style={{
           overflow: isMobile ? 'visible' : 'auto',
@@ -142,7 +149,8 @@ const PageLayout = () => {
             style={{
               position: 'fixed',
               left: 0,
-              top: '64px',
+              // 嵌入式模式下侧边栏从顶部开始（没有 header）
+              top: isEmbedded ? '0' : '64px',
               zIndex: 99,
               border: 'none',
               paddingRight: '0',
@@ -173,7 +181,12 @@ const PageLayout = () => {
               flex: '1 0 auto',
               overflowY: isMobile ? 'visible' : 'hidden',
               WebkitOverflowScrolling: 'touch',
-              paddingTop: shouldInnerPadding ? (isMobile ? '5px' : '24px') : '0',
+              // 嵌入式模式下移除顶部 padding（没有 header）
+              paddingTop: isEmbedded
+                ? '0'
+                : shouldInnerPadding
+                  ? (isMobile ? '5px' : '24px')
+                  : '0',
               paddingLeft: shouldInnerPadding ? (isMobile ? '5px' : '24px') : '0',
               paddingRight: shouldInnerPadding ? (isMobile ? '5px' : '24px') : '0',
               position: 'relative',

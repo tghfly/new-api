@@ -19,11 +19,17 @@ For commercial licensing, please contact support@quantumnous.com
 
 import React from 'react';
 import TaskLogsTable from '../../components/table/task-logs';
+import { useEmbeddedMode } from '../../hooks/common/useEmbeddedMode';
 
-const Task = () => (
-  <div className='mt-[60px] px-2'>
-    <TaskLogsTable />
-  </div>
-);
+const Task = () => {
+  const isEmbedded = useEmbeddedMode();
+  const topMarginClass = isEmbedded ? '' : 'mt-[60px]';
+
+  return (
+    <div className={`${topMarginClass} px-2`}>
+      <TaskLogsTable />
+    </div>
+  );
+};
 
 export default Task;

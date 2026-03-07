@@ -19,10 +19,14 @@ For commercial licensing, please contact support@quantumnous.com
 
 import React from 'react';
 import ChannelsTable from '../../components/table/channels';
+import { useEmbeddedMode } from '../../hooks/common/useEmbeddedMode';
 
 const File = () => {
+  const isEmbedded = useEmbeddedMode();
+  const topMarginClass = isEmbedded ? '' : 'mt-[60px]';
+
   return (
-    <div className='mt-[60px] px-2'>
+    <div className={`${topMarginClass} px-2`}>
       <ChannelsTable />
     </div>
   );

@@ -19,11 +19,17 @@ For commercial licensing, please contact support@quantumnous.com
 
 import React from 'react';
 import Dashboard from '../../components/dashboard';
+import { useEmbeddedMode } from '../../hooks/common/useEmbeddedMode';
 
-const Detail = () => (
-  <div className='mt-[60px] px-2'>
-    <Dashboard />
-  </div>
-);
+const Detail = () => {
+  const isEmbedded = useEmbeddedMode();
+  const topMarginClass = isEmbedded ? '' : 'mt-[60px]';
+
+  return (
+    <div className={`${topMarginClass} px-2`}>
+      <Dashboard />
+    </div>
+  );
+};
 
 export default Detail;

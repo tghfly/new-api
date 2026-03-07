@@ -19,11 +19,17 @@ For commercial licensing, please contact support@quantumnous.com
 
 import React from 'react';
 import MjLogsTable from '../../components/table/mj-logs';
+import { useEmbeddedMode } from '../../hooks/common/useEmbeddedMode';
 
-const Midjourney = () => (
-  <div className='mt-[60px] px-2'>
-    <MjLogsTable />
-  </div>
-);
+const Midjourney = () => {
+  const isEmbedded = useEmbeddedMode();
+  const topMarginClass = isEmbedded ? '' : 'mt-[60px]';
+
+  return (
+    <div className={`${topMarginClass} px-2`}>
+      <MjLogsTable />
+    </div>
+  );
+};
 
 export default Midjourney;

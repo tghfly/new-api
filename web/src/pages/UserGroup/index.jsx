@@ -19,10 +19,14 @@ For commercial licensing, please contact support@quantumnous.com
 
 import React from 'react';
 import UserGroupsTable from '../../components/table/user-groups';
+import { useEmbeddedMode } from '../../hooks/common/useEmbeddedMode';
 
 const UserGroup = () => {
+  const isEmbedded = useEmbeddedMode();
+  const topMarginClass = isEmbedded ? '' : 'mt-[60px]';
+
   return (
-    <div className='mt-[60px] px-2'>
+    <div className={`${topMarginClass} px-2`}>
       <UserGroupsTable />
     </div>
   );

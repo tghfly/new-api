@@ -31,55 +31,7 @@ body {
   background-color: var(--semi-color-bg-0);
 }
 
-/* ==================== 全局背景图样式 ==================== */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url('/bg.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  z-index: -2;
-  opacity: 0.85;
-}
 
-/* 暗黑模式下背景图更暗一些，保证内容可读性 */
-html.dark body::before {
-  opacity: 0.4;
-}
-
-/* 背景遮罩层，增加内容可读性 */
-body::after {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(var(--semi-grey-0), 0.3) 0%,
-    rgba(var(--semi-grey-0), 0.1) 50%,
-    rgba(var(--semi-grey-0), 0.4) 100%
-  );
-  z-index: -1;
-  pointer-events: none;
-}
-
-/* 暗黑模式下使用更深的遮罩 */
-html.dark body::after {
-  background: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0.5) 0%,
-    rgba(0, 0, 0, 0.3) 50%,
-    rgba(0, 0, 0, 0.6) 100%
-  );
-}
 
 .app-layout {
   height: 100vh;
@@ -89,6 +41,13 @@ html.dark body::after {
 .app-sider {
   height: calc(100vh - 64px);
   height: calc(100dvh - 64px);
+}
+
+/* 右侧内容区域高度设置 */
+.semi-layout-content {
+  height: calc(100vh - 64px);
+  height: calc(100dvh - 64px);
+  overflow: hidden;
 }
 
 code {
@@ -977,68 +936,11 @@ html.dark .with-pastel-balls::before {
   padding: 10px !important;
 }
 
-/* ==================== 布局背景透明效果 ==================== */
-/* 让布局背景透明，显示背景图 */
-.semi-layout,
-.semi-layout-content {
-  background: transparent !important;
-}
 
-/* 侧边栏半透明背景 */
-.sidebar-container,
-.sidebar-nav {
-  background: rgba(var(--semi-grey-0), 0.85) !important;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
 
-html.dark .sidebar-container,
-html.dark .sidebar-nav {
-  background: rgba(30, 30, 30, 0.9) !important;
-}
 
-/* 顶部导航栏半透明背景 */
-.semi-layout-header {
-  background: rgba(var(--semi-grey-0), 0.9) !important;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
 
-html.dark .semi-layout-header {
-  background: rgba(30, 30, 30, 0.95) !important;
-}
 
-/* 卡片半透明效果 */
-.semi-card {
-  background: rgba(var(--semi-grey-0), 0.85) !important;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-html.dark .semi-card {
-  background: rgba(35, 35, 35, 0.9) !important;
-}
-
-/* 表格半透明背景 */
-.semi-table {
-  background: transparent !important;
-}
-
-.semi-table-tbody,
-.semi-table-thead {
-  background: rgba(var(--semi-grey-0), 0.7) !important;
-}
-
-html.dark .semi-table-tbody,
-html.dark .semi-table-thead {
-  background: rgba(35, 35, 35, 0.8) !important;
-}
-
-/* 抽屉和弹窗保持不透明 */
-.semi-modal-content,
-.semi-sidesheet-inner {
-  background: var(--semi-color-bg-1) !important;
-}
 
 /* ==================== 使用日志: channel affinity tag ==================== */
 .semi-tag.channel-affinity-tag {

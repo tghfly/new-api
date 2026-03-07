@@ -19,10 +19,14 @@ For commercial licensing, please contact support@quantumnous.com
 
 import React from 'react';
 import UsersTable from '../../components/table/users';
+import { useEmbeddedMode } from '../../hooks/common/useEmbeddedMode';
 
 const User = () => {
+  const isEmbedded = useEmbeddedMode();
+  const topMarginClass = isEmbedded ? '' : 'mt-[60px]';
+
   return (
-    <div className='mt-[60px] px-2'>
+    <div className={`${topMarginClass} px-2`}>
       <UsersTable />
     </div>
   );

@@ -24,7 +24,7 @@ import '@douyinfe/semi-ui/dist/css/semi.css';
 import { UserProvider } from './context/User';
 import { UserGroupProvider } from './context/UserGroup';
 import 'react-toastify/dist/ReactToastify.css';
-import { StatusProvider } from './context/Status';
+import { StatusContext, StatusProvider } from './context/Status';
 import { ThemeProvider } from './context/Theme';
 import PageLayout from './components/layout/PageLayout';
 import './i18n/i18n';
@@ -53,6 +53,23 @@ function SemiLocaleWrapper({ children }) {
   return <LocaleProvider locale={semiLocale}>{children}</LocaleProvider>;
 }
 
+// 检测是否为嵌入式模式
+function EmbeddedModeDetector({ children }) {
+  const [, statusDispatch] = React.useContext(StatusContext);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isEmbedded = urlParams.get('newapi_embedded') === '1';
+      if (isEmbedded) {
+        statusDispatch({ type: 'setEmbedded', payload: true });
+      }
+    }
+  }, [statusDispatch]);
+
+  return children;
+}
+
 // initialization
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -69,7 +86,9 @@ root.render(
         >
           <ThemeProvider>
             <SemiLocaleWrapper>
-              <PageLayout />
+              <EmbeddedModeDetector>
+                <PageLayout />
+              </EmbeddedModeDetector>
             </SemiLocaleWrapper>
           </ThemeProvider>
         </BrowserRouter>
