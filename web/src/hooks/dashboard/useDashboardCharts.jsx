@@ -436,6 +436,14 @@ export const useDashboardCharts = (
         panel: {
           background: 'transparent',
         },
+        // 添加 tooltip 背景色配置，确保不透明
+        tooltip: {
+          panel: {
+            fill: 'var(--semi-color-bg-2)',  // 使用 Semi Design 的背景色变量
+            stroke: 'var(--semi-color-border)',
+            lineWidth: 1,
+          },
+        },
       },
     });
   }, []);

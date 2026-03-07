@@ -1023,3 +1023,21 @@ svg[class*="vchart"] {
   background-color: transparent !important;
   background: transparent !important;
 }
+
+/* ==================== VChart Tooltip 背景修复 ==================== */
+/* 排除 tooltip，确保 tooltip 有不透明背景 */
+.vchart-tooltip,
+.vchart-tooltip *,
+div[class*="vchart-tooltip"],
+div[class*="vchart-tooltip"] * {
+  background: var(--semi-color-bg-2) !important;
+}
+
+/* tooltip 容器样式 */
+.vchart-tooltip,
+div[class*="vchart-tooltip"] {
+  background: var(--semi-color-bg-2) !important;
+  border: 1px solid var(--semi-color-border) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
