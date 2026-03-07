@@ -11,6 +11,32 @@ import (
 )
 
 func GetAllLogs(c *gin.Context) {
+	role := c.GetInt("role")
+
+	// TODO Admin 用户也只能查看自己的日志，只有 Root 用户才能查看所有日志
+	if role == common.RoleAdminUser {
+		// Admin 用户：调用 GetUserLogs 逻辑，只查询当前用户的日志
+		pageInfo := common.GetPageQuery(c)
+		userId := c.GetInt("id")
+		logType, _ := strconv.Atoi(c.Query("type"))
+		startTimestamp, _ := strconv.ParseInt(c.Query("start_timestamp"), 10, 64)
+		endTimestamp, _ := strconv.ParseInt(c.Query("end_timestamp"), 10, 64)
+		tokenName := c.Query("token_name")
+		modelName := c.Query("model_name")
+		group := c.Query("group")
+		requestId := c.Query("request_id")
+		logs, total, err := model.GetUserLogs(userId, logType, startTimestamp, endTimestamp, modelName, tokenName, pageInfo.GetStartIdx(), pageInfo.GetPageSize(), group, requestId)
+		if err != nil {
+			common.ApiError(c, err)
+			return
+		}
+		pageInfo.SetTotal(int(total))
+		pageInfo.SetItems(logs)
+		common.ApiSuccess(c, pageInfo)
+		return
+	}
+
+	// Root 用户：可以查看所有日志
 	pageInfo := common.GetPageQuery(c)
 	logType, _ := strconv.Atoi(c.Query("type"))
 	startTimestamp, _ := strconv.ParseInt(c.Query("start_timestamp"), 10, 64)
