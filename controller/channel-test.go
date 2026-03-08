@@ -768,6 +768,12 @@ func TestChannel(c *gin.Context) {
 	go channel.UpdateResponseTime(milliseconds)
 	consumedTime := float64(milliseconds) / 1000.0
 	if result.newAPIError != nil {
+		// 测试失败时，如果渠道是启用状态且满足自动禁用条件，则自动禁用渠道
+		if channel.Status == common.ChannelStatusEnabled && service.ShouldDisableChannel(channel.Type, result.newAPIError) && channel.GetAutoBan() {
+			usingKey := common.GetContextKeyString(result.context, constant.ContextKeyChannelKey)
+			channelError := types.NewChannelError(channel.Id, channel.Type, channel.Name, channel.ChannelInfo.IsMultiKey, usingKey, channel.GetAutoBan())
+			service.DisableChannel(*channelError, result.newAPIError.Error())
+		}
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
 			"message": result.newAPIError.Error(),
@@ -775,6 +781,13 @@ func TestChannel(c *gin.Context) {
 		})
 		return
 	}
+
+	// 测试成功后，如果渠道是自动禁用状态且开启了自动启用功能，则自动启用渠道
+	if service.ShouldEnableChannel(nil, channel.Status) {
+		usingKey := common.GetContextKeyString(result.context, constant.ContextKeyChannelKey)
+		service.EnableChannel(channel.Id, usingKey, channel.Name)
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",

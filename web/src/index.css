@@ -1040,4 +1040,31 @@ div[class*="vchart-tooltip"] {
   border: 1px solid var(--semi-color-border) !important;
   border-radius: 6px !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  /* 防止 tooltip 溢出导致滚动条 */
+  max-width: 300px !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+/* VChart tooltip 容器 - 限制在视口内 */
+.vchart-tooltip-container,
+div[class*="vchart-tooltip-container"] {
+  position: fixed !important;
+  z-index: 9999 !important;
+  /* 防止 tooltip 导致页面滚动 */
+  max-height: 100vh !important;
+  max-width: 100vw !important;
+  overflow: visible !important;
+}
+
+/* 确保图表容器内的 tooltip 不会溢出 */
+.vchart,
+.vchart-container {
+  overflow: visible !important;
+}
+
+/* 防止 VChart 内部元素导致滚动 */
+.vchart-canvas-layer,
+.vchart-event-layer {
+  overflow: hidden !important;
 }
