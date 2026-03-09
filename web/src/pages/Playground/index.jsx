@@ -88,6 +88,8 @@ const Playground = () => {
 
   // 根据嵌入式模式动态计算顶部边距类名
   const topMarginClass = isEmbedded ? '' : 'mt-[60px]';
+  // 根据嵌入式模式动态计算高度类名
+  const heightClass = isEmbedded ? 'h-full' : 'h-[calc(100vh-64px)]';
 
   const state = usePlaygroundState();
   const {
@@ -473,7 +475,7 @@ const Playground = () => {
               ${
                 isMobile
                   ? 'fixed top-0 left-0 right-0 bottom-0 z-[1000] w-full h-auto bg-white shadow-lg'
-                  : 'relative z-[1] w-80 h-[calc(100vh-64px)]'
+                  : `relative z-[1] w-80 ${isEmbedded ? 'h-full' : 'h-[calc(100vh-64px)]'}`
               }
             `}
               width={isMobile ? '100%' : 320}
@@ -502,7 +504,7 @@ const Playground = () => {
           )}
 
           <Layout.Content className='relative flex-1 overflow-hidden'>
-            <div className={`overflow-hidden flex flex-col lg:flex-row h-[calc(100vh-64px)] ${topMarginClass}`}>
+            <div className={`overflow-hidden flex flex-col lg:flex-row ${heightClass} ${topMarginClass}`}>
               <div className='flex-1 flex flex-col'>
                 <ChatArea
                   chatRef={chatRef}

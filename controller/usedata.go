@@ -11,6 +11,15 @@ import (
 )
 
 func GetAllQuotaDates(c *gin.Context) {
+	// TODO 只有 RootRole 可以查看所有用户的数据，因为 算力平台默认给所用户是 AdminRole
+	// AdminRole 及以下只能查看自己的数据
+	role := c.GetInt("role")
+	if role != common.RoleRootUser {
+		// 非 Root 用户，调用 GetUserQuotaDates 逻辑查看自己的数据
+		GetUserQuotaDates(c)
+		return
+	}
+
 	startTimestamp, _ := strconv.ParseInt(c.Query("start_timestamp"), 10, 64)
 	endTimestamp, _ := strconv.ParseInt(c.Query("end_timestamp"), 10, 64)
 	username := c.Query("username")

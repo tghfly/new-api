@@ -115,6 +115,8 @@ const PageLayout = () => {
         display: 'flex',
         flexDirection: 'column',
         overflow: isMobile ? 'visible' : 'hidden',
+        height: isEmbedded ? '100%' : 'auto',
+        minHeight: isEmbedded ? '0' : '100vh',
       }}
     >
       {/* 嵌入式模式下隐藏顶部导航栏 */}
@@ -138,7 +140,7 @@ const PageLayout = () => {
       )}
       <Layout
         style={{
-          overflow: isMobile ? 'visible' : 'auto',
+          overflow: isMobile ? 'visible' : 'hidden',
           display: 'flex',
           flexDirection: 'column',
         }}
