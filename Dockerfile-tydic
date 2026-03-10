@@ -1,0 +1,3 @@
+FROM registry.tydic.com/ai-studio/new-api:base
+COPY new-api /
+RUN chmod +x /new-api

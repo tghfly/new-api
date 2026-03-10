@@ -143,6 +143,8 @@ func initConstantEnv() {
 	constant.GenerateDefaultToken = GetEnvOrDefaultBool("GENERATE_DEFAULT_TOKEN", false)
 	// 是否启用错误日志
 	constant.ErrorLogEnabled = GetEnvOrDefaultBool("ERROR_LOG_ENABLED", false)
+	// 是否记录 distributor 阶段的错误（如 model_not_found）
+	constant.ErrorLogDistributorEnabled = GetEnvOrDefaultBool("ERROR_LOG_DISTRIBUTOR_ENABLED", false)
 
 	// GPU 耗时计算系数，类型是 string，计算时要转换为float64
 	constant.GPUTimeFactor = GetEnvOrDefaultString("GPU_TIME_FACTOR", "0.7")

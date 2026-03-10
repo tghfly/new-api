@@ -15,6 +15,7 @@ var NotifyLimitCount int
 var NotificationLimitDurationMinute int
 var GenerateDefaultToken bool
 var ErrorLogEnabled bool
+var ErrorLogDistributorEnabled bool
 var TaskQueryLimit int
 var GPUTimeFactor string
 var TaskTimeoutMinutes int
