@@ -876,6 +876,19 @@ html.dark .with-pastel-balls::before {
   }
 }
 
+/* 嵌入模式下调整卡片高度（没有顶部栏 64px） */
+body.embedded-mode .table-scroll-card {
+  height: calc(100vh - 46px);
+  max-height: calc(100vh - 46px);
+}
+
+@media (max-width: 767px) {
+  body.embedded-mode .table-scroll-card {
+    height: calc(100vh - 29px);
+    max-height: calc(100vh - 29px);
+  }
+}
+
 /* ==================== 模型定价页面布局 ==================== */
 .pricing-layout {
   height: calc(100vh - 60px);

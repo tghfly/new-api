@@ -40,7 +40,14 @@ import { parseUpstreamUpdateMeta } from './upstreamUpdateUtils';
 import { Modal, Button } from '@douyinfe/semi-ui';
 import { openCodexUsageModal } from '../../components/table/channels/modals/CodexUsageModal';
 
-export const useChannelsData = () => {
+import { fetchInferenceService, fetchModelRegistry } from '../../helpers/aiProviderApi';
+
+export const useChannelsData = ({ 
+  autoAction, 
+  inferenceServiceId, 
+  modelRegistryId,
+  isEmbedded 
+} = {}) => {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
 
@@ -92,6 +99,10 @@ export const useChannelsData = () => {
   const [isStreamTest, setIsStreamTest] = useState(false);
   const [globalPassThroughEnabled, setGlobalPassThroughEnabled] =
     useState(false);
+
+  // AI Provider 数据状态
+  const [aiProviderData, setAiProviderData] = useState(null);
+  const [aiProviderLoading, setAiProviderLoading] = useState(false);
 
   const fetchGlobalPassThroughEnabled = async () => {
     try {
@@ -167,6 +178,50 @@ export const useChannelsData = () => {
     loadChannelModels().then();
     fetchGlobalPassThroughEnabled().then();
   }, []);
+
+  // 监听 autoAction 参数，自动打开添加弹窗
+  // 注意：AI Provider 接口只在嵌入模式下使用
+  useEffect(() => {
+    if (autoAction === 'add') {
+      setEditingChannel({ id: undefined });
+      setShowEdit(true);
+
+      // 只在嵌入模式下获取 AI Provider 数据
+      if (isEmbedded) {
+        loadAiProviderData();
+      }
+    }
+  }, [autoAction, inferenceServiceId, modelRegistryId, isEmbedded]);
+
+  /**
+   * 加载 AI Provider 数据
+   */
+  const loadAiProviderData = async () => {
+    // 如果两个ID都没有，直接返回
+    if (!inferenceServiceId && !modelRegistryId) {
+      return;
+    }
+
+    setAiProviderLoading(true);
+    try {
+      let data = null;
+
+      if (inferenceServiceId) {
+        // 优先使用推理服务ID
+        data = await fetchInferenceService(inferenceServiceId);
+      } else if (modelRegistryId) {
+        // 使用模型注册ID
+        data = await fetchModelRegistry(modelRegistryId);
+      }
+
+      setAiProviderData(data);
+    } catch (error) {
+      console.error('Failed to load AI Provider data:', error);
+      showError('获取 AI Provider 数据失败');
+    } finally {
+      setAiProviderLoading(false);
+    }
+  };
 
   // Column visibility management
   const getDefaultColumnVisibility = () => {
@@ -1252,5 +1307,10 @@ export const useChannelsData = () => {
     setStatusFilter,
     setCompactMode,
     setActivePage,
+
+    // AI Provider data
+    aiProviderData,
+    aiProviderLoading,
+    loadAiProviderData,
   };
 };

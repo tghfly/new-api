@@ -36,8 +36,13 @@ import MultiKeyManageModal from './modals/MultiKeyManageModal';
 import ChannelUpstreamUpdateModal from './modals/ChannelUpstreamUpdateModal';
 import { createCardProPagination } from '../../../helpers/utils';
 
-const ChannelsPage = () => {
-  const channelsData = useChannelsData();
+const ChannelsPage = ({ autoAction, inferenceServiceId, modelRegistryId, isEmbedded }) => {
+  const channelsData = useChannelsData({ 
+    autoAction, 
+    inferenceServiceId, 
+    modelRegistryId,
+    isEmbedded
+  });
   const isMobile = useIsMobile();
 
   return (

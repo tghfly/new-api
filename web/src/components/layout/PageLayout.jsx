@@ -108,6 +108,18 @@ const PageLayout = () => {
     }
   }, [i18n]);
 
+  // 嵌入模式下给 body 添加样式类
+  useEffect(() => {
+    if (isEmbedded) {
+      document.body.classList.add('embedded-mode');
+    } else {
+      document.body.classList.remove('embedded-mode');
+    }
+    return () => {
+      document.body.classList.remove('embedded-mode');
+    };
+  }, [isEmbedded]);
+
   return (
     <Layout
       className='app-layout'
@@ -115,8 +127,8 @@ const PageLayout = () => {
         display: 'flex',
         flexDirection: 'column',
         overflow: isMobile ? 'visible' : 'hidden',
-        height: isEmbedded ? '100%' : 'auto',
-        minHeight: isEmbedded ? '0' : '100vh',
+        height: isEmbedded ? '100vh' : 'auto',
+        minHeight: isEmbedded ? '100vh' : '100vh',
       }}
     >
       {/* 嵌入式模式下隐藏顶部导航栏 */}
@@ -180,19 +192,19 @@ const PageLayout = () => {
         >
           <Content
             style={{
-              flex: '1 0 auto',
-              overflowY: isMobile ? 'visible' : 'hidden',
+              flex: '1 1 auto',
+              overflowY: isMobile ? 'visible' : 'auto',
               WebkitOverflowScrolling: 'touch',
-              // 嵌入式模式下移除顶部 padding（没有 header）
+              // 嵌入模式下固定 24px 顶部内边距，其他模式根据 shouldInnerPadding 决定
               paddingTop: isEmbedded
-                ? '0'
+                ? '24px'
                 : shouldInnerPadding
                   ? (isMobile ? '5px' : '24px')
                   : '0',
               paddingLeft: shouldInnerPadding ? (isMobile ? '5px' : '24px') : '0',
               paddingRight: shouldInnerPadding ? (isMobile ? '5px' : '24px') : '0',
+              paddingBottom: isEmbedded ? '0' : '40px',
               position: 'relative',
-              paddingBottom: '40px',
             }}
           >
             <App />

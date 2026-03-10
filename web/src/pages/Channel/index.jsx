@@ -20,14 +20,24 @@ For commercial licensing, please contact support@quantumnous.com
 import React from 'react';
 import ChannelsTable from '../../components/table/channels';
 import { useEmbeddedMode } from '../../hooks/common/useEmbeddedMode';
+import { useSearchParams } from 'react-router-dom';
 
 const File = () => {
   const isEmbedded = useEmbeddedMode();
   const topMarginClass = isEmbedded ? '' : 'mt-[60px]';
+  const [searchParams] = useSearchParams();
+  const action = searchParams.get('action');
+  const inferenceServiceId = searchParams.get('inference_service_id');
+  const modelRegistryId = searchParams.get('model_registry_id');
 
   return (
     <div className={`${topMarginClass} px-2`}>
-      <ChannelsTable />
+      <ChannelsTable 
+        autoAction={action}
+        inferenceServiceId={inferenceServiceId}
+        modelRegistryId={modelRegistryId}
+        isEmbedded={isEmbedded}
+      />
     </div>
   );
 };
