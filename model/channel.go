@@ -355,33 +355,35 @@ func GetChannelById(id int, selectAll bool) (*Channel, error) {
 	return channel, nil
 }
 
-func BatchInsertChannels(channels []Channel) error {
+func BatchInsertChannels(channels []Channel) ([]Channel, error) {
 	if len(channels) == 0 {
-		return nil
+		return channels, nil
 	}
 	tx := DB.Begin()
 	if tx.Error != nil {
-		return tx.Error
+		return nil, tx.Error
 	}
 	defer func() {
 		if r := recover(); r != nil {
 			tx.Rollback()
 		}
 	}()
-
+	result := make([]Channel, 0, len(channels))
 	for _, chunk := range lo.Chunk(channels, 50) {
 		if err := tx.Create(&chunk).Error; err != nil {
 			tx.Rollback()
-			return err
+			return nil, err
 		}
+		// 收集插入后的数据（包含 ID）
+		result = append(result, chunk...)
 		for _, channel_ := range chunk {
 			if err := channel_.AddAbilities(tx); err != nil {
 				tx.Rollback()
-				return err
+				return nil, err
 			}
 		}
 	}
-	return tx.Commit().Error
+	return result, tx.Commit().Error
 }
 
 func BatchDeleteChannels(ids []int) error {
