@@ -207,7 +207,9 @@ func SetApiRouter(router *gin.Engine) {
 			channelRoute.GET("/models", controller.ChannelListModels)
 			channelRoute.GET("/models_enabled", controller.EnabledListModels)
 			channelRoute.GET("/:id", controller.GetChannel)
-			channelRoute.POST("/:id/key", middleware.RootAuth(), middleware.CriticalRateLimit(), middleware.DisableCache(), middleware.SecureVerificationRequired(), controller.GetChannelKey)
+			// TODO 将 RootAuth 改为 AdminAuth 并且删除 SecureVerificationRequired，也就是只要具备 AdminAuth 就可以查看，不需要经过 SecureVerificationRequired 复杂验证
+			//channelRoute.POST("/:id/key", middleware.RootAuth(), middleware.CriticalRateLimit(), middleware.DisableCache(), middleware.SecureVerificationRequired(), controller.GetChannelKey)
+			channelRoute.POST("/:id/key", middleware.AdminAuth(), middleware.CriticalRateLimit(), middleware.DisableCache(), controller.GetChannelKey)
 			channelRoute.GET("/test", controller.TestAllChannels)
 			channelRoute.GET("/test/:id", controller.TestChannel)
 			channelRoute.GET("/update_balance", controller.UpdateAllChannelsBalance)

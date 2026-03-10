@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/constant"
 	"github.com/QuantumNous/new-api/logger"
 	"github.com/QuantumNous/new-api/types"
 
@@ -17,26 +19,27 @@ import (
 )
 
 type Log struct {
-	Id               int    `json:"id" gorm:"index:idx_created_at_id,priority:1;index:idx_user_id_id,priority:2"`
-	UserId           int    `json:"user_id" gorm:"index;index:idx_user_id_id,priority:1"`
-	CreatedAt        int64  `json:"created_at" gorm:"bigint;index:idx_created_at_id,priority:2;index:idx_created_at_type"`
-	Type             int    `json:"type" gorm:"index:idx_created_at_type"`
-	Content          string `json:"content"`
-	Username         string `json:"username" gorm:"index;index:index_username_model_name,priority:2;default:''"`
-	TokenName        string `json:"token_name" gorm:"index;default:''"`
-	ModelName        string `json:"model_name" gorm:"index;index:index_username_model_name,priority:1;default:''"`
-	Quota            int    `json:"quota" gorm:"default:0"`
-	PromptTokens     int    `json:"prompt_tokens" gorm:"default:0"`
-	CompletionTokens int    `json:"completion_tokens" gorm:"default:0"`
-	UseTime          int    `json:"use_time" gorm:"default:0"`
-	IsStream         bool   `json:"is_stream"`
-	ChannelId        int    `json:"channel" gorm:"index"`
-	ChannelName      string `json:"channel_name" gorm:"->"`
-	TokenId          int    `json:"token_id" gorm:"default:0;index"`
-	Group            string `json:"group" gorm:"index"`
-	Ip               string `json:"ip" gorm:"index;default:''"`
-	RequestId        string `json:"request_id,omitempty" gorm:"type:varchar(64);index:idx_logs_request_id;default:''"`
-	Other            string `json:"other"`
+	Id               int     `json:"id" gorm:"index:idx_created_at_id,priority:1;index:idx_user_id_id,priority:2"`
+	UserId           int     `json:"user_id" gorm:"index;index:idx_user_id_id,priority:1"`
+	CreatedAt        int64   `json:"created_at" gorm:"bigint;index:idx_created_at_id,priority:2;index:idx_created_at_type"`
+	Type             int     `json:"type" gorm:"index:idx_created_at_type"`
+	Content          string  `json:"content"`
+	Username         string  `json:"username" gorm:"index;index:index_username_model_name,priority:2;default:''"`
+	TokenName        string  `json:"token_name" gorm:"index;default:''"`
+	ModelName        string  `json:"model_name" gorm:"index;index:index_username_model_name,priority:1;default:''"`
+	Quota            int     `json:"quota" gorm:"default:0"`
+	PromptTokens     int     `json:"prompt_tokens" gorm:"default:0"`
+	CompletionTokens int     `json:"completion_tokens" gorm:"default:0"`
+	UseTime          int     `json:"use_time" gorm:"default:0"`
+	GpuTime          float64 `json:"gpu_time" gorm:"default:0.0"`
+	IsStream         bool    `json:"is_stream"`
+	ChannelId        int     `json:"channel" gorm:"index"`
+	ChannelName      string  `json:"channel_name" gorm:"->"`
+	TokenId          int     `json:"token_id" gorm:"default:0;index"`
+	Group            string  `json:"group" gorm:"index"`
+	Ip               string  `json:"ip" gorm:"index;default:''"`
+	RequestId        string  `json:"request_id,omitempty" gorm:"type:varchar(64);index:idx_logs_request_id;default:''"`
+	Other            string  `json:"other"`
 }
 
 // don't use iota, avoid change log type value
@@ -52,7 +55,7 @@ const (
 
 func formatUserLogs(logs []*Log, startIdx int) {
 	for i := range logs {
-		logs[i].ChannelName = ""
+		// logs[i].ChannelName = ""
 		var otherMap map[string]interface{}
 		otherMap, _ = common.StrToMap(logs[i].Other)
 		if otherMap != nil {
@@ -102,6 +105,10 @@ func RecordErrorLog(c *gin.Context, userId int, channelId int, modelName string,
 			needRecordIp = true
 		}
 	}
+	gpuTimeFactor, _ := strconv.ParseFloat(constant.GPUTimeFactor, 64)
+	if gpuTimeFactor <= 0 {
+		gpuTimeFactor = 0.7 // 默认值保护
+	}
 	log := &Log{
 		UserId:           userId,
 		Username:         username,
@@ -116,6 +123,7 @@ func RecordErrorLog(c *gin.Context, userId int, channelId int, modelName string,
 		ChannelId:        channelId,
 		TokenId:          tokenId,
 		UseTime:          useTimeSeconds,
+		GpuTime:          float64(useTimeSeconds) * gpuTimeFactor,
 		IsStream:         isStream,
 		Group:            group,
 		Ip: func() string {
@@ -163,6 +171,10 @@ func RecordConsumeLog(c *gin.Context, userId int, params RecordConsumeLogParams)
 			needRecordIp = true
 		}
 	}
+	gpuTimeFactor, _ := strconv.ParseFloat(constant.GPUTimeFactor, 64)
+	if gpuTimeFactor <= 0 {
+		gpuTimeFactor = 0.7 // 默认值保护
+	}
 	log := &Log{
 		UserId:           userId,
 		Username:         username,
@@ -177,6 +189,7 @@ func RecordConsumeLog(c *gin.Context, userId int, params RecordConsumeLogParams)
 		ChannelId:        params.ChannelId,
 		TokenId:          params.TokenId,
 		UseTime:          params.UseTimeSeconds,
+		GpuTime:          float64(params.UseTimeSeconds) * gpuTimeFactor,
 		IsStream:         params.IsStream,
 		Group:            params.Group,
 		Ip: func() string {
@@ -367,6 +380,48 @@ func GetUserLogs(userId int, logType int, startTimestamp int64, endTimestamp int
 	if err != nil {
 		common.SysError("failed to search user logs: " + err.Error())
 		return nil, 0, errors.New("查询日志失败")
+	}
+
+	// Adminrole角色用户也能在日志中查看渠道名称
+	channelIds := types.NewSet[int]()
+	for _, log := range logs {
+		if log.ChannelId != 0 {
+			channelIds.Add(log.ChannelId)
+		}
+	}
+
+	if channelIds.Len() > 0 {
+		var channels []struct {
+			Id   int    `gorm:"column:id"`
+			Name string `gorm:"column:name"`
+		}
+		if common.MemoryCacheEnabled {
+			// Cache get channel
+			for _, channelId := range channelIds.Items() {
+				if cacheChannel, err := CacheGetChannel(channelId); err == nil {
+					channels = append(channels, struct {
+						Id   int    `gorm:"column:id"`
+						Name string `gorm:"column:name"`
+					}{
+						Id:   channelId,
+						Name: cacheChannel.Name,
+					})
+				}
+			}
+		} else {
+			// Bulk query channels from DB
+			if err = DB.Table("channels").Select("id, name").Where("id IN ?", channelIds.Items()).Find(&channels).Error; err != nil {
+				// Log error but don't fail the request
+				common.SysError("failed to query channel names for user logs: " + err.Error())
+			}
+		}
+		channelMap := make(map[int]string, len(channels))
+		for _, channel := range channels {
+			channelMap[channel.Id] = channel.Name
+		}
+		for i := range logs {
+			logs[i].ChannelName = channelMap[logs[i].ChannelId]
+		}
 	}
 
 	formatUserLogs(logs, startIdx)

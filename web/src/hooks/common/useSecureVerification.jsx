@@ -23,6 +23,36 @@ import { SecureVerificationService } from '../../services/secureVerification';
 import { showError, showSuccess } from '../../helpers';
 import { isVerificationRequiredError } from '../../helpers/secureApiCall';
 
+// 管理员用户：点击"查看密钥"直接显示，无需额外验证
+// 普通用户：仍需启用 2FA 或 Passkey 并进行验证后才能查看
+// 管理员角色值
+const ADMIN_ROLE = 10;
+
+/**
+ * 获取当前用户角色
+ * @returns {number} 用户角色值，未登录返回 0
+ */
+const getUserRole = () => {
+  try {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      return user.role || 0;
+    }
+  } catch (e) {
+    console.error('Failed to parse user from localStorage:', e);
+  }
+  return 0;
+};
+
+/**
+ * 检查用户是否是管理员
+ * @returns {boolean} 是否是管理员
+ */
+const isAdmin = () => {
+  return getUserRole() >= ADMIN_ROLE;
+};
+
 /**
  * 通用安全验证 Hook
  * @param {Object} options - 配置选项
@@ -220,12 +250,18 @@ export const useSecureVerification = ({
   /**
    * 包装 API 调用，自动处理验证错误
    * 当 API 返回需要验证的错误时，自动弹出验证模态框
+   * 管理员角色可直接调用，不需要验证
    * @param {Function} apiCall - API 调用函数
    * @param {Object} options - 验证选项（同 startVerification）
    * @returns {Promise<any>}
    */
   const withVerification = useCallback(
     async (apiCall, options = {}) => {
+      // 管理员角色直接执行 API 调用，不需要验证
+      if (isAdmin()) {
+        return await apiCall();
+      }
+
       try {
         // 直接尝试调用 API
         return await apiCall();

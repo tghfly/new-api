@@ -567,6 +567,25 @@ export const getLogsColumns = ({
       },
     },
     {
+      key: COLUMN_KEYS.GPU_TIME,
+      title: t('GPU耗时'),
+      dataIndex: 'gpu_time',
+      render: (text, record, index) => {
+        if (!(record.type === 2 || record.type === 5)) {
+          return <></>;
+        }
+        const gpuTime = parseFloat(text) || 0;
+        if (gpuTime <= 0) {
+          return '-';
+        }
+        return (
+          <Tag color='blue' shape='circle'>
+            {gpuTime.toFixed(1)} s
+          </Tag>
+        );
+      },
+    },
+    {
       key: COLUMN_KEYS.GENERATION_SPEED,
       title: (
         <div className='flex items-center gap-1'>

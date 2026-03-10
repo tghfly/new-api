@@ -49,6 +49,15 @@ func GenerateTextOtherInfo(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, m
 		other["is_model_mapped"] = true
 		other["upstream_model_name"] = relayInfo.UpstreamModelName
 	}
+	// TODO 日志中增加 组织和标签字段
+	if relayInfo.ChannelMeta != nil {
+		if relayInfo.Organization != "" {
+			other["open_ai_organization"] = relayInfo.Organization
+		}
+		if relayInfo.Tag != "" {
+			other["channel_tag"] = relayInfo.Tag
+		}
+	}
 
 	isSystemPromptOverwritten := common.GetContextKeyBool(ctx, constant.ContextKeySystemPromptOverride)
 	if isSystemPromptOverwritten {

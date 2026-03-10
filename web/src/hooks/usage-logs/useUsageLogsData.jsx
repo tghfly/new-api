@@ -53,6 +53,7 @@ export const useLogsData = () => {
     TYPE: 'type',
     MODEL: 'model',
     USE_TIME: 'use_time',
+    GPU_TIME: 'gpu_time',
     GENERATION_SPEED: 'generation_speed',
     PROMPT: 'prompt',
     COMPLETION: 'completion',
@@ -158,6 +159,7 @@ export const useLogsData = () => {
       [COLUMN_KEYS.TYPE]: true,
       [COLUMN_KEYS.MODEL]: true,
       [COLUMN_KEYS.USE_TIME]: true,
+      [COLUMN_KEYS.GPU_TIME]: true,
       [COLUMN_KEYS.GENERATION_SPEED]: true,
       [COLUMN_KEYS.PROMPT]: true,
       [COLUMN_KEYS.COMPLETION]: true,
@@ -350,6 +352,21 @@ export const useLogsData = () => {
         expandDataLocal.push({
           key: t('渠道信息'),
           value: `${logs[i].channel} - ${logs[i].channel_name || '[未知]'}`,
+        });
+      }
+      // 渠道标签
+      if (other?.channel_tag) {
+        expandDataLocal.push({
+          key: t('渠道标签'),
+          value: other.channel_tag,
+        });
+      }
+
+      // 渠道组织
+      if (other?.open_ai_organization) {
+        expandDataLocal.push({
+          key: t('组织'),
+          value: other.open_ai_organization,
         });
       }
       if (logs[i].request_id) {

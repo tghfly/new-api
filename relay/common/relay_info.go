@@ -67,6 +67,8 @@ type ChannelMeta struct {
 	ApiVersion           string
 	ApiKey               string
 	Organization         string
+	// TODO 日志中增加 组织和标签字段
+	Tag                  string
 	ChannelCreateTime    int64
 	ParamOverride        map[string]interface{}
 	HeadersOverride      map[string]interface{}
@@ -185,6 +187,8 @@ func (info *RelayInfo) InitChannelMeta(c *gin.Context) {
 		ApiVersion:           c.GetString("api_version"),
 		ApiKey:               common.GetContextKeyString(c, constant.ContextKeyChannelKey),
 		Organization:         c.GetString("channel_organization"),
+		// TODO 日志中增加 组织和标签字段
+		Tag:                  common.GetContextKeyString(c, constant.ContextKeyChannelTag),
 		ChannelCreateTime:    c.GetInt64("channel_create_time"),
 		ParamOverride:        paramOverride,
 		HeadersOverride:      headerOverride,
