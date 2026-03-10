@@ -35,8 +35,8 @@ new-api: web
 clean:
 	rm -rf $WEBDIR/$(DISTDIR)
 
-image: $(DISTDIR)/$(NAME)
-	docker build --no-cache -t $(IMAGE) -f Dockerfile-tydic $(DISTDIR)
+image:
+	docker build --no-cache -t $(IMAGE) -f Dockerfile-tydic .
 
 push: push
 	docker push $(IMAGE)

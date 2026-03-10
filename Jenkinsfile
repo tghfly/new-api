@@ -7,14 +7,15 @@ pipeline {
 	   version = "20260310"
    }
    stages {
-      stage('pull project') {
-         steps {
-            checkout([$class: 'GitSCM', branches: [[name: 'merge_onehub']], extensions: [], userRemoteConfigs: [[credentialsId: '27f29dcd-b882-4d6b-83ed-06483bf631c3', url: "https://git.tydic.com:11011/TRDC-CSR/cloud/mo/ai/${project_name}.git"]]])
-         }
-      }
+//       stage('pull project') {
+//          steps {
+//             checkout([$class: 'GitSCM', branches: [[name: 'merge_onehub']], extensions: [], userRemoteConfigs: [[credentialsId: '27f29dcd-b882-4d6b-83ed-06483bf631c3', url: "https://git.tydic.com:11011/TRDC-CSR/cloud/mo/ai/${project_name}.git"]]])
+//          }
+//       }
       stage('build project') {
          steps {
-            sh 'make clean && . ~/.nvm/nvm.sh && nvm use v24 && make all && make image'
+//             sh 'make clean && . ~/.nvm/nvm.sh && nvm use v24 && make all && make image'
+               sh 'make image'
          }
       }
       stage('publish image') {
