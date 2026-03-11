@@ -1,4 +1,4 @@
-FROM registry.tydic.com/library/node:22-alpine3.21 AS builder
+FROM registry.tydic.com/library/bun:3.10 AS builder
 
 WORKDIR /build
 #COPY web/package.json .
@@ -7,8 +7,8 @@ WORKDIR /build
 COPY ./web .
 COPY ./VERSION .
 # RUN DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat VERSION) bun run build
-RUN npm install -g bun@1.3.10 && bun install && bun run build
-
+#RUN npm install -g bun@1.3.10 && bun install && bun run build
+RUN bun install && bun run build
 FROM registry.tydic.com/library/golang:alpine AS builder2
 ENV GO111MODULE=on CGO_ENABLED=0
 ENV GOPROXY=https://goproxy.cn,direct
