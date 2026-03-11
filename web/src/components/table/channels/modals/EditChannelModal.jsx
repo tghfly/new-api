@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import {
   API,
   showError,
@@ -70,6 +71,7 @@ import {
   collectInvalidStatusCodeEntries,
   collectNewDisallowedStatusCodeRedirects,
 } from './statusCodeRiskGuard';
+import { releaseLlmapi } from '../../../../helpers/aiProviderApi';
 import {
   IconSave,
   IconClose,
@@ -157,10 +159,13 @@ function type2secretPrompt(type) {
 
 const EditChannelModal = (props) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { aiProviderData, aiProviderLoading, isEmbedded, inferenceServiceId } = props;
   const channelId = props.editingChannel.id;
   const isEdit = channelId !== undefined;
   const [loading, setLoading] = useState(isEdit);
   const isMobile = useIsMobile();
+
   const handleCancel = () => {
     props.handleClose();
   };
@@ -176,7 +181,7 @@ const EditChannelModal = (props) => {
     param_override: '',
     status_code_mapping: '',
     models: [],
-    auto_ban: 1,
+    auto_ban: true,
     test_model: '',
     groups: ['default'],
     priority: 0,
@@ -421,6 +426,60 @@ const EditChannelModal = (props) => {
   const updateTwoFAState = (updates) => {
     setTwoFAState((prev) => ({ ...prev, ...updates }));
   };
+
+  // 处理 aiProviderData，自动匹配 project_code 对应的分组
+  useEffect(() => {
+    if (!isEdit && isEmbedded && inferenceServiceId && aiProviderData && aiProviderData.result) {
+      const result = aiProviderData.result;
+      let baseUrl = result.ip || '';
+      const ipMatch = baseUrl.match(/href="([^"]+)"|>([^<]+)</);
+      if (ipMatch) {
+        baseUrl = ipMatch[1] || ipMatch[2] || baseUrl;
+      }
+      if (baseUrl && !baseUrl.startsWith('http')) {
+        baseUrl = 'http://' + baseUrl;
+      }
+
+      // 根据 project_code 匹配分组
+      const projectCode = result.project?.project_code;
+      let mappedGroups = ['default'];
+      if (projectCode && groupOptions.length > 0) {
+        const matchedGroup = groupOptions.find(
+          (g) => g.value === projectCode
+        );
+        if (matchedGroup) {
+          // 如果匹配到的分组 name 是 public，同时添加 default 分组
+          if (matchedGroup.label === 'public') {
+            mappedGroups = [matchedGroup.value, 'default'];
+          } else {
+            mappedGroups = [matchedGroup.value];
+          }
+        }
+      }
+
+      setInputs((inputs) => ({
+        ...inputs,
+        type: 1,
+        name: result.model_name || '',
+        key: 'none-key',
+        base_url: baseUrl,
+        models: result.model_name ? [result.model_name] : [],
+        groups: mappedGroups,
+      }));
+
+      if (formApiRef.current) {
+        formApiRef.current.setValues({
+          type: 1,
+          name: result.model_name || '',
+          key: 'none-key',
+          base_url: baseUrl,
+          models: result.model_name ? [result.model_name] : [],
+          groups: mappedGroups,
+        });
+      }
+    }
+  }, [aiProviderData, isEdit, groupOptions]);
+
   // 使用通用安全验证 Hook
   const {
     isModalVisible,
@@ -946,15 +1005,16 @@ const EditChannelModal = (props) => {
         data.base_url = 'https://ark.cn-beijing.volces.com';
       }
 
-      setInputs(data);
+      // 将 auto_ban 转换为布尔值
+      const processedData = {
+        ...data,
+        auto_ban: data.auto_ban !== 0,
+      };
+      setInputs(processedData);
       if (formApiRef.current) {
-        formApiRef.current.setValues(data);
+        formApiRef.current.setValues(processedData);
       }
-      if (data.auto_ban === 0) {
-        setAutoBan(false);
-      } else {
-        setAutoBan(true);
-      }
+      setAutoBan(processedData.auto_ban);
       // 同步企业账户状态
       setIsEnterpriseAccount(data.is_enterprise_account || false);
       setBasicModels(getChannelModels(data.type));
@@ -1818,6 +1878,21 @@ const EditChannelModal = (props) => {
         showSuccess(t('渠道更新成功！'));
       } else {
         showSuccess(t('渠道创建成功！'));
+
+        // 嵌入模式下调用发布接口
+        if (isEmbedded && inferenceServiceId) {
+          try {
+            const newChannelIds = res.data?.data?.ids;
+            if (newChannelIds && newChannelIds.length > 0 ) {
+              await releaseLlmapi(inferenceServiceId, newChannelIds);
+              navigate('/console/channel?newapi_embedded=1');
+            }
+          } catch (error) {
+            console.error('Release LLMAPI failed:', error);
+            // 不影响主流程，仅记录错误
+          }
+        }
+
         setInputs(originInputs);
       }
       props.refresh();

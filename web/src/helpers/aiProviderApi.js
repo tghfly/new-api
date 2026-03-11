@@ -28,16 +28,21 @@ export const AIProviderAPI = axios.create({
   },
 });
 
-// 请求拦截器 - 从 Cookie 中获取 token 并添加 Authorization header
+// 请求拦截器 - 从 localStorage 或 Cookie 中获取 token 并添加 Authorization header
 AIProviderAPI.interceptors.request.use(
   (config) => {
-    // 尝试获取 dcloud_token 或 token
-    let token = Cookies.get('dcloud_token');
+    // 优先从 localStorage 获取 token
+    let token = localStorage.getItem('test_token');
+    
+    // 如果 localStorage 没有，再从 Cookie 获取
     if (!token) {
-      token = Cookies.get('token');
+      token = Cookies.get('dcloud_token');
+      if (!token) {
+        token = Cookies.get('token');
+      }
     }
     
-    console.log('AI Provider API - Token from cookie:', token ? 'found' : 'not found');
+    console.log('AI Provider API - Token:', token ? 'found' : 'not found');
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -73,5 +78,19 @@ export async function fetchInferenceService(id) {
  */
 export async function fetchModelRegistry(id) {
   const response = await AIProviderAPI.get(`/training_model_modelview/api/${id}`);
+  return response.data;
+}
+
+/**
+ * 发布 LLMAPI 渠道
+ * @param {string|number} serviceId - 推理服务ID
+ * @param {Array<number>} ids - 渠道ID列表
+ * @returns {Promise<Object>}
+ */
+export async function releaseLlmapi(serviceId, ids) {
+  const response = await AIProviderAPI.post('/inferenceservice_modelview/api/release_llmapi', {
+    service_id: serviceId,
+    ids: ids,
+  });
   return response.data;
 }

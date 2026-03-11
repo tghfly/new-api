@@ -60,6 +60,10 @@ const ChannelsPage = ({ autoAction, inferenceServiceId, modelRegistryId, isEmbed
         visible={channelsData.showEdit}
         handleClose={channelsData.closeEdit}
         editingChannel={channelsData.editingChannel}
+        aiProviderData={channelsData.aiProviderData}
+        aiProviderLoading={channelsData.aiProviderLoading}
+        isEmbedded={isEmbedded}
+        inferenceServiceId={inferenceServiceId}
       />
       <BatchTagModal {...channelsData} />
       <ModelTestModal {...channelsData} />
