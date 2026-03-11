@@ -5,7 +5,8 @@ NAME=new-api
 DISTDIR=dist
 WEBDIR=web
 VERSION := $(shell git describe --tags || echo "dev")
-tag := $(shell date +%Y%m%d)
+# 允许从命令行传入 tag，默认为当前日期
+tag ?= $(shell date +%Y%m%d)
 GO := /usr/local/go/bin/go
 export GOPROXY=https://goproxy.cn,direct
 GOBUILD := $(GO) build -ldflags "-s -w -extldflags '-static'"

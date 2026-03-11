@@ -3,8 +3,8 @@ pipeline {
    environment {
        image_url = "registry.tydic.com"
        project_name = "new-api"
-	   pod_prefix = "new-api"
-	   version = "20260310"
+       pod_prefix = "new-api"
+       version = sh(script: 'date +%Y%m%d', returnStdout: true).trim()
    }
    stages {
 //       stage('pull project') {
@@ -14,8 +14,9 @@ pipeline {
 //       }
       stage('build project') {
          steps {
-//             sh 'make clean && . ~/.nvm/nvm.sh && nvm use v24 && make all && make image'
-               sh 'make image'
+               sh '''
+               make image tag=${version}
+               '''
          }
       }
       stage('publish image') {
@@ -25,8 +26,8 @@ withCredentials([usernamePassword(credentialsId: '00a62033-d13b-4b89-a534-dfc806
     //  sh '''echo ${harbor_pass} |docker login ${imageUrl} -u ${harbor_user} --password-stdin '''
     sh '''
     docker login registry.tydic.com -u ${harbor_user} -p ${harbor_pass}
-    echo ${image_url}/ai-studio/${project_name}:$version
-    docker push ${image_url}/ai-studio/${project_name}:$version
+    echo ${image_url}/ai-studio/${project_name}:${version}
+    docker push ${image_url}/ai-studio/${project_name}:${version}
     '''
 }
 
