@@ -20,6 +20,7 @@ For commercial licensing, please contact support@quantumnous.com
 import React from 'react';
 import { Button, Form } from '@douyinfe/semi-ui';
 import { IconSearch } from '@douyinfe/semi-icons';
+import { useNavigate } from 'react-router-dom';
 
 const ChannelsFilters = ({
   setEditingChannel,
@@ -35,30 +36,59 @@ const ChannelsFilters = ({
   loading,
   searching,
   t,
+  autoAction,
+  isEmbedded,
 }) => {
+  const navigate = useNavigate();
   return (
     <div className='flex flex-col md:flex-row justify-between items-center gap-2 w-full'>
       <div className='flex gap-2 w-full md:w-auto order-2 md:order-1'>
-        <Button
-          size='small'
-          theme='light'
-          type='primary'
-          className='w-full md:w-auto'
-          onClick={() => {
-            setEditingChannel({
-              id: undefined,
-            });
-            setShowEdit(true);
-          }}
-        >
-          {t('添加渠道')}
-        </Button>
+        {/* 返回按钮 - 仅在 action=add 时显示 */}
+        {autoAction === 'add' && (
+          <Button
+            size='small'
+            theme='light'
+            type='primary'
+            className='w-full md:w-auto'
+            onClick={() => {
+              navigate(-1); // 返回上一页
+            }}
+          >
+            {t('返回')}
+          </Button>
+        )}
 
+        {/* 添加渠道按钮 - 在 action=add 时隐藏 */}
+        {autoAction !== 'add' && (
+          <Button
+            size='small'
+            theme='light'
+            type='primary'
+            className='w-full md:w-auto'
+            onClick={() => {
+              setEditingChannel({
+                id: undefined,
+              });
+              setShowEdit(true);
+            }}
+          >
+            {t('添加渠道')}
+          </Button>
+        )}
+
+        {/* 刷新按钮 - 特殊处理 */}
         <Button
           size='small'
           type='tertiary'
           className='w-full md:w-auto'
-          onClick={refresh}
+          onClick={() => {
+            if (autoAction === 'add' && isEmbedded) {
+              // action=add 且嵌入模式下，跳转而不是刷新
+              navigate('/console/channel?newapi_embedded=1');
+            } else {
+              refresh();
+            }
+          }}
         >
           {t('刷新')}
         </Button>

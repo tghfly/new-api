@@ -19,7 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+
 import {
   API,
   showError,
@@ -159,7 +159,6 @@ function type2secretPrompt(type) {
 
 const EditChannelModal = (props) => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { aiProviderData, aiProviderLoading, isEmbedded, inferenceServiceId, modelRegistryId } = props;
   const channelId = props.editingChannel.id;
   const isEdit = channelId !== undefined;
@@ -1930,7 +1929,6 @@ const EditChannelModal = (props) => {
             const newChannelIds = res.data?.data?.ids;
             if (newChannelIds && newChannelIds.length > 0) {
               await releaseLlmapi(inferenceServiceId, newChannelIds);
-              navigate('/console/channel?newapi_embedded=1');
             }
           } catch (error) {
             console.error('Release LLMAPI failed:', error);
@@ -1946,17 +1944,11 @@ const EditChannelModal = (props) => {
             const thirdPartyId = aiProviderData?.result?.third_party?.id;
             if (newChannelIds && newChannelIds.length > 0 && thirdPartyId) {
               await releaseModelRegistry(thirdPartyId, newChannelIds);
-              navigate('/console/channel?newapi_embedded=1');
             }
           } catch (error) {
             console.error('Release Model Registry failed:', error);
             // 不影响主流程，仅记录错误
           }
-        }
-
-        // 嵌入模式下跳转到清理后的 URL
-        if (isEmbedded) {
-          navigate('/console/channel?newapi_embedded=1');
         }
 
         setInputs(originInputs);

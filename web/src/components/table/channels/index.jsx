@@ -105,7 +105,7 @@ const ChannelsPage = ({ autoAction, inferenceServiceId, modelRegistryId, isEmbed
         type='type3'
         tabsArea={<ChannelsTabs {...channelsData} />}
         actionsArea={<ChannelsActions {...channelsData} />}
-        searchArea={<ChannelsFilters {...channelsData} />}
+        searchArea={<ChannelsFilters {...channelsData} autoAction={autoAction} isEmbedded={isEmbedded} />}
         paginationArea={createCardProPagination({
           currentPage: channelsData.activePage,
           pageSize: channelsData.pageSize,
