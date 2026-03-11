@@ -646,7 +646,7 @@ func AddChannel(c *gin.Context) {
 		}
 		channels = append(channels, *localChannel)
 	}
-	err = model.BatchInsertChannels(channels)
+	channelsWithIds, err := model.BatchInsertChannels(channels)
 	if err != nil {
 		common.ApiError(c, err)
 		return
@@ -654,8 +654,8 @@ func AddChannel(c *gin.Context) {
 	service.ResetProxyClientCache()
 
 	// 收集插入后的渠道 ID
-	channelIds := make([]int, 0, len(channels))
-	for _, channel := range channels {
+	channelIds := make([]int, 0, len(channelsWithIds))
+	for _, channel := range channelsWithIds {
 		channelIds = append(channelIds, channel.Id)
 	}
 
@@ -1203,7 +1203,7 @@ func CopyChannel(c *gin.Context) {
 	}
 
 	// insert
-	if err := model.BatchInsertChannels([]model.Channel{clone}); err != nil {
+	if _, err := model.BatchInsertChannels([]model.Channel{clone}); err != nil {
 		common.SysError("failed to clone channel: " + err.Error())
 		c.JSON(http.StatusOK, gin.H{"success": false, "message": "复制渠道失败，请稍后重试"})
 		return
