@@ -687,7 +687,12 @@ func EnableChannelByTag(tag string) error {
 		return err
 	}
 	err = UpdateAbilityStatusByTag(tag, true)
-	return err
+	if err != nil {
+		return err
+	}
+	// TODO 批量启用标签下渠道时也要马上刷新缓存
+	InitChannelCache()
+	return nil
 }
 
 func DisableChannelByTag(tag string) error {

@@ -756,6 +756,12 @@ func TestChannel(c *gin.Context) {
 	tik := time.Now()
 	result := testChannel(channel, testModel, endpointType, isStream)
 	if result.localErr != nil {
+		// 测试失败时，如果渠道是启用状态且满足自动禁用条件，则自动禁用渠道
+		if channel.Status == common.ChannelStatusEnabled && service.ShouldDisableChannel(channel.Type, result.newAPIError) && channel.GetAutoBan() {
+			usingKey := common.GetContextKeyString(result.context, constant.ContextKeyChannelKey)
+			channelError := types.NewChannelError(channel.Id, channel.Type, channel.Name, channel.ChannelInfo.IsMultiKey, usingKey, channel.GetAutoBan())
+			service.DisableChannel(*channelError, result.newAPIError.Error())
+		}
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
 			"message": result.localErr.Error(),

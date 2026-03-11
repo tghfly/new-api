@@ -42,6 +42,8 @@ func EnableChannel(channelId int, usingKey string, channelName string) {
 		content := fmt.Sprintf("通道「%s」（#%d）已被启用", channelName, channelId)
 		NotifyRootUser(formatNotifyType(channelId, common.ChannelStatusEnabled), subject, content)
 	}
+	// TODO 刷新缓存，在手动测试时，渠道从禁用变成启用后，需要更新渠道缓存，不然会有1-60秒调用失败
+	model.InitChannelCache()
 }
 
 func ShouldDisableChannel(channelType int, err *types.NewAPIError) bool {
