@@ -94,3 +94,17 @@ export async function releaseLlmapi(serviceId, ids) {
   });
   return response.data;
 }
+
+/**
+ * 发布模型注册渠道
+ * @param {string|number} thirdPartyId - 第三方模型ID
+ * @param {Array<number>} ids - 渠道ID列表
+ * @returns {Promise<Object>}
+ */
+export async function releaseModelRegistry(thirdPartyId, ids) {
+  const response = await AIProviderAPI.post('/model_third_party/api/release_llmapi', {
+    third_party_id: thirdPartyId,
+    ids: ids,
+  });
+  return response.data;
+}

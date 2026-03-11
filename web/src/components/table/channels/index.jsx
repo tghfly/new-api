@@ -64,6 +64,7 @@ const ChannelsPage = ({ autoAction, inferenceServiceId, modelRegistryId, isEmbed
         aiProviderLoading={channelsData.aiProviderLoading}
         isEmbedded={isEmbedded}
         inferenceServiceId={inferenceServiceId}
+        modelRegistryId={modelRegistryId}
       />
       <BatchTagModal {...channelsData} />
       <ModelTestModal {...channelsData} />

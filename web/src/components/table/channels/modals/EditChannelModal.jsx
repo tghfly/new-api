@@ -71,7 +71,7 @@ import {
   collectInvalidStatusCodeEntries,
   collectNewDisallowedStatusCodeRedirects,
 } from './statusCodeRiskGuard';
-import { releaseLlmapi } from '../../../../helpers/aiProviderApi';
+import { releaseLlmapi, releaseModelRegistry } from '../../../../helpers/aiProviderApi';
 import {
   IconSave,
   IconClose,
@@ -160,7 +160,7 @@ function type2secretPrompt(type) {
 const EditChannelModal = (props) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { aiProviderData, aiProviderLoading, isEmbedded, inferenceServiceId } = props;
+  const { aiProviderData, aiProviderLoading, isEmbedded, inferenceServiceId, modelRegistryId } = props;
   const channelId = props.editingChannel.id;
   const isEdit = channelId !== undefined;
   const [loading, setLoading] = useState(isEdit);
@@ -427,8 +427,8 @@ const EditChannelModal = (props) => {
     setTwoFAState((prev) => ({ ...prev, ...updates }));
   };
 
-  // 处理 aiProviderData，自动匹配 project_code 对应的分组
   useEffect(() => {
+    // 处理 aiProviderData，自动匹配 project_code 对应的分组
     if (!isEdit && isEmbedded && inferenceServiceId && aiProviderData && aiProviderData.result) {
       const result = aiProviderData.result;
       let baseUrl = result.ip || '';
@@ -478,7 +478,52 @@ const EditChannelModal = (props) => {
         });
       }
     }
-  }, [aiProviderData, isEdit, groupOptions]);
+    // 处理 aiProviderData，自动填充模型注册信息（modelRegistryId）
+    if (!isEdit && isEmbedded && modelRegistryId && aiProviderData && aiProviderData.result) {
+      const result = aiProviderData.result;
+      const baseUrl = result.third_party?.api_address || '';
+      const apiKey = result.third_party?.api_key || '';
+      const modelName = result.name || '';
+
+      // 根据 project_code 匹配分组
+      const projectCode = result.project?.project_code;
+      let mappedGroups = ['default'];
+      if (projectCode && groupOptions.length > 0) {
+        const matchedGroup = groupOptions.find(
+          (g) => g.value === projectCode
+        );
+        if (matchedGroup) {
+          // 如果匹配到的分组 name 是 public，同时添加 default 分组
+          if (matchedGroup.label === 'public') {
+            mappedGroups = [matchedGroup.value, 'default'];
+          } else {
+            mappedGroups = [matchedGroup.value];
+          }
+        }
+      }
+
+      setInputs((inputs) => ({
+        ...inputs,
+        type: 8, // 自定义渠道
+        name: modelName,
+        key: apiKey,
+        base_url: baseUrl,
+        models: modelName ? [modelName] : [],
+        groups: mappedGroups,
+      }));
+
+      if (formApiRef.current) {
+        formApiRef.current.setValues({
+          type: 8,
+          name: modelName,
+          key: apiKey,
+          base_url: baseUrl,
+          models: modelName ? [modelName] : [],
+          groups: mappedGroups,
+        });
+      }
+    }
+  }, [aiProviderData, isEdit, isEmbedded, groupOptions]);
 
   // 使用通用安全验证 Hook
   const {
@@ -1879,11 +1924,11 @@ const EditChannelModal = (props) => {
       } else {
         showSuccess(t('渠道创建成功！'));
 
-        // 嵌入模式下调用发布接口
+        // 嵌入模式下调用发布接口（inferenceServiceId）
         if (isEmbedded && inferenceServiceId) {
           try {
             const newChannelIds = res.data?.data?.ids;
-            if (newChannelIds && newChannelIds.length > 0 ) {
+            if (newChannelIds && newChannelIds.length > 0) {
               await releaseLlmapi(inferenceServiceId, newChannelIds);
               navigate('/console/channel?newapi_embedded=1');
             }
@@ -1891,6 +1936,27 @@ const EditChannelModal = (props) => {
             console.error('Release LLMAPI failed:', error);
             // 不影响主流程，仅记录错误
           }
+        }
+
+        // 嵌入模式下调用发布接口（modelRegistryId）
+        if (isEmbedded && modelRegistryId) {
+          try {
+            const newChannelIds = res.data?.data?.ids;
+            // 从 aiProviderData 中获取 third_party.id
+            const thirdPartyId = aiProviderData?.result?.third_party?.id;
+            if (newChannelIds && newChannelIds.length > 0 && thirdPartyId) {
+              await releaseModelRegistry(thirdPartyId, newChannelIds);
+              navigate('/console/channel?newapi_embedded=1');
+            }
+          } catch (error) {
+            console.error('Release Model Registry failed:', error);
+            // 不影响主流程，仅记录错误
+          }
+        }
+
+        // 嵌入模式下跳转到清理后的 URL
+        if (isEmbedded) {
+          navigate('/console/channel?newapi_embedded=1');
         }
 
         setInputs(originInputs);
