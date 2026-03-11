@@ -1,4 +1,4 @@
-FROM registry.tydic.com/oven/bun:1.3.9 AS builder
+FROM registry.tydic.com/library/node:22-alpine3.21 AS builder
 
 WORKDIR /build
 #COPY web/package.json .
