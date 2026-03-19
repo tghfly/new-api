@@ -315,16 +315,28 @@ func SearchChannels(keyword string, group string, model string, idSort bool) ([]
 	// 构造WHERE子句
 	var whereClause string
 	var args []interface{}
+
+	// 解析 group 字符串（支持多选，逗号分隔）
+	var groups []string
 	if group != "" && group != "null" {
-		var groupCondition string
-		if common.UsingMySQL {
-			groupCondition = `CONCAT(',', ` + commonGroupCol + `, ',') LIKE ?`
-		} else {
-			// sqlite, PostgreSQL
-			groupCondition = `(',' || ` + commonGroupCol + ` || ',') LIKE ?`
+		groups = strings.Split(group, ",")
+	}
+
+	if len(groups) > 0 {
+		// 构建多个 group 的 OR 条件
+		groupConditions := make([]string, len(groups))
+		for i, g := range groups {
+			if common.UsingMySQL {
+				groupConditions[i] = `CONCAT(',', ` + commonGroupCol + `, ',') LIKE ?`
+			} else {
+				// sqlite, PostgreSQL
+				groupConditions[i] = `(',' || ` + commonGroupCol + ` || ',') LIKE ?`
+			}
+			args = append(args, "%,"+g+",%")
 		}
+		groupCondition := "(" + strings.Join(groupConditions, " OR ") + ")"
 		whereClause = "(id = ? OR name LIKE ? OR " + commonKeyCol + " = ? OR " + baseURLCol + " LIKE ?) AND " + modelsCol + ` LIKE ? AND ` + groupCondition
-		args = append(args, common.String2Int(keyword), "%"+keyword+"%", keyword, "%"+keyword+"%", "%"+model+"%", "%,"+group+",%")
+		args = append([]interface{}{common.String2Int(keyword), "%" + keyword + "%", keyword, "%" + keyword + "%", "%" + model + "%"}, args...)
 	} else {
 		whereClause = "(id = ? OR name LIKE ? OR " + commonKeyCol + " = ? OR " + baseURLCol + " LIKE ?) AND " + modelsCol + " LIKE ?"
 		args = append(args, common.String2Int(keyword), "%"+keyword+"%", keyword, "%"+keyword+"%", "%"+model+"%")
@@ -817,16 +829,28 @@ func SearchTags(keyword string, group string, model string, idSort bool) ([]*str
 	// 构造WHERE子句
 	var whereClause string
 	var args []interface{}
+
+	// 解析 group 字符串（支持多选，逗号分隔）
+	var groups []string
 	if group != "" && group != "null" {
-		var groupCondition string
-		if common.UsingMySQL {
-			groupCondition = `CONCAT(',', ` + commonGroupCol + `, ',') LIKE ?`
-		} else {
-			// sqlite, PostgreSQL
-			groupCondition = `(',' || ` + commonGroupCol + ` || ',') LIKE ?`
+		groups = strings.Split(group, ",")
+	}
+
+	if len(groups) > 0 {
+		// 构建多个 group 的 OR 条件
+		groupConditions := make([]string, len(groups))
+		for i, g := range groups {
+			if common.UsingMySQL {
+				groupConditions[i] = `CONCAT(',', ` + commonGroupCol + `, ',') LIKE ?`
+			} else {
+				// sqlite, PostgreSQL
+				groupConditions[i] = `(',' || ` + commonGroupCol + ` || ',') LIKE ?`
+			}
+			args = append(args, "%,"+g+",%")
 		}
+		groupCondition := "(" + strings.Join(groupConditions, " OR ") + ")"
 		whereClause = "(id = ? OR name LIKE ? OR " + commonKeyCol + " = ? OR " + baseURLCol + " LIKE ?) AND " + modelsCol + ` LIKE ? AND ` + groupCondition
-		args = append(args, common.String2Int(keyword), "%"+keyword+"%", keyword, "%"+keyword+"%", "%"+model+"%", "%,"+group+",%")
+		args = append([]interface{}{common.String2Int(keyword), "%" + keyword + "%", keyword, "%" + keyword + "%", "%" + model + "%"}, args...)
 	} else {
 		whereClause = "(id = ? OR name LIKE ? OR " + commonKeyCol + " = ? OR " + baseURLCol + " LIKE ?) AND " + modelsCol + " LIKE ?"
 		args = append(args, common.String2Int(keyword), "%"+keyword+"%", keyword, "%"+keyword+"%", "%"+model+"%")

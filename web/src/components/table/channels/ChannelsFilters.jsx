@@ -140,13 +140,11 @@ const ChannelsFilters = ({
               size='small'
               field='searchGroup'
               placeholder={t('选择分组')}
-              optionList={[
-                { label: t('选择分组'), value: null },
-                ...groupOptions,
-              ]}
+              optionList={groupOptions}
               className='w-full'
               showClear
               pure
+              multiple
               onChange={() => {
                 // 延迟执行搜索，让表单值先更新
                 setTimeout(() => {
