@@ -33,10 +33,6 @@ const TokensDescription = ({ compactMode, setCompactMode, t }) => {
     // 优先使用当前浏览器地址
     let serverAddress = window.location.origin;
 
-    // 检查路径是否包含 llmapi 前缀
-    const pathname = window.location.pathname;
-    const pathPrefix = pathname.startsWith('/llmapi') ? '/llmapi' : '';
-
     // 尝试从 localStorage 读取（仅作为备选，且需要验证合理性）
     const status = localStorage.getItem('status');
     if (status) {
@@ -45,7 +41,7 @@ const TokensDescription = ({ compactMode, setCompactMode, t }) => {
         const storedAddress = statusObj.server_address;
         // 如果存储的地址与当前域名一致，才考虑使用
         if (storedAddress) {
-          const currentHost = window.location.host; // localhost:3000
+          const currentHost = window.location.host;
           const storedUrl = new URL(storedAddress);
           if (storedUrl.host === currentHost) {
             serverAddress = storedAddress;
@@ -56,7 +52,7 @@ const TokensDescription = ({ compactMode, setCompactMode, t }) => {
       }
     }
 
-    return `${serverAddress}${pathPrefix}/v1`;
+    return `${serverAddress}/v1`;
   }, []);
 
   // 复制基础URL到剪贴板
