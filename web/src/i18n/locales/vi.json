@@ -66,6 +66,7 @@
     "API地址": "Base URL",
     "API渠道配置": "Cấu hình kênh API",
     "API端点": "Điểm cuối API",
+    "API 基础 URL": "URL cơ sở API",
     "Authorization callback URL 填": "Điền URL gọi lại ủy quyền",
     "Authorization Endpoint": "Điểm cuối ủy quyền",
     "auto分组调用链路": "chuỗi gọi nhóm tự động",

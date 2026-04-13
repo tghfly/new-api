@@ -66,6 +66,7 @@
     "API地址": "ベースURL",
     "API渠道配置": "APIチャネル設定",
     "API端点": "APIエンドポイント",
+    "API 基础 URL": "API ベース URL",
     "Authorization callback URL 填": "Authorization callback URLを入力してください",
     "Authorization Endpoint": "Authorization Endpoint",
     "auto分组调用链路": "自動グループ連携",

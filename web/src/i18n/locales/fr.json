@@ -70,6 +70,7 @@
     "API地址": "URL de base",
     "API渠道配置": "Configuration du canal de l'API",
     "API端点": "Points de terminaison de l'API",
+    "API 基础 URL": "URL de base de l'API",
     "Authorization callback URL 填": "Remplir l'URL de rappel d'autorisation",
     "Authorization Endpoint": "Point de terminaison d'autorisation",
     "auto分组调用链路": "Chaîne d'appels de groupe auto",
