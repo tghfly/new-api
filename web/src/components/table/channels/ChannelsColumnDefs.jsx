@@ -38,6 +38,7 @@ import {
   showSuccess,
   showError,
   showInfo,
+  hasSSOPerm,
 } from '../../../helpers';
 import {
   CHANNEL_OPTIONS,
@@ -680,8 +681,11 @@ export const getChannelsColumns = ({
       render: (text, record, index) => {
         if (record.children === undefined) {
           const upstreamUpdateMeta = getUpstreamUpdateMeta(record);
-          const moreMenuItems = [
-            {
+          const moreMenuItems = [];
+
+          // 删除
+          if (hasSSOPerm('b:ai-web:modelstation:channel:delete')) {
+            moreMenuItems.push({
               node: 'item',
               name: t('删除'),
               type: 'danger',
@@ -702,8 +706,12 @@ export const getChannelsColumns = ({
                   },
                 });
               },
-            },
-            {
+            });
+          }
+
+          // 复制
+          if (hasSSOPerm('b:ai-web:modelstation:channel:copy')) {
+            moreMenuItems.push({
               node: 'item',
               name: t('复制'),
               type: 'tertiary',
@@ -714,44 +722,50 @@ export const getChannelsColumns = ({
                   onOk: () => copySelectedChannel(record),
                 });
               },
-            },
-          ];
+            });
+          }
 
           if (upstreamUpdateMeta.supported) {
-            moreMenuItems.push({
-              node: 'item',
-              name: t('仅检测上游模型更新'),
-              type: 'tertiary',
-              onClick: () => {
-                detectChannelUpstreamUpdates(record);
-              },
-            });
-            moreMenuItems.push({
-              node: 'item',
-              name: t('处理上游模型更新'),
-              type: 'tertiary',
-              onClick: () => {
-                if (!upstreamUpdateMeta.enabled) {
-                  showInfo(t('该渠道未开启上游模型更新检测'));
-                  return;
-                }
-                if (
-                  upstreamUpdateMeta.pendingAddModels.length === 0 &&
-                  upstreamUpdateMeta.pendingRemoveModels.length === 0
-                ) {
-                  showInfo(t('该渠道暂无可处理的上游模型更新'));
-                  return;
-                }
-                openUpstreamUpdateModal(
-                  record,
-                  upstreamUpdateMeta.pendingAddModels,
-                  upstreamUpdateMeta.pendingRemoveModels,
-                  upstreamUpdateMeta.pendingAddModels.length > 0
-                    ? 'add'
-                    : 'remove',
-                );
-              },
-            });
+            // 仅检测上游模型更新
+            if (hasSSOPerm('b:ai-web:modelstation:channel:detectupdate')) {
+              moreMenuItems.push({
+                node: 'item',
+                name: t('仅检测上游模型更新'),
+                type: 'tertiary',
+                onClick: () => {
+                  detectChannelUpstreamUpdates(record);
+                },
+              });
+            }
+            // 处理上游模型更新
+            if (hasSSOPerm('b:ai-web:modelstation:channel:applyupdate')) {
+              moreMenuItems.push({
+                node: 'item',
+                name: t('处理上游模型更新'),
+                type: 'tertiary',
+                onClick: () => {
+                  if (!upstreamUpdateMeta.enabled) {
+                    showInfo(t('该渠道未开启上游模型更新检测'));
+                    return;
+                  }
+                  if (
+                    upstreamUpdateMeta.pendingAddModels.length === 0 &&
+                    upstreamUpdateMeta.pendingRemoveModels.length === 0
+                  ) {
+                    showInfo(t('该渠道暂无可处理的上游模型更新'));
+                    return;
+                  }
+                  openUpstreamUpdateModal(
+                    record,
+                    upstreamUpdateMeta.pendingAddModels,
+                    upstreamUpdateMeta.pendingRemoveModels,
+                    upstreamUpdateMeta.pendingAddModels.length > 0
+                      ? 'add'
+                      : 'remove',
+                  );
+                },
+              });
+            }
           }
 
           if (record.type === 4) {
@@ -765,95 +779,110 @@ export const getChannelsColumns = ({
 
           return (
             <Space wrap>
-              <SplitButtonGroup
-                className='overflow-hidden'
-                aria-label={t('测试单个渠道操作项目组')}
-              >
-                <Button
-                  size='small'
-                  type='tertiary'
-                  onClick={() => testChannel(record, '')}
+              {(hasSSOPerm('b:ai-web:modelstation:channel:test') ) && (
+                <SplitButtonGroup
+                  className='overflow-hidden'
+                  aria-label={t('测试单个渠道操作项目组')}
                 >
-                  {t('测试')}
-                </Button>
-                <Button
-                  size='small'
-                  type='tertiary'
-                  icon={<IconTreeTriangleDown />}
-                  onClick={() => {
-                    setCurrentTestChannel(record);
-                    setShowModelTestModal(true);
-                  }}
-                />
-              </SplitButtonGroup>
-
-              {record.status === 1 ? (
-                <Button
-                  type='danger'
-                  size='small'
-                  onClick={() => manageChannel(record.id, 'disable', record)}
-                >
-                  {t('禁用')}
-                </Button>
-              ) : (
-                <Button
-                  size='small'
-                  onClick={() => manageChannel(record.id, 'enable', record)}
-                >
-                  {t('启用')}
-                </Button>
+                  <Button
+                    size='small'
+                    type='tertiary'
+                    onClick={() => testChannel(record, '')}
+                  >
+                    {t('测试')}
+                  </Button>
+                  <Button
+                    size='small'
+                    type='tertiary'
+                    icon={<IconTreeTriangleDown />}
+                    onClick={() => {
+                      setCurrentTestChannel(record);
+                      setShowModelTestModal(true);
+                    }}
+                  />
+                </SplitButtonGroup>
               )}
 
-              {record.channel_info?.is_multi_key ? (
-                <SplitButtonGroup aria-label={t('多密钥渠道操作项目组')}>
-                  <Button
-                    type='tertiary'
-                    size='small'
-                    onClick={() => {
-                      setEditingChannel(record);
-                      setShowEdit(true);
-                    }}
-                  >
-                    {t('编辑')}
-                  </Button>
-                  <Dropdown
-                    trigger='click'
-                    position='bottomRight'
-                    menu={[
-                      {
-                        node: 'item',
-                        name: t('多密钥管理'),
-                        onClick: () => {
-                          setCurrentMultiKeyChannel(record);
-                          setShowMultiKeyManageModal(true);
-                        },
-                      },
-                    ]}
-                  >
+              {(hasSSOPerm('b:ai-web:modelstation:channel:enable') || hasSSOPerm('b:ai-web:modelstation:channel:disable')) && (
+                <>
+                  {record.status === 1 ? (
+                    hasSSOPerm('b:ai-web:modelstation:channel:disable') && (
+                      <Button
+                        type='danger'
+                        size='small'
+                        onClick={() => manageChannel(record.id, 'disable', record)}
+                      >
+                        {t('禁用')}
+                      </Button>
+                    )
+                  ) : (
+                    hasSSOPerm('b:ai-web:modelstation:channel:enable') && (
+                      <Button
+                        size='small'
+                        onClick={() => manageChannel(record.id, 'enable', record)}
+                      >
+                        {t('启用')}
+                      </Button>
+                    )
+                  )}
+                </>
+              )}
+
+              {hasSSOPerm('b:ai-web:modelstation:channel:edit') && (
+                <>
+                  {record.channel_info?.is_multi_key ? (
+                    <SplitButtonGroup aria-label={t('多密钥渠道操作项目组')}>
+                      <Button
+                        type='tertiary'
+                        size='small'
+                        onClick={() => {
+                          setEditingChannel(record);
+                          setShowEdit(true);
+                        }}
+                      >
+                        {t('编辑')}
+                      </Button>
+                      <Dropdown
+                        trigger='click'
+                        position='bottomRight'
+                        menu={[
+                          {
+                            node: 'item',
+                            name: t('多密钥管理'),
+                            onClick: () => {
+                              setCurrentMultiKeyChannel(record);
+                              setShowMultiKeyManageModal(true);
+                            },
+                          },
+                        ]}
+                      >
+                        <Button
+                          type='tertiary'
+                          size='small'
+                          icon={<IconTreeTriangleDown />}
+                        />
+                      </Dropdown>
+                    </SplitButtonGroup>
+                  ) : (
                     <Button
                       type='tertiary'
                       size='small'
-                      icon={<IconTreeTriangleDown />}
-                    />
-                  </Dropdown>
-                </SplitButtonGroup>
-              ) : (
-                <Button
-                  type='tertiary'
-                  size='small'
-                  onClick={() => {
-                    setEditingChannel(record);
-                    setShowEdit(true);
-                  }}
-                >
-                  {t('编辑')}
-                </Button>
+                      onClick={() => {
+                        setEditingChannel(record);
+                        setShowEdit(true);
+                      }}
+                    >
+                      {t('编辑')}
+                    </Button>
+                  )}
+                </>
               )}
 
               <Dropdown
                 trigger='click'
                 position='bottomRight'
                 menu={moreMenuItems}
+                disabled={moreMenuItems.length === 0}
               >
                 <Button icon={<IconMore />} type='tertiary' size='small' />
               </Dropdown>
@@ -863,30 +892,36 @@ export const getChannelsColumns = ({
           // 标签操作按钮
           return (
             <Space wrap>
-              <Button
-                type='tertiary'
-                size='small'
-                onClick={() => manageTag(record.key, 'enable')}
-              >
-                {t('启用全部')}
-              </Button>
-              <Button
-                type='tertiary'
-                size='small'
-                onClick={() => manageTag(record.key, 'disable')}
-              >
-                {t('禁用全部')}
-              </Button>
-              <Button
-                type='tertiary'
-                size='small'
-                onClick={() => {
-                  setShowEditTag(true);
-                  setEditingTag(record.key);
-                }}
-              >
-                {t('编辑')}
-              </Button>
+              {hasSSOPerm('b:ai-web:modelstation:channel:enable') && (
+                <Button
+                  type='tertiary'
+                  size='small'
+                  onClick={() => manageTag(record.key, 'enable')}
+                >
+                  {t('启用全部')}
+                </Button>
+              )}
+              {hasSSOPerm('b:ai-web:modelstation:channel:disable') && (
+                <Button
+                  type='tertiary'
+                  size='small'
+                  onClick={() => manageTag(record.key, 'disable')}
+                >
+                  {t('禁用全部')}
+                </Button>
+              )}
+              {hasSSOPerm('b:ai-web:modelstation:channel:edittag') && (
+                <Button
+                  type='tertiary'
+                  size='small'
+                  onClick={() => {
+                    setShowEditTag(true);
+                    setEditingTag(record.key);
+                  }}
+                >
+                  {t('编辑')}
+                </Button>
+              )}
             </Space>
           );
         }

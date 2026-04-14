@@ -19,7 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { API, showError, showSuccess } from '../../../helpers';
+import { API, showError, showSuccess, hasSSOPerm } from '../../../helpers';
 import CardPro from '../../common/ui/CardPro';
 import { useIsMobile } from '../../../hooks/common/useIsMobile';
 import { createCardProPagination } from '../../../helpers/utils';
@@ -286,10 +286,12 @@ const UserGroupsPage = () => {
       key: 'enable',
       width: 90,
       render: (enable, record) => (
+        (hasSSOPerm('b:ai-web:modelstation:usergroup:enable') || hasSSOPerm('b:ai-web:modelstation:usergroup:disable')) && (
         <Switch
           checked={enable}
           onChange={(checked) => handleToggleEnable(record.id, checked)}
         />
+        )
       ),
     },
     {
@@ -299,6 +301,7 @@ const UserGroupsPage = () => {
       fixed: 'right',
       render: (_, record) => (
         <Space>
+          {hasSSOPerm('b:ai-web:modelstation:usergroup:edit') && (
           <Button
             type='tertiary'
             size='small'
@@ -306,6 +309,8 @@ const UserGroupsPage = () => {
           >
             {t('编辑')}
           </Button>
+          )}
+          {hasSSOPerm('b:ai-web:modelstation:usergroup:delete') && (
           <Button
             type='danger'
             size='small'
@@ -313,6 +318,7 @@ const UserGroupsPage = () => {
           >
             {t('删除')}
           </Button>
+          )}
         </Space>
       ),
     },
@@ -324,9 +330,11 @@ const UserGroupsPage = () => {
         type='type1'
         actionsArea={
           <div className='flex justify-between items-center w-full'>
+            {hasSSOPerm('b:ai-web:modelstation:usergroup:create') && (
             <Button className='w-full md:w-auto' onClick={handleAdd} size='small'>
               {t('添加用户组')}
             </Button>
+            )}
           </div>
         }
         paginationArea={createCardProPagination({

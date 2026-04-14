@@ -21,6 +21,7 @@ import React from 'react';
 import { Button, Form } from '@douyinfe/semi-ui';
 import { IconSearch } from '@douyinfe/semi-icons';
 import { useNavigate } from 'react-router-dom';
+import { hasSSOPerm } from '../../../helpers/data';
 
 const ChannelsFilters = ({
   setEditingChannel,
@@ -59,7 +60,7 @@ const ChannelsFilters = ({
         )}
 
         {/* 添加渠道按钮 - 在 action=add 时隐藏 */}
-        {autoAction !== 'add' && (
+        {autoAction !== 'add' && hasSSOPerm('b:ai-web:modelstation:channel:create') && (
           <Button
             size='small'
             theme='light'

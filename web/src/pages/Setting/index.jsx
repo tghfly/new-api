@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 
 import SystemSetting from '../../components/settings/SystemSetting';
-import { isRoot } from '../../helpers';
+import { isRoot, hasSSOPerm } from '../../helpers';
 import OtherSetting from '../../components/settings/OtherSetting';
 import OperationSetting from '../../components/settings/OperationSetting';
 import RateLimitSetting from '../../components/settings/RateLimitSetting';
@@ -61,6 +61,8 @@ const Setting = () => {
   let panes = [];
 
   if (isRoot()) {
+    // 运营设置
+    if (hasSSOPerm('b:ai-web:modelstation:setting:operation') || hasSSOPerm('b:ai-web:modelstation:setting:general')) {
     panes.push({
       tab: (
         <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -71,6 +73,9 @@ const Setting = () => {
       content: <OperationSetting />,
       itemKey: 'operation',
     });
+    }
+    // 仪表盘设置
+    if (hasSSOPerm('b:ai-web:modelstation:setting:dashboard')) {
     panes.push({
       tab: (
         <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -81,6 +86,9 @@ const Setting = () => {
       content: <DashboardSetting />,
       itemKey: 'dashboard',
     });
+    }
+    // 聊天设置
+    if (hasSSOPerm('b:ai-web:modelstation:setting:chat')) {
     panes.push({
       tab: (
         <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -91,6 +99,9 @@ const Setting = () => {
       content: <ChatsSetting />,
       itemKey: 'chats',
     });
+    }
+    // 绘图设置
+    if (hasSSOPerm('b:ai-web:modelstation:setting:drawing')) {
     panes.push({
       tab: (
         <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -101,6 +112,9 @@ const Setting = () => {
       content: <DrawingSetting />,
       itemKey: 'drawing',
     });
+    }
+    // 支付设置
+    if (hasSSOPerm('b:ai-web:modelstation:setting:payment')) {
     panes.push({
       tab: (
         <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -111,6 +125,9 @@ const Setting = () => {
       content: <PaymentSetting />,
       itemKey: 'payment',
     });
+    }
+    // 分组与模型定价设置
+    if (hasSSOPerm('b:ai-web:modelstation:setting:ratio')) {
     panes.push({
       tab: (
         <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -121,6 +138,9 @@ const Setting = () => {
       content: <RatioSetting />,
       itemKey: 'ratio',
     });
+    }
+    // 速率限制设置
+    if (hasSSOPerm('b:ai-web:modelstation:setting:ratelimit')) {
     panes.push({
       tab: (
         <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -131,6 +151,9 @@ const Setting = () => {
       content: <RateLimitSetting />,
       itemKey: 'ratelimit',
     });
+    }
+    // 模型相关设置
+    if (hasSSOPerm('b:ai-web:modelstation:setting:model')) {
     panes.push({
       tab: (
         <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -141,6 +164,9 @@ const Setting = () => {
       content: <ModelSetting />,
       itemKey: 'models',
     });
+    }
+    // 模型部署设置
+    if (hasSSOPerm('b:ai-web:modelstation:setting:modeldeployment')) {
     panes.push({
       tab: (
         <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -151,6 +177,9 @@ const Setting = () => {
       content: <ModelDeploymentSetting />,
       itemKey: 'model-deployment',
     });
+    }
+    // 性能设置
+    if (hasSSOPerm('b:ai-web:modelstation:setting:performance')) {
     panes.push({
       tab: (
         <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -161,6 +190,9 @@ const Setting = () => {
       content: <PerformanceSetting />,
       itemKey: 'performance',
     });
+    }
+    // 系统设置
+    if (hasSSOPerm('b:ai-web:modelstation:setting:system')) {
     panes.push({
       tab: (
         <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -171,6 +203,9 @@ const Setting = () => {
       content: <SystemSetting />,
       itemKey: 'system',
     });
+    }
+    // 其他设置
+    if (hasSSOPerm('b:ai-web:modelstation:setting:other')) {
     panes.push({
       tab: (
         <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -181,6 +216,7 @@ const Setting = () => {
       content: <OtherSetting />,
       itemKey: 'other',
     });
+    }
   }
   const onChangeTab = (key) => {
     setTabActiveKey(key);

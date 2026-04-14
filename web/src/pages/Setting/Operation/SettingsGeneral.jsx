@@ -36,6 +36,7 @@ import {
   showError,
   showSuccess,
   showWarning,
+  hasSSOPerm,
 } from '../../../helpers';
 import { useTranslation } from 'react-i18next';
 
@@ -168,6 +169,7 @@ export default function GeneralSettings(props) {
           getFormApi={(formAPI) => (refForm.current = formAPI)}
           style={{ marginBottom: 15 }}
         >
+          {hasSSOPerm('b:ai-web:modelstation:setting:general') && (
           <Form.Section text={t('通用设置')}>
             <Row gutter={16}>
               <Col xs={24} sm={12} md={8} lg={8} xl={8}>
@@ -307,6 +309,7 @@ export default function GeneralSettings(props) {
               </Button>
             </Row>
           </Form.Section>
+          )}
         </Form>
       </Spin>
 

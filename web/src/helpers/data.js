@@ -79,5 +79,17 @@ export function setUserData(data) {
 // ssoPerms 格式: ['m:ai-web:modelstation:user', 'm:ai-web:modelstation:usergroup', 'm:ai-web:modelstation:setting']
 export function getSSOPerms() {
   const ssoPermsStr = localStorage.getItem('saber-sso-perms');
-  return ssoPermsStr ? JSON.parse(ssoPermsStr).content : [];
+  const parsed = ssoPermsStr ? JSON.parse(ssoPermsStr) : null;
+  return parsed?.content || [];
+}
+
+// 判断是否拥有指定 SSO 权限
+// hasSSOPerm('b:ai-web:modelstation:dashboard:recharge')
+// 当 ssoPerms 为空时（长度=0），返回 true（兼容非SSO场景）
+export function hasSSOPerm(ssoKey) {
+  const ssoPerms = getSSOPerms();
+  if (ssoPerms.length === 0) {
+    return true;
+  }
+  return ssoPerms.includes(ssoKey);
 }

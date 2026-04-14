@@ -39,6 +39,7 @@ import {
   renderQuota,
   getModelCategories,
   showError,
+  hasSSOPerm,
 } from '../../../helpers';
 import {
   IconTreeTriangleDown,
@@ -341,85 +342,99 @@ const renderOperations = (
 
   return (
     <Space wrap>
-      <SplitButtonGroup
-        className='overflow-hidden'
-        aria-label={t('项目操作按钮组')}
-      >
-        <Button
-          size='small'
-          type='tertiary'
-          onClick={() => {
-            if (chatsArray.length === 0) {
-              showError(t('请联系管理员配置聊天链接'));
-            } else {
-              const first = chatsArray[0];
-              onOpenLink(first.name, first.value, record);
-            }
-          }}
+      {hasSSOPerm('b:ai-web:modelstation:token:chat') && (
+        <SplitButtonGroup
+          className='overflow-hidden'
+          aria-label={t('项目操作按钮组')}
         >
-          {t('聊天')}
-        </Button>
-        <Dropdown trigger='click' position='bottomRight' menu={chatsArray}>
           <Button
-            type='tertiary'
-            icon={<IconTreeTriangleDown />}
             size='small'
-          ></Button>
-        </Dropdown>
-      </SplitButtonGroup>
+            type='tertiary'
+            onClick={() => {
+              if (chatsArray.length === 0) {
+                showError(t('请联系管理员配置聊天链接'));
+              } else {
+                const first = chatsArray[0];
+                onOpenLink(first.name, first.value, record);
+              }
+            }}
+          >
+            {t('聊天')}
+          </Button>
+          <Dropdown trigger='click' position='bottomRight' menu={chatsArray}>
+            <Button
+              type='tertiary'
+              icon={<IconTreeTriangleDown />}
+              size='small'
+            ></Button>
+          </Dropdown>
+        </SplitButtonGroup>
+      )}
 
-      {record.status === 1 ? (
+      {(hasSSOPerm('b:ai-web:modelstation:token:enable') || hasSSOPerm('b:ai-web:modelstation:token:disable')) && (
+        <>
+          {record.status === 1 ? (
+            hasSSOPerm('b:ai-web:modelstation:token:disable') && (
+              <Button
+                type='danger'
+                size='small'
+                onClick={async () => {
+                  await manageToken(record.id, 'disable', record);
+                  await refresh();
+                }}
+              >
+                {t('禁用')}
+              </Button>
+            )
+          ) : (
+            hasSSOPerm('b:ai-web:modelstation:token:enable') && (
+              <Button
+                size='small'
+                onClick={async () => {
+                  await manageToken(record.id, 'enable', record);
+                  await refresh();
+                }}
+              >
+                {t('启用')}
+              </Button>
+            )
+          )}
+        </>
+      )}
+
+      {hasSSOPerm('b:ai-web:modelstation:token:edit') && (
         <Button
-          type='danger'
+          type='tertiary'
           size='small'
-          onClick={async () => {
-            await manageToken(record.id, 'disable', record);
-            await refresh();
+          onClick={() => {
+            setEditingToken(record);
+            setShowEdit(true);
           }}
         >
-          {t('禁用')}
-        </Button>
-      ) : (
-        <Button
-          size='small'
-          onClick={async () => {
-            await manageToken(record.id, 'enable', record);
-            await refresh();
-          }}
-        >
-          {t('启用')}
+          {t('编辑')}
         </Button>
       )}
 
-      <Button
-        type='tertiary'
-        size='small'
-        onClick={() => {
-          setEditingToken(record);
-          setShowEdit(true);
-        }}
-      >
-        {t('编辑')}
-      </Button>
-
-      <Button
-        type='danger'
-        size='small'
-        onClick={() => {
-          Modal.confirm({
-            title: t('确定是否要删除此令牌？'),
-            content: t('此修改将不可逆'),
-            onOk: () => {
-              (async () => {
-                await manageToken(record.id, 'delete', record);
-                await refresh();
-              })();
-            },
-          });
-        }}
-      >
-        {t('删除')}
-      </Button>
+      {hasSSOPerm('b:ai-web:modelstation:token:delete') && (
+        <Button
+          type='danger'
+          size='small'
+          onClick={() => {
+            Modal.confirm({
+              title: t('确定是否要删除此令牌？'),
+              content: t('此修改将不可逆'),
+              onOk: () => {
+                (async () => {
+                  await manageToken(record.id, 'delete', record);
+                  await refresh();
+                })();
+              },
+            });
+          }}
+        >
+          {t('删除')}
+        </Button>
+      )}
     </Space>
   );
 };

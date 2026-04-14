@@ -29,7 +29,7 @@ import {
   Dropdown,
 } from '@douyinfe/semi-ui';
 import { IconMore } from '@douyinfe/semi-icons';
-import { renderGroup, renderNumber, renderQuota } from '../../../helpers';
+import { renderGroup, renderNumber, renderQuota, hasSSOPerm } from '../../../helpers';
 
 /**
  * Render user role
@@ -216,81 +216,112 @@ const renderOperations = (
     return <></>;
   }
 
-  const moreMenu = [
-    {
+  const moreMenu = [];
+
+  // 订阅管理
+  if (hasSSOPerm('b:ai-web:modelstation:user:subscription')) {
+    moreMenu.push({
       node: 'item',
       name: t('订阅管理'),
       onClick: () => showUserSubscriptionsModal(record),
-    },
-    {
-      node: 'divider',
-    },
-    {
+    });
+    moreMenu.push({ node: 'divider' });
+  }
+
+  // 重置 Passkey
+  if (hasSSOPerm('b:ai-web:modelstation:user:resetpasskey')) {
+    moreMenu.push({
       node: 'item',
       name: t('重置 Passkey'),
       onClick: () => showResetPasskeyModal(record),
-    },
-    {
+    });
+  }
+
+  // 重置 2FA
+  if (hasSSOPerm('b:ai-web:modelstation:user:reset2fa')) {
+    moreMenu.push({
       node: 'item',
       name: t('重置 2FA'),
       onClick: () => showResetTwoFAModal(record),
-    },
-    {
-      node: 'divider',
-    },
-    {
+    });
+  }
+
+  // 注销
+  if (hasSSOPerm('b:ai-web:modelstation:user:delete')) {
+    moreMenu.push({ node: 'divider' });
+    moreMenu.push({
       node: 'item',
       name: t('注销'),
       type: 'danger',
       onClick: () => showDeleteModal(record),
-    },
-  ];
+    });
+  }
 
   return (
     <Space>
-      {record.status === 1 ? (
+      {(hasSSOPerm('b:ai-web:modelstation:user:enable') || hasSSOPerm('b:ai-web:modelstation:user:disable')) && (
+        <>
+          {record.status === 1 ? (
+            hasSSOPerm('b:ai-web:modelstation:user:disable') && (
+              <Button
+                type='danger'
+                size='small'
+                onClick={() => showEnableDisableModal(record, 'disable')}
+              >
+                {t('禁用')}
+              </Button>
+            )
+          ) : (
+            hasSSOPerm('b:ai-web:modelstation:user:enable') && (
+              <Button
+                size='small'
+                onClick={() => showEnableDisableModal(record, 'enable')}
+              >
+                {t('启用')}
+              </Button>
+            )
+          )}
+        </>
+      )}
+
+      {hasSSOPerm('b:ai-web:modelstation:user:edit') && (
         <Button
-          type='danger'
+          type='tertiary'
           size='small'
-          onClick={() => showEnableDisableModal(record, 'disable')}
+          onClick={() => {
+            setEditingUser(record);
+            setShowEditUser(true);
+          }}
         >
-          {t('禁用')}
-        </Button>
-      ) : (
-        <Button
-          size='small'
-          onClick={() => showEnableDisableModal(record, 'enable')}
-        >
-          {t('启用')}
+          {t('编辑')}
         </Button>
       )}
-      <Button
-        type='tertiary'
-        size='small'
-        onClick={() => {
-          setEditingUser(record);
-          setShowEditUser(true);
-        }}
-      >
-        {t('编辑')}
-      </Button>
-      <Button
-        type='warning'
-        size='small'
-        onClick={() => showPromoteModal(record)}
-      >
-        {t('提升')}
-      </Button>
-      <Button
-        type='secondary'
-        size='small'
-        onClick={() => showDemoteModal(record)}
-      >
-        {t('降级')}
-      </Button>
-      <Dropdown menu={moreMenu} trigger='click' position='bottomRight'>
-        <Button type='tertiary' size='small' icon={<IconMore />} />
-      </Dropdown>
+
+      {hasSSOPerm('b:ai-web:modelstation:user:promote') && (
+        <Button
+          type='warning'
+          size='small'
+          onClick={() => showPromoteModal(record)}
+        >
+          {t('提升')}
+        </Button>
+      )}
+
+      {hasSSOPerm('b:ai-web:modelstation:user:demote') && (
+        <Button
+          type='secondary'
+          size='small'
+          onClick={() => showDemoteModal(record)}
+        >
+          {t('降级')}
+        </Button>
+      )}
+
+      {moreMenu.length > 0 && (
+        <Dropdown menu={moreMenu} trigger='click' position='bottomRight'>
+          <Button type='tertiary' size='small' icon={<IconMore />} />
+        </Dropdown>
+      )}
     </Space>
   );
 };

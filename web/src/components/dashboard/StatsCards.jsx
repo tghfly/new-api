@@ -22,6 +22,7 @@ import { Card, Avatar, Skeleton, Tag } from '@douyinfe/semi-ui';
 import { VChart } from '@visactor/react-vchart';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { hasSSOPerm } from '../../helpers/data';
 
 const StatsCards = ({
   groupedStatsData,
@@ -80,7 +81,7 @@ const StatsCards = ({
                       </div>
                     </div>
                   </div>
-                  {item.title === t('当前余额') ? (
+                  {item.title === t('当前余额') && hasSSOPerm('b:ai-web:modelstation:dashboard:recharge') ? (
                     <Tag
                       color='white'
                       shape='circle'
