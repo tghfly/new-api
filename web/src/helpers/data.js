@@ -57,5 +57,27 @@ export function setStatusData(data) {
 }
 
 export function setUserData(data) {
+  const ssoPerms = getSSOPerms();
+  if (ssoPerms && ssoPerms.length > 0) {
+    // 根据 SSO 权限计算用户角色
+    let role;
+    if (ssoPerms.includes('m:ai-web:modelstation:setting')) {
+      role = 100;
+    } else if (
+      ssoPerms.includes('m:ai-web:modelstation:user') ||
+      ssoPerms.includes('m:ai-web:modelstation:usergroup')
+    ) {
+      role = 10;
+    } else {
+      role = data.role;
+    }
+    data.role = role;
+  }
   localStorage.setItem('user', JSON.stringify(data));
+}
+
+// ssoPerms 格式: ['m:ai-web:modelstation:user', 'm:ai-web:modelstation:usergroup', 'm:ai-web:modelstation:setting']
+export function getSSOPerms() {
+  const ssoPermsStr = localStorage.getItem('saber-sso-perms');
+  return ssoPermsStr ? JSON.parse(ssoPermsStr).content : [];
 }
