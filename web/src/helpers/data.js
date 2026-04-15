@@ -65,7 +65,8 @@ export function setUserData(data) {
       role = 100;
     } else if (
       ssoPerms.includes('m:ai-web:modelstation:user') ||
-      ssoPerms.includes('m:ai-web:modelstation:usergroup')
+      ssoPerms.includes('m:ai-web:modelstation:usergroup') ||
+      ssoPerms.includes('m:ai-web:modelstation:channel')
     ) {
       role = 10;
     } else {
