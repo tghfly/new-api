@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -37,6 +38,24 @@ func authHelper(c *gin.Context, minRole int) {
 	id := session.Get("id")
 	status := session.Get("status")
 	useAccessToken := false
+
+	// 遍历打印所有session属性
+	sessionValues := session.Flashes()
+	_ = sessionValues // 仅用于触发加载，实际属性可能需要通过反射获取
+	var sessionInfo []string
+	// 尝试通过反射获取session中所有key
+	sessionInterface := reflect.ValueOf(session).Elem()
+	if sessionInterface.Kind() == reflect.Struct {
+		valuesField := sessionInterface.FieldByName("Values")
+		if valuesField.IsValid() && valuesField.Kind() == reflect.Map {
+			keys := valuesField.MapKeys()
+			for _, key := range keys {
+				value := valuesField.MapIndex(key)
+				sessionInfo = append(sessionInfo, fmt.Sprintf("%v: %v", key, value.Interface()))
+			}
+		}
+	}
+	logger.LogDebug(c, "[Session] 所有属性 - %s", strings.Join(sessionInfo, ", "))
 
 	// TODO 如果未登录且启用了算力平台集成，尝试 用算力平台认证
 	dcloudAuth := false
