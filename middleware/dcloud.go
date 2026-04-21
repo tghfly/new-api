@@ -1,8 +1,11 @@
 package middleware
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,16 +19,18 @@ import (
 
 // DCloud JWT Claims 結構
 type DCloudJWTClaims struct {
-	TenantId    string   `json:"tenant_id"`
-	RoleName    string   `json:"role_name"`
-	VdcCode     string   `json:"vdc_code"`
-	RoleId      string   `json:"role_id"`
-	UserId      string   `json:"user_id"`
-	UserName    string   `json:"user_name"`
-	Exp         int64    `json:"exp"`
-	Authorities []string `json:"authorities"`
-	ClientId    string   `json:"client_id"`
-	Account     string   `json:"account"`
+	TenantId     string            `json:"tenant_id"`
+	RoleName     string            `json:"role_name"`
+	VdcCode      string            `json:"vdc_code"`
+	RoleId       string            `json:"role_id"`
+	UserId       string            `json:"user_id"`
+	UserName     string            `json:"user_name"`
+	Exp          int64             `json:"exp"`
+	Authorities  []string          `json:"authorities"`
+	ClientId     string            `json:"client_id"`
+	Account      string            `json:"account"`
+	OtherRole    interface{}       `json:"other_role"`
+	OtherRoleMap map[string]string `json:"-"`
 }
 
 // GetExpirationTime 返回 JWT 的過期時間
@@ -122,6 +127,27 @@ func ValidateDCloudToken(tokenString string) (*DCloudJWTClaims, error) {
 	}
 
 	if claims, ok := token.Claims.(*DCloudJWTClaims); ok && token.Valid {
+		// 解析 OtherRole（可能是字符串或map）
+		if claims.OtherRole != nil {
+			switch v := claims.OtherRole.(type) {
+			case string:
+				// 如果是字符串，尝试解析为 JSON
+				if v != "" {
+					if err := json.Unmarshal([]byte(v), &claims.OtherRoleMap); err != nil {
+						fmt.Printf("[DEBUG DCloud parseToken] Failed to parse OtherRole string: %v\n", err)
+					}
+				}
+			case map[string]interface{}:
+				// 转换为 map[string]string
+				claims.OtherRoleMap = make(map[string]string)
+				for key, val := range v {
+					if strVal, ok := val.(string); ok {
+						claims.OtherRoleMap[key] = strVal
+					}
+				}
+			}
+		}
+		fmt.Printf("[DEBUG DCloud ValidateDCloudToken] OtherRoleMap=%v\n", claims.OtherRoleMap)
 		return claims, nil
 	}
 
@@ -135,8 +161,21 @@ func SyncDCloudUser(claims *DCloudJWTClaims) (*model.User, error) {
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
+	var role int
+	if claims.OtherRoleMap != nil {
+		if newapiRole, ok := claims.OtherRoleMap["newapi"]; ok && newapiRole != "" {
+			fmt.Printf("[DEBUG DCloud SyncDCloudUser] OtherRoleMap newapi=%s\n", newapiRole)
+			if r, err := strconv.Atoi(newapiRole); err == nil {
+				role = r
+				fmt.Printf("[DEBUG DCloud SyncDCloudUser] Parsed role from OtherRoleMap: %d\n", role)
+			}
+		}
+	}
 
-	role := ParseDCloudRole(claims.RoleName)
+	if role == 0 {
+		role = ParseDCloudRole(claims.RoleName)
+		fmt.Printf("[DEBUG DCloud SyncDCloudUser] Parsed role from RoleName: %d\n", role)
+	}
 
 	if user == nil {
 		// 2. 用戶不存在，創建新用戶

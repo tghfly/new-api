@@ -57,23 +57,6 @@ export function setStatusData(data) {
 }
 
 export function setUserData(data) {
-  const ssoPerms = getSSOPerms();
-  if (ssoPerms && ssoPerms.length > 0) {
-    // 根据 SSO 权限计算用户角色
-    let role;
-    if (ssoPerms.includes('m:ai-web:modelstation:setting')) {
-      role = 100;
-    } else if (
-      ssoPerms.includes('m:ai-web:modelstation:user') ||
-      ssoPerms.includes('m:ai-web:modelstation:usergroup') ||
-      ssoPerms.includes('m:ai-web:modelstation:channel')
-    ) {
-      role = 10;
-    } else {
-      role = data.role;
-    }
-    data.role = role;
-  }
   localStorage.setItem('user', JSON.stringify(data));
 }
 
