@@ -159,7 +159,7 @@ function type2secretPrompt(type) {
 
 const EditChannelModal = (props) => {
   const { t } = useTranslation();
-  const { aiProviderData, aiProviderLoading, isEmbedded, inferenceServiceId, modelRegistryId } = props;
+  const { aiProviderData, aiProviderLoading, isEmbedded, inferenceServiceId, modelRegistryId, bluegreenUrl, bluegreenName, bluegreenModelName } = props;
   const channelId = props.editingChannel.id;
   const isEdit = channelId !== undefined;
   const [loading, setLoading] = useState(isEdit);
@@ -519,6 +519,34 @@ const EditChannelModal = (props) => {
           base_url: baseUrl,
           models: modelName ? [modelName] : [],
           groups: mappedGroups,
+        });
+      }
+    }
+    // 处理蓝绿发布数据填充
+    if (!isEdit && isEmbedded && aiProviderData?.result?.is_bluegreen) {
+      const result = aiProviderData.result;
+      const bluegreenBaseUrl = result.bluegreen_url || '';
+      const bluegreenModelName = result.model_name || '';
+      const bluegreenConfigName = result.bluegreen_name || '';
+
+      setInputs((inputs) => ({
+        ...inputs,
+        type: 1,
+        name: bluegreenConfigName || bluegreenModelName || '',
+        key: 'none-key',
+        base_url: bluegreenBaseUrl,
+        models: bluegreenModelName ? [bluegreenModelName] : [],
+        groups: ['default'],
+      }));
+
+      if (formApiRef.current) {
+        formApiRef.current.setValues({
+          type: 1,
+          name: bluegreenConfigName || bluegreenModelName || '',
+          key: 'none-key',
+          base_url: bluegreenBaseUrl,
+          models: bluegreenModelName ? [bluegreenModelName] : [],
+          groups: ['default'],
         });
       }
     }

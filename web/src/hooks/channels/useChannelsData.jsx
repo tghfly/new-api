@@ -42,11 +42,14 @@ import { openCodexUsageModal } from '../../components/table/channels/modals/Code
 
 import { fetchInferenceService, fetchModelRegistry } from '../../helpers/aiProviderApi';
 
-export const useChannelsData = ({ 
-  autoAction, 
-  inferenceServiceId, 
+export const useChannelsData = ({
+  autoAction,
+  inferenceServiceId,
   modelRegistryId,
-  isEmbedded 
+  bluegreenUrl,
+  bluegreenName,
+  bluegreenModelName,
+  isEmbedded
 } = {}) => {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
@@ -188,10 +191,22 @@ export const useChannelsData = ({
 
       // 只在嵌入模式下获取 AI Provider 数据
       if (isEmbedded) {
-        loadAiProviderData();
+        // 蓝绿发布参数：直接设置 aiProviderData，不需要调用 API
+        if (bluegreenUrl) {
+          setAiProviderData({
+            result: {
+              bluegreen_url: bluegreenUrl,
+              bluegreen_name: bluegreenName || '',
+              model_name: bluegreenModelName || '',
+              is_bluegreen: true,
+            }
+          });
+        } else {
+          loadAiProviderData();
+        }
       }
     }
-  }, [autoAction, inferenceServiceId, modelRegistryId, isEmbedded]);
+  }, [autoAction, inferenceServiceId, modelRegistryId, bluegreenUrl, bluegreenName, bluegreenModelName, isEmbedded]);
 
   /**
    * 加载 AI Provider 数据

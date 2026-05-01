@@ -36,11 +36,14 @@ import MultiKeyManageModal from './modals/MultiKeyManageModal';
 import ChannelUpstreamUpdateModal from './modals/ChannelUpstreamUpdateModal';
 import { createCardProPagination } from '../../../helpers/utils';
 
-const ChannelsPage = ({ autoAction, inferenceServiceId, modelRegistryId, isEmbedded }) => {
-  const channelsData = useChannelsData({ 
-    autoAction, 
-    inferenceServiceId, 
+const ChannelsPage = ({ autoAction, inferenceServiceId, modelRegistryId, bluegreenUrl, bluegreenName, bluegreenModelName, isEmbedded }) => {
+  const channelsData = useChannelsData({
+    autoAction,
+    inferenceServiceId,
     modelRegistryId,
+    bluegreenUrl,
+    bluegreenName,
+    bluegreenModelName,
     isEmbedded
   });
   const isMobile = useIsMobile();
@@ -65,6 +68,9 @@ const ChannelsPage = ({ autoAction, inferenceServiceId, modelRegistryId, isEmbed
         isEmbedded={isEmbedded}
         inferenceServiceId={inferenceServiceId}
         modelRegistryId={modelRegistryId}
+        bluegreenUrl={bluegreenUrl}
+        bluegreenName={bluegreenName}
+        bluegreenModelName={bluegreenModelName}
       />
       <BatchTagModal {...channelsData} />
       <ModelTestModal {...channelsData} />
