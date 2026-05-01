@@ -49,6 +49,7 @@ export const useChannelsData = ({
   bluegreenUrl,
   bluegreenName,
   bluegreenModelName,
+  bluegreenProjectCode,
   isEmbedded
 } = {}) => {
   const { t } = useTranslation();
@@ -198,6 +199,7 @@ export const useChannelsData = ({
               bluegreen_url: bluegreenUrl,
               bluegreen_name: bluegreenName || '',
               model_name: bluegreenModelName || '',
+              project_code: bluegreenProjectCode || '',
               is_bluegreen: true,
             }
           });
@@ -206,7 +208,7 @@ export const useChannelsData = ({
         }
       }
     }
-  }, [autoAction, inferenceServiceId, modelRegistryId, bluegreenUrl, bluegreenName, bluegreenModelName, isEmbedded]);
+  }, [autoAction, inferenceServiceId, modelRegistryId, bluegreenUrl, bluegreenName, bluegreenModelName, bluegreenProjectCode, isEmbedded]);
 
   /**
    * 加载 AI Provider 数据

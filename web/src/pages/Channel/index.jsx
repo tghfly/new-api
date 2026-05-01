@@ -32,6 +32,7 @@ const File = () => {
   const bluegreenUrl = searchParams.get('bluegreen_url');
   const bluegreenName = searchParams.get('bluegreen_name');
   const bluegreenModelName = searchParams.get('bluegreen_model_name');
+  const bluegreenProjectCode = searchParams.get('bluegreen_project_code');
 
   return (
     <div className={`${topMarginClass} px-2`}>
@@ -42,6 +43,7 @@ const File = () => {
         bluegreenUrl={bluegreenUrl}
         bluegreenName={bluegreenName}
         bluegreenModelName={bluegreenModelName}
+        bluegreenProjectCode={bluegreenProjectCode}
         isEmbedded={isEmbedded}
       />
     </div>

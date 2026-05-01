@@ -159,7 +159,7 @@ function type2secretPrompt(type) {
 
 const EditChannelModal = (props) => {
   const { t } = useTranslation();
-  const { aiProviderData, aiProviderLoading, isEmbedded, inferenceServiceId, modelRegistryId, bluegreenUrl, bluegreenName, bluegreenModelName } = props;
+  const { aiProviderData, aiProviderLoading, isEmbedded, inferenceServiceId, modelRegistryId, bluegreenUrl, bluegreenName, bluegreenModelName, bluegreenProjectCode } = props;
   const channelId = props.editingChannel.id;
   const isEdit = channelId !== undefined;
   const [loading, setLoading] = useState(isEdit);
@@ -527,26 +527,42 @@ const EditChannelModal = (props) => {
       const result = aiProviderData.result;
       const bluegreenBaseUrl = result.bluegreen_url || '';
       const bluegreenModelName = result.model_name || '';
-      const bluegreenConfigName = result.bluegreen_name || '';
+      const projectCode = result.project_code || '';
+
+      // 根据 project_code 匹配分组（参考 inferenceServiceId 的处理方式）
+      let mappedGroups = ['default'];
+      if (projectCode && groupOptions.length > 0) {
+        const matchedGroup = groupOptions.find(
+          (g) => g.value === projectCode
+        );
+        if (matchedGroup) {
+          // 如果匹配到的分组 name 是 public，同时添加 default 分组
+          if (matchedGroup.label === 'public') {
+            mappedGroups = [matchedGroup.value, 'default'];
+          } else {
+            mappedGroups = [matchedGroup.value];
+          }
+        }
+      }
 
       setInputs((inputs) => ({
         ...inputs,
         type: 1,
-        name: bluegreenConfigName || bluegreenModelName || '',
+        name: bluegreenModelName || '',  // 名称使用模型名称
         key: 'none-key',
         base_url: bluegreenBaseUrl,
         models: bluegreenModelName ? [bluegreenModelName] : [],
-        groups: ['default'],
+        groups: mappedGroups,
       }));
 
       if (formApiRef.current) {
         formApiRef.current.setValues({
           type: 1,
-          name: bluegreenConfigName || bluegreenModelName || '',
+          name: bluegreenModelName || '',
           key: 'none-key',
           base_url: bluegreenBaseUrl,
           models: bluegreenModelName ? [bluegreenModelName] : [],
-          groups: ['default'],
+          groups: mappedGroups,
         });
       }
     }
