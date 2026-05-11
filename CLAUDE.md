@@ -23,7 +23,12 @@ controller/    — Request handlers
 service/       — Business logic
 model/         — Data models and DB access (GORM)
 relay/         — AI API relay/proxy with provider adapters
-  relay/channel/ — Provider-specific adapters (openai/, claude/, gemini/, aws/, etc.)
+  relay/channel/ — Provider-specific adapters (35+ providers):
+    ai360, ali, aws, baidu, baidu_v2, cloudflare, claude, codex,
+    cohere, coze, deepseek, dify, gemini, jimeng, jina, lingyiwanwu,
+    minimax, mistral, mokaai, moonshot, ollama, openai, openrouter,
+    palm, perplexity, replicate, siliconflow, submodel, task, tencent,
+    vertex, volcengine, xai, xinference, xunfei, zhipu, zhipu_4v
 middleware/    — Auth, rate limiting, CORS, logging, distribution
 setting/       — Configuration management (ratio, model, operation, system, performance)
 common/        — Shared utilities (JSON, crypto, Redis, env, rate-limit, etc.)
@@ -34,7 +39,12 @@ i18n/          — Backend internationalization (go-i18n, en/zh)
 oauth/         — OAuth provider implementations
 pkg/           — Internal packages (cachex, ionet)
 web/           — React frontend
-  web/src/i18n/  — Frontend internationalization (i18next, zh/en/fr/ru/ja/vi)
+  web/src/pages/  — Page components:
+    About, Channel, Chat, Chat2Link, Dashboard, Forbidden, Home,
+    Log, Midjourney, Model, ModelDeployment, NotFound, Playground,
+    Pricing, PrivacyPolicy, Redemption, Setting, Setup, Subscription,
+    Task, Token, TopUp, User, UserAgreement, UserGroup
+  web/src/i18n/   — Frontend internationalization (i18next, zh/en/fr/ru/ja/vi)
 ```
 
 ## Internationalization (i18n)
@@ -125,7 +135,7 @@ This includes but is not limited to:
 
 For request structs that are parsed from client JSON and then re-marshaled to upstream providers (especially relay/convert paths):
 
-- Optional scalar fields MUST use pointer types with `omitempty` (e.g. `*int`, `*uint`, `*float64`, `*bool`), not non-pointer scalars.
+- Optional scalar fields MUST use pointer types with `omitempty` (e.g., `*int`, `*uint`, `*float64`, `*bool`), not non-pointer scalars.
 - Semantics MUST be:
   - field absent in client JSON => `nil` => omitted on marshal;
   - field explicitly set to zero/false => non-`nil` pointer => must still be sent upstream.
