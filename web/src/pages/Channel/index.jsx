@@ -29,13 +29,21 @@ const File = () => {
   const action = searchParams.get('action');
   const inferenceServiceId = searchParams.get('inference_service_id');
   const modelRegistryId = searchParams.get('model_registry_id');
+  const bluegreenUrl = searchParams.get('bluegreen_url');
+  const bluegreenName = searchParams.get('bluegreen_name');
+  const bluegreenModelName = searchParams.get('bluegreen_model_name');
+  const bluegreenProjectCode = searchParams.get('bluegreen_project_code');
 
   return (
     <div className={`${topMarginClass} px-2`}>
-      <ChannelsTable 
+      <ChannelsTable
         autoAction={action}
         inferenceServiceId={inferenceServiceId}
         modelRegistryId={modelRegistryId}
+        bluegreenUrl={bluegreenUrl}
+        bluegreenName={bluegreenName}
+        bluegreenModelName={bluegreenModelName}
+        bluegreenProjectCode={bluegreenProjectCode}
         isEmbedded={isEmbedded}
       />
     </div>
