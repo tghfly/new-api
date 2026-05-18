@@ -430,16 +430,15 @@ export const useDashboardCharts = (
   useEffect(() => {
     initVChartSemiTheme({
       isWatchingThemeSwitch: true,
-      // 覆盖默认背景色为透明
+      // 固定浅色主题
       theme: {
-        background: 'transparent',
+        background: '#ffffff',
         panel: {
-          background: 'transparent',
+          background: '#ffffff',
         },
-        // 添加 tooltip 背景色配置，确保不透明
         tooltip: {
           panel: {
-            fill: 'var(--semi-color-bg-2)',  // 使用 Semi Design 的背景色变量
+            fill: '#ffffff',
             stroke: 'var(--semi-color-border)',
             lineWidth: 1,
           },
