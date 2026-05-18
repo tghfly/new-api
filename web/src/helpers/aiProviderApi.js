@@ -22,7 +22,7 @@ import Cookies from 'js-cookie';
 
 // 创建独立的 axios 实例用于 AI Provider 服务
 export const AIProviderAPI = axios.create({
-  baseURL: 'https://dcloud.tydic.com:28443/ai-provider',
+  baseURL: '/ai-provider',
   headers: {
     'Content-Type': 'application/json',
   },
