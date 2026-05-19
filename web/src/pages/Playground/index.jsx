@@ -139,6 +139,19 @@ const Playground = () => {
   // 数据加载
   useDataLoader(userState, inputs, handleInputChange, setModels, setGroups);
 
+  // 从 URL 参数初始化模型和分组
+  useEffect(() => {
+    const modelParam = searchParams.get('selected_model');
+    const groupParam = searchParams.get('selected_group');
+
+    if (modelParam && modelParam !== inputs.model) {
+      handleInputChange('model', modelParam);
+    }
+    if (groupParam && groupParam !== inputs.group) {
+      handleInputChange('group', groupParam);
+    }
+  }, [searchParams, inputs.model, inputs.group, handleInputChange]);
+
   // 消息编辑
   const {
     editingMessageId,
