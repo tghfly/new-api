@@ -17,11 +17,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial commercial, please contact support@quantumnous.com
 */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useContext } from 'react';
 import { Navigate } from 'react-router-dom';
 import { history } from './history';
 import { API } from './api';
 import { setUserData } from './data';
+import { UserContext } from '../context/User';
 
 export function authHeader() {
   // return authorization header with jwt token
@@ -142,10 +143,18 @@ async function syncDCloudProjects() {
 function PrivateRoute({ children }) {
   const [checking, setChecking] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
+  const [, userDispatch] = useContext(UserContext);
 
   const checkAuth = useCallback(async () => {
-    const user = localStorage.getItem('user');
-    if (user) {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      // 已有 localStorage 数据，同步到 UserContext
+      try {
+        const user = JSON.parse(userStr);
+        userDispatch({ type: 'login', payload: user });
+      } catch (e) {
+        // ignore parse error
+      }
       setAuthenticated(true);
       setChecking(false);
       // 即使有 user 信息，也尝试同步项目信息（处理从算力平台跳转的情况）
@@ -156,10 +165,20 @@ function PrivateRoute({ children }) {
     // 检查后端 Session 状态（DCloud SSO 场景）
     const sessionValid = await checkSessionStatus();
     if (sessionValid) {
+      // checkSessionStatus 已写入 localStorage，现在同步到 UserContext
+      const newUserStr = localStorage.getItem('user');
+      if (newUserStr) {
+        try {
+          const user = JSON.parse(newUserStr);
+          userDispatch({ type: 'login', payload: user });
+        } catch (e) {
+          // ignore parse error
+        }
+      }
       setAuthenticated(true);
     }
     setChecking(false);
-  }, []);
+  }, [userDispatch]);
 
   useEffect(() => {
     checkAuth();
@@ -180,6 +199,7 @@ function PrivateRoute({ children }) {
 export function AdminRoute({ children }) {
   const [checking, setChecking] = useState(true);
   const [authorized, setAuthorized] = useState(false);
+  const [, userDispatch] = useContext(UserContext);
 
   const checkAuth = useCallback(async () => {
     const raw = localStorage.getItem('user');
@@ -187,6 +207,8 @@ export function AdminRoute({ children }) {
       try {
         const user = JSON.parse(raw);
         if (user && typeof user.role === 'number' && user.role >= 10) {
+          // 同步到 UserContext
+          userDispatch({ type: 'login', payload: user });
           setAuthorized(true);
           setChecking(false);
           // 尝试同步项目信息
@@ -206,6 +228,8 @@ export function AdminRoute({ children }) {
         try {
           const user = JSON.parse(newRaw);
           if (user && typeof user.role === 'number' && user.role >= 10) {
+            // 同步到 UserContext
+            userDispatch({ type: 'login', payload: user });
             setAuthorized(true);
             setChecking(false);
             return;
@@ -216,7 +240,7 @@ export function AdminRoute({ children }) {
       }
     }
     setChecking(false);
-  }, []);
+  }, [userDispatch]);
 
   useEffect(() => {
     checkAuth();

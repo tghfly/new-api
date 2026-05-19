@@ -21,7 +21,6 @@ import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { API, processModelsData, processGroupsData, showError } from '../../helpers';
 import { API_ENDPOINTS } from '../../constants/playground.constants';
-import { useUserGroupContext } from '../../context/UserGroup';
 
 export const useDataLoader = (
   userState,
@@ -31,7 +30,6 @@ export const useDataLoader = (
   setGroups,
 ) => {
   const { t } = useTranslation();
-  const { loadGroupMap, groupMap } = useUserGroupContext();
 
   const loadModels = useCallback(async () => {
     try {
@@ -71,11 +69,6 @@ export const useDataLoader = (
 
   const loadGroups = useCallback(async () => {
     try {
-      // 确保 user_group_names 已加载到 localStorage
-      if (Object.keys(groupMap).length === 0) {
-        await loadGroupMap();
-      }
-
       const res = await API.get(API_ENDPOINTS.USER_GROUPS);
       const { success, message, data } = res.data;
 
@@ -98,7 +91,7 @@ export const useDataLoader = (
     } catch (error) {
       showError(t('加载分组失败'));
     }
-  }, [userState, inputs.group, handleInputChange, setGroups, t, groupMap, loadGroupMap]);
+  }, [userState, inputs.group, handleInputChange, setGroups, t]);
 
   // 自动加载数据
   useEffect(() => {
@@ -106,7 +99,7 @@ export const useDataLoader = (
       loadModels();
       loadGroups();
     }
-  }, [userState?.user, loadModels, loadGroups, groupMap]);
+  }, [userState?.user, loadModels, loadGroups]);
 
   // 当分组变化时重新加载模型
   useEffect(() => {

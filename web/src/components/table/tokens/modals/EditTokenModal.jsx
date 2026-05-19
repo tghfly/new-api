@@ -55,6 +55,24 @@ import { StatusContext } from '../../../../context/Status';
 
 const { Text, Title } = Typography;
 
+// 从 localStorage 获取当前项目信息
+const getCurrentProjectInfo = () => {
+  try {
+    const projectStr = localStorage.getItem('saber-currentProject');
+    if (projectStr) {
+      const project = JSON.parse(projectStr);
+      return {
+        project_code: project?.content?.project_code || '',
+        project_name: project?.content?.name || '',
+        vdc_name: project?.content?.vdc_name || '',
+      };
+    }
+  } catch (e) {
+    // ignore
+  }
+  return { project_code: '', project_name: '', vdc_name: '' };
+};
+
 const EditTokenModal = (props) => {
   const { t } = useTranslation();
   const [statusState, statusDispatch] = useContext(StatusContext);
@@ -66,6 +84,10 @@ const EditTokenModal = (props) => {
   const [currentGroup, setCurrentGroup] = useState('');
   const isEdit = props.editingToken.id !== undefined;
 
+  // 获取项目信息用于名称前缀和默认分组
+  const { project_code, vdc_name } = getCurrentProjectInfo();
+  const namePrefix = vdc_name ? `${vdc_name}-` : '';
+
   const getInitValues = () => ({
     name: '',
     remain_quota: 0,
@@ -74,7 +96,7 @@ const EditTokenModal = (props) => {
     model_limits_enabled: false,
     model_limits: [],
     allow_ips: '',
-    group: '',
+    group: project_code || '',  // 默认分组：当前项目
     cross_group_retry: false,
     tokenCount: 1,
   });
@@ -288,12 +310,13 @@ const EditTokenModal = (props) => {
       let successCount = 0;
       for (let i = 0; i < count; i++) {
         let { tokenCount: _tc, ...localInputs } = values;
-        const baseName =
-          values.name.trim() === '' ? 'default' : values.name.trim();
+        // 名称格式：部门-应用名（用户只输入应用名）
+        const appName = values.name.trim() === '' ? 'default' : values.name.trim();
+        const fullName = namePrefix + appName;
         if (i !== 0 || values.name.trim() === '') {
-          localInputs.name = `${baseName}-${generateRandomSuffix()}`;
+          localInputs.name = `${fullName}-${generateRandomSuffix()}`;
         } else {
-          localInputs.name = baseName;
+          localInputs.name = fullName;
         }
         localInputs.remain_quota = parseInt(localInputs.remain_quota);
 
@@ -402,9 +425,11 @@ const EditTokenModal = (props) => {
                   <Col span={24}>
                     <Form.Input
                       field='name'
-                      label={t('名称')}
-                      placeholder={t('请输入名称')}
-                      rules={[{ required: true, message: t('请输入名称') }]}
+                      label={t('应用名称')}
+                      placeholder={t('请输入应用名称')}
+                      prefix={namePrefix || undefined}
+                      extraText={namePrefix ? t(`完整名称：${namePrefix}应用名`) : undefined}
+                      rules={[{ required: true, message: t('请输入应用名称') }]}
                       showClear
                     />
                   </Col>

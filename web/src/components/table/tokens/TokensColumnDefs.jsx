@@ -484,7 +484,7 @@ export const getTokensColumns = ({
       render: (text, record) => renderModelLimits(text, record, t),
     },
     {
-      title: t('IP限制'),
+      title: t('IP白名单'),
       dataIndex: 'allow_ips',
       render: (text) => renderAllowIps(text, t),
     },
