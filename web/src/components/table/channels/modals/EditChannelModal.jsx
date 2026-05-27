@@ -28,6 +28,7 @@ import {
   verifyJSON,
 } from '../../../../helpers';
 import { useIsMobile } from '../../../../hooks/common/useIsMobile';
+import { useCurrentProject } from '../../../../hooks/common/useCurrentProject';
 import { CHANNEL_OPTIONS, MODEL_FETCHABLE_CHANNEL_TYPES } from '../../../../constants';
 import {
   SideSheet,
@@ -85,8 +86,6 @@ import {
   IconChevronUp,
   IconChevronDown,
 } from '@douyinfe/semi-icons';
-
-const { Text, Title } = Typography;
 
 const MODEL_MAPPING_EXAMPLE = {
   'gpt-3.5-turbo': 'gpt-3.5-turbo-0125',
@@ -157,6 +156,8 @@ function type2secretPrompt(type) {
   }
 }
 
+const { Text, Title } = Typography;
+
 const EditChannelModal = (props) => {
   const { t } = useTranslation();
   const { aiProviderData, aiProviderLoading, isEmbedded, inferenceServiceId, modelRegistryId, bluegreenUrl, bluegreenName, bluegreenModelName, bluegreenProjectCode } = props;
@@ -165,6 +166,9 @@ const EditChannelModal = (props) => {
   const [loading, setLoading] = useState(isEdit);
   const isMobile = useIsMobile();
 
+  // 使用 hook 获取当前项目信息，支持响应项目切换
+  const { project_code: currentProjectCode, vdc_name: currentVdcName } = useCurrentProject();
+
   const handleCancel = () => {
     props.handleClose();
   };
@@ -172,7 +176,7 @@ const EditChannelModal = (props) => {
     name: '',
     type: 1,
     key: '',
-    openai_organization: '',
+    openai_organization: currentVdcName || '',
     max_input_tokens: 0,
     base_url: '',
     other: '',
@@ -182,7 +186,7 @@ const EditChannelModal = (props) => {
     models: [],
     auto_ban: true,
     test_model: '',
-    groups: ['default'],
+    groups: currentProjectCode ? [currentProjectCode] : ['default'],
     priority: 0,
     weight: 0,
     tag: '',
@@ -456,6 +460,8 @@ const EditChannelModal = (props) => {
         }
       }
 
+      const vdcName = currentVdcName;
+
       setInputs((inputs) => ({
         ...inputs,
         type: 1,
@@ -464,6 +470,7 @@ const EditChannelModal = (props) => {
         base_url: baseUrl,
         models: result.model_name ? [result.model_name] : [],
         groups: mappedGroups,
+        openai_organization: vdcName,
       }));
 
       if (formApiRef.current) {
@@ -474,6 +481,7 @@ const EditChannelModal = (props) => {
           base_url: baseUrl,
           models: result.model_name ? [result.model_name] : [],
           groups: mappedGroups,
+          openai_organization: vdcName,
         });
       }
     }
@@ -483,6 +491,7 @@ const EditChannelModal = (props) => {
       const baseUrl = result.third_party?.api_address || '';
       const apiKey = result.third_party?.api_key || '';
       const modelName = result.name || '';
+      const vdcName = currentVdcName;
 
       // 根据 project_code 匹配分组
       const projectCode = result.project?.project_code;
@@ -509,6 +518,7 @@ const EditChannelModal = (props) => {
         base_url: baseUrl,
         models: modelName ? [modelName] : [],
         groups: mappedGroups,
+        openai_organization: vdcName,
       }));
 
       if (formApiRef.current) {
@@ -519,15 +529,20 @@ const EditChannelModal = (props) => {
           base_url: baseUrl,
           models: modelName ? [modelName] : [],
           groups: mappedGroups,
+          openai_organization: vdcName,
         });
       }
     }
     // 处理蓝绿发布数据填充
+    // 注意：蓝绿发布 API 返回的是 result.project_code（直接字段），
+    // 而推理服务/模型注册返回的是 result.project?.project_code（嵌套字段），
+    // 这是 API 设计不一致，但前端需要兼容两种结构
     if (!isEdit && isEmbedded && aiProviderData?.result?.is_bluegreen) {
       const result = aiProviderData.result;
       const bluegreenBaseUrl = result.bluegreen_url || '';
       const bluegreenModelName = result.model_name || '';
       const projectCode = result.project_code || '';
+      const vdcName = currentVdcName;
 
       // 根据 project_code 匹配分组（参考 inferenceServiceId 的处理方式）
       let mappedGroups = ['default'];
@@ -553,6 +568,7 @@ const EditChannelModal = (props) => {
         base_url: bluegreenBaseUrl,
         models: bluegreenModelName ? [bluegreenModelName] : [],
         groups: mappedGroups,
+        openai_organization: vdcName,
       }));
 
       if (formApiRef.current) {
@@ -563,6 +579,7 @@ const EditChannelModal = (props) => {
           base_url: bluegreenBaseUrl,
           models: bluegreenModelName ? [bluegreenModelName] : [],
           groups: mappedGroups,
+          openai_organization: vdcName,
         });
       }
     }

@@ -484,8 +484,19 @@ export const getLogsColumns = ({
       },
     },
     {
+      key: COLUMN_KEYS.ORGANIZATION,
+      title: t('组织'),
+      dataIndex: 'organization',
+      render: (text, record, index) => {
+        if (record.type === 0 || record.type === 2 || record.type === 5 || record.type === 6) {
+          return text || '-';
+        }
+        return '-';
+      },
+    },
+    {
       key: COLUMN_KEYS.GROUP,
-      title: t('分组'),
+      title: t('项目组'),
       dataIndex: 'group',
       render: (text, record, index) => {
         if (record.type === 0 || record.type === 2 || record.type === 5 || record.type === 6) {
@@ -513,6 +524,41 @@ export const getLogsColumns = ({
         } else {
           return <></>;
         }
+      },
+    },
+    {
+      key: COLUMN_KEYS.IP,
+      title: (
+        <div className='flex items-center gap-1'>
+          {t('IP')}
+          <Tooltip
+            content={t(
+              '只有当用户设置开启IP记录时，才会进行请求和错误类型日志的IP记录',
+            )}
+          >
+            <IconHelpCircle className='text-gray-400 cursor-help' />
+          </Tooltip>
+        </div>
+      ),
+      dataIndex: 'ip',
+      render: (text, record, index) => {
+        return (record.type === 2 || record.type === 5) && text ? (
+          <Tooltip content={text}>
+            <span>
+              <Tag
+                color='orange'
+                shape='circle'
+                onClick={(event) => {
+                  copyText(event, text);
+                }}
+              >
+                {text}
+              </Tag>
+            </span>
+          </Tooltip>
+        ) : (
+          <></>
+        );
       },
     },
     {
@@ -702,41 +748,6 @@ export const getLogsColumns = ({
           );
         }
         return <>{renderQuota(text, 6)}</>;
-      },
-    },
-    {
-      key: COLUMN_KEYS.IP,
-      title: (
-        <div className='flex items-center gap-1'>
-          {t('IP')}
-          <Tooltip
-            content={t(
-              '只有当用户设置开启IP记录时，才会进行请求和错误类型日志的IP记录',
-            )}
-          >
-            <IconHelpCircle className='text-gray-400 cursor-help' />
-          </Tooltip>
-        </div>
-      ),
-      dataIndex: 'ip',
-      render: (text, record, index) => {
-        return (record.type === 2 || record.type === 5) && text ? (
-          <Tooltip content={text}>
-            <span>
-              <Tag
-                color='orange'
-                shape='circle'
-                onClick={(event) => {
-                  copyText(event, text);
-                }}
-              >
-                {text}
-              </Tag>
-            </span>
-          </Tooltip>
-        ) : (
-          <></>
-        );
       },
     },
     {

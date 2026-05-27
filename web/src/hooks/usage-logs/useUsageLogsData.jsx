@@ -49,7 +49,9 @@ export const useLogsData = () => {
     CHANNEL: 'channel',
     USERNAME: 'username',
     TOKEN: 'token',
+    ORGANIZATION: 'organization',
     GROUP: 'group',
+    IP: 'ip',
     TYPE: 'type',
     MODEL: 'model',
     USE_TIME: 'use_time',
@@ -59,7 +61,6 @@ export const useLogsData = () => {
     COMPLETION: 'completion',
     COST: 'cost',
     RETRY: 'retry',
-    IP: 'ip',
     DETAILS: 'details',
   };
 
@@ -155,7 +156,9 @@ export const useLogsData = () => {
       [COLUMN_KEYS.CHANNEL]: isAdminUser,
       [COLUMN_KEYS.USERNAME]: isAdminUser,
       [COLUMN_KEYS.TOKEN]: true,
+      [COLUMN_KEYS.ORGANIZATION]: true,
       [COLUMN_KEYS.GROUP]: true,
+      [COLUMN_KEYS.IP]: true,
       [COLUMN_KEYS.TYPE]: true,
       [COLUMN_KEYS.MODEL]: true,
       [COLUMN_KEYS.USE_TIME]: true,
@@ -165,7 +168,6 @@ export const useLogsData = () => {
       [COLUMN_KEYS.COMPLETION]: true,
       [COLUMN_KEYS.COST]: true,
       [COLUMN_KEYS.RETRY]: isAdminUser,
-      [COLUMN_KEYS.IP]: true,
       [COLUMN_KEYS.DETAILS]: true,
     };
   };

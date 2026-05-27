@@ -148,7 +148,9 @@ export const useChannelsData = ({
   const COLUMN_KEYS = {
     ID: 'id',
     NAME: 'name',
+    ORGANIZATION: 'openai_organization',
     GROUP: 'group',
+    IP: 'base_url',
     TYPE: 'type',
     STATUS: 'status',
     RESPONSE_TIME: 'response_time',
@@ -245,7 +247,9 @@ export const useChannelsData = ({
     return {
       [COLUMN_KEYS.ID]: true,
       [COLUMN_KEYS.NAME]: true,
+      [COLUMN_KEYS.ORGANIZATION]: true,
       [COLUMN_KEYS.GROUP]: true,
+      [COLUMN_KEYS.IP]: true,
       [COLUMN_KEYS.TYPE]: true,
       [COLUMN_KEYS.STATUS]: true,
       [COLUMN_KEYS.RESPONSE_TIME]: true,

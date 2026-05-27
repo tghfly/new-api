@@ -30,6 +30,7 @@ import {
   setGroupNameMap,
 } from '../../../../helpers';
 import { useIsMobile } from '../../../../hooks/common/useIsMobile';
+import { useCurrentProject } from '../../../../hooks/common/useCurrentProject';
 import {
   Button,
   SideSheet,
@@ -55,24 +56,6 @@ import { StatusContext } from '../../../../context/Status';
 
 const { Text, Title } = Typography;
 
-// 从 localStorage 获取当前项目信息
-const getCurrentProjectInfo = () => {
-  try {
-    const projectStr = localStorage.getItem('saber-currentProject');
-    if (projectStr) {
-      const project = JSON.parse(projectStr);
-      return {
-        project_code: project?.content?.project_code || '',
-        project_name: project?.content?.name || '',
-        vdc_name: project?.content?.vdc_name || '',
-      };
-    }
-  } catch (e) {
-    // ignore
-  }
-  return { project_code: '', project_name: '', vdc_name: '' };
-};
-
 const EditTokenModal = (props) => {
   const { t } = useTranslation();
   const [statusState, statusDispatch] = useContext(StatusContext);
@@ -84,8 +67,8 @@ const EditTokenModal = (props) => {
   const [currentGroup, setCurrentGroup] = useState('');
   const isEdit = props.editingToken.id !== undefined;
 
-  // 获取项目信息用于名称前缀和默认分组
-  const { project_code, vdc_name } = getCurrentProjectInfo();
+  // 使用 hook 获取当前项目信息，支持响应项目切换
+  const { project_code, vdc_name } = useCurrentProject();
   const namePrefix = vdc_name ? `${vdc_name}-` : '';
 
   const getInitValues = () => ({

@@ -459,8 +459,13 @@ export const getChannelsColumns = ({
       },
     },
     {
+      key: COLUMN_KEYS.ORGANIZATION,
+      title: t('组织'),
+      dataIndex: 'openai_organization',
+    },
+    {
       key: COLUMN_KEYS.GROUP,
-      title: t('分组'),
+      title: t('项目组'),
       dataIndex: 'group',
       render: (text, record, index) => (
         <div>
@@ -476,6 +481,11 @@ export const getChannelsColumns = ({
           </Space>
         </div>
       ),
+    },
+    {
+      key: COLUMN_KEYS.IP,
+      title: t('IP'),
+      dataIndex: 'base_url',
     },
     {
       key: COLUMN_KEYS.TYPE,
