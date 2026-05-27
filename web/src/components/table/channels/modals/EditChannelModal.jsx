@@ -1561,7 +1561,7 @@ const EditChannelModal = (props) => {
           <div className='text-sm leading-6'>
             <div>
               {t(
-                '模型重定向里的下列模型尚未添加到“模型”列表，调用时会因为缺少可用模型而失败：',
+                '模型别名里的下列模型尚未添加到”模型”列表，调用时会因为缺少可用模型而失败：',
               )}
             </div>
             <div className='font-mono text-xs break-all text-red-600 mt-1'>
@@ -3032,6 +3032,20 @@ const EditChannelModal = (props) => {
                         }
                       />
                     )}
+
+                    <Form.Select
+                      field='groups'
+                      label={t('项目组')}
+                      placeholder={t('请选择可以使用该渠道的分组')}
+                      multiple
+                      allowAdditions
+                      additionLabel={t(
+                        '请在系统设置页面编辑分组倍率以添加新的分组：',
+                      )}
+                      optionList={groupOptions}
+                      style={{ width: '100%' }}
+                      onChange={(value) => handleInputChange('groups', value)}
+                    />
                   </Card>
                 </div>
 
@@ -3463,6 +3477,50 @@ const EditChannelModal = (props) => {
                       }
                     />
 
+                    <JSONEditor
+                      key={`model_mapping-${isEdit ? channelId : 'new'}`}
+                      field='model_mapping'
+                      label={t('模型别名')}
+                      placeholder={
+                        t(
+                          '此项可选，用于修改请求体中的模型名称，为一个 JSON 字符串，键为请求中模型名称，值为要替换的模型名称，例如：',
+                        ) +
+                        `\n${JSON.stringify(MODEL_MAPPING_EXAMPLE, null, 2)}`
+                      }
+                      value={inputs.model_mapping || ''}
+                      onChange={(value) =>
+                        handleInputChange('model_mapping', value)
+                      }
+                      template={MODEL_MAPPING_EXAMPLE}
+                      templateLabel={t('填入模板')}
+                      editorType='keyValue'
+                      formApi={formApiRef.current}
+                      renderStringValueSuffix={({ pairKey, value }) => {
+                        if (!MODEL_FETCHABLE_CHANNEL_TYPES.has(inputs.type)) {
+                          return null;
+                        }
+                        const disabled = !String(pairKey ?? '').trim();
+                        return (
+                          <Tooltip content={t('选择模型')}>
+                            <Button
+                              type='tertiary'
+                              theme='borderless'
+                              size='small'
+                              icon={<IconSearch size={14} />}
+                              disabled={disabled}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openModelMappingValueModal({ pairKey, value });
+                              }}
+                            />
+                          </Tooltip>
+                        );
+                      }}
+                      extraText={t(
+                        '键为请求中的模型名称，值为要替换的模型名称',
+                      )}
+                    />
+
                     {MODEL_FETCHABLE_CHANNEL_TYPES.has(inputs.type) && (
                       <>
                         <Form.Switch
@@ -3510,50 +3568,6 @@ const EditChannelModal = (props) => {
                       }
                       showClear
                     />
-
-                    <JSONEditor
-                      key={`model_mapping-${isEdit ? channelId : 'new'}`}
-                      field='model_mapping'
-                      label={t('模型重定向')}
-                      placeholder={
-                        t(
-                          '此项可选，用于修改请求体中的模型名称，为一个 JSON 字符串，键为请求中模型名称，值为要替换的模型名称，例如：',
-                        ) +
-                        `\n${JSON.stringify(MODEL_MAPPING_EXAMPLE, null, 2)}`
-                      }
-                      value={inputs.model_mapping || ''}
-                      onChange={(value) =>
-                        handleInputChange('model_mapping', value)
-                      }
-                      template={MODEL_MAPPING_EXAMPLE}
-                      templateLabel={t('填入模板')}
-                      editorType='keyValue'
-                      formApi={formApiRef.current}
-                      renderStringValueSuffix={({ pairKey, value }) => {
-                        if (!MODEL_FETCHABLE_CHANNEL_TYPES.has(inputs.type)) {
-                          return null;
-                        }
-                        const disabled = !String(pairKey ?? '').trim();
-                        return (
-                          <Tooltip content={t('选择模型')}>
-                            <Button
-                              type='tertiary'
-                              theme='borderless'
-                              size='small'
-                              icon={<IconSearch size={14} />}
-                              disabled={disabled}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openModelMappingValueModal({ pairKey, value });
-                              }}
-                            />
-                          </Tooltip>
-                        );
-                      }}
-                      extraText={t(
-                        '键为请求中的模型名称，值为要替换的模型名称',
-                      )}
-                    />
                   </Card>
                 </div>
 
@@ -3580,20 +3594,6 @@ const EditChannelModal = (props) => {
                         </div>
                       </div>
                     </div>
-
-                    <Form.Select
-                      field='groups'
-                      label={t('分组')}
-                      placeholder={t('请选择可以使用该渠道的分组')}
-                      multiple
-                      allowAdditions
-                      additionLabel={t(
-                        '请在系统设置页面编辑分组倍率以添加新的分组：',
-                      )}
-                      optionList={groupOptions}
-                      style={{ width: '100%' }}
-                      onChange={(value) => handleInputChange('groups', value)}
-                    />
 
                     <Form.Input
                       field='tag'
