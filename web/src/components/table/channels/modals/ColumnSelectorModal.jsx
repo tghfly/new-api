@@ -102,8 +102,8 @@ const ColumnSelectorModal = ({
         style={{ border: '1px solid var(--semi-color-border)' }}
       >
         {allColumns.map((column) => {
-          // Skip columns without title
-          if (!column.title) {
+          // Skip columns without title and IP column (not for display)
+          if (!column.title || column.key === COLUMN_KEYS.IP) {
             return null;
           }
 

@@ -249,7 +249,7 @@ export const useChannelsData = ({
       [COLUMN_KEYS.NAME]: true,
       [COLUMN_KEYS.ORGANIZATION]: true,
       [COLUMN_KEYS.GROUP]: true,
-      [COLUMN_KEYS.IP]: true,
+      [COLUMN_KEYS.IP]: false,
       [COLUMN_KEYS.TYPE]: true,
       [COLUMN_KEYS.STATUS]: true,
       [COLUMN_KEYS.RESPONSE_TIME]: true,
