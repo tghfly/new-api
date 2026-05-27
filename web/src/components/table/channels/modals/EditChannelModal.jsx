@@ -186,6 +186,7 @@ const EditChannelModal = (props) => {
     models: [],
     auto_ban: true,
     test_model: '',
+    model_version: '',
     groups: currentProjectCode ? [currentProjectCode] : ['default'],
     priority: 0,
     weight: 0,
@@ -469,6 +470,7 @@ const EditChannelModal = (props) => {
         key: 'none-key',
         base_url: baseUrl,
         models: result.model_name ? [result.model_name] : [],
+        model_version: result.model_version || '',
         groups: mappedGroups,
         openai_organization: vdcName,
       }));
@@ -480,6 +482,7 @@ const EditChannelModal = (props) => {
           key: 'none-key',
           base_url: baseUrl,
           models: result.model_name ? [result.model_name] : [],
+          model_version: result.model_version || '',
           groups: mappedGroups,
           openai_organization: vdcName,
         });
@@ -1376,6 +1379,18 @@ const EditChannelModal = (props) => {
       setDoubaoApiEditUnlocked(false);
     }
   }, [inputs.type]);
+
+  // 新建渠道时，自动将名称填充到渠道标签，格式为 name=xxx,version=xxx
+  useEffect(() => {
+    if (!isEdit && inputs.name && !inputs.tag) {
+      const modelVersion = inputs.model_version || '';
+      if (modelVersion) {
+        handleInputChange('tag', `name=${inputs.name},version=${modelVersion}`);
+      } else {
+        handleInputChange('tag', `name=${inputs.name}`);
+      }
+    }
+  }, [inputs.name, inputs.model_version, isEdit]);
 
   useEffect(() => {
     const modelMap = new Map();
