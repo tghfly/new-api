@@ -346,7 +346,7 @@ export const getLogsColumns = ({
     },
     {
       key: COLUMN_KEYS.CHANNEL,
-      title: t('渠道'),
+      title: t('API序号'),
       dataIndex: 'channel',
       render: (text, record, index) => {
         let isMultiKey = false;

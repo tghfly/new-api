@@ -52,7 +52,7 @@ export const useLogsData = () => {
     ORGANIZATION: 'organization',
     GROUP: 'group',
     IP: 'ip',
-    TYPE: 'type',
+    // TYPE: 'type',
     MODEL: 'model',
     USE_TIME: 'use_time',
     GPU_TIME: 'gpu_time',
@@ -60,7 +60,7 @@ export const useLogsData = () => {
     PROMPT: 'prompt',
     COMPLETION: 'completion',
     COST: 'cost',
-    RETRY: 'retry',
+    // RETRY: 'retry',
     DETAILS: 'details',
   };
 
