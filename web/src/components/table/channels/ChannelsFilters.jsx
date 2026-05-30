@@ -59,7 +59,7 @@ const ChannelsFilters = ({
           </Button>
         )}
 
-        {/* 添加渠道按钮 - 在 action=add 时隐藏 */}
+        {/* 添加API接口按钮 - 在 action=add 时隐藏 */}
         {autoAction !== 'add' && hasSSOPerm('b:ai-web:modelstation:channel:create') && (
           <Button
             size='small'
@@ -73,7 +73,7 @@ const ChannelsFilters = ({
               setShowEdit(true);
             }}
           >
-            {t('添加渠道')}
+            {t('添加API接口')}
           </Button>
         )}
 
@@ -121,7 +121,7 @@ const ChannelsFilters = ({
               size='small'
               field='searchKeyword'
               prefix={<IconSearch />}
-              placeholder={t('渠道ID，名称，密钥，API地址')}
+              placeholder={t('API接口ID，名称，密钥，API地址')}
               showClear
               pure
             />

@@ -223,7 +223,7 @@ const ChannelUpstreamUpdateModal = ({
       <div className='flex flex-col gap-3'>
         <Typography.Text type='secondary' size='small'>
           {t(
-            '可勾选需要执行的变更：新增会加入渠道模型列表，删除会从渠道模型列表移除。',
+            '可勾选需要执行的变更：新增会加入API接口模型列表，删除会从API接口模型列表移除。',
           )}
         </Typography.Text>
 

@@ -688,7 +688,7 @@ const OllamaModelModal = ({
                 disabled={selectedModelIds.length === 0}
                 size='small'
               >
-                {t('加入渠道')}
+                {t('加入API接口')}
               </Button>
               <Button
                 theme='light'

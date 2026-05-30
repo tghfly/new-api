@@ -161,7 +161,7 @@ const CodexOAuthModal = ({ visible, onCancel, onSuccess }) => {
 
         <Text type='tertiary' size='small'>
           {t(
-            '说明：生成结果是可直接粘贴到渠道密钥里的 JSON（包含 access_token / refresh_token / account_id）。',
+            '说明：生成结果是可直接粘贴到API接口密钥里的 JSON（包含 access_token / refresh_token / account_id）。',
           )}
         </Text>
       </Space>

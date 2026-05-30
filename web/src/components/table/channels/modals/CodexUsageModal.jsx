@@ -135,7 +135,7 @@ const CodexUsageView = ({ t, record, payload, onCopy, onRefresh }) => {
     <div className='flex flex-col gap-3'>
       <div className='flex flex-wrap items-center justify-between gap-2'>
         <Text type='tertiary' size='small'>
-          {tt('渠道：')}
+          {tt('API接口：')}
           {record?.name || '-'} ({tt('编号：')}
           {record?.id || '-'})
         </Text>

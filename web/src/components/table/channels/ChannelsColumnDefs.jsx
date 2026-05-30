@@ -394,7 +394,7 @@ export const getChannelsColumns = ({
             {passThroughEnabled && (
               <Tooltip
                 content={t(
-                  '该渠道已开启请求透传：参数覆写、模型重定向、渠道适配等 NewAPI 内置功能将失效，非最佳实践；如因此产生问题，请勿提交 issue 反馈。',
+                  '该API接口已开启请求透传：参数覆写、模型重定向、API接口适配等 NewAPI 内置功能将失效，非最佳实践；如因此产生问题，请勿提交 issue 反馈。',
                 )}
                 trigger='hover'
                 position='topLeft'
@@ -603,9 +603,9 @@ export const getChannelsColumns = ({
               keepFocus={true}
               onBlur={(e) => {
                 Modal.warning({
-                  title: t('修改子渠道优先级'),
+                  title: t('修改子API接口优先级'),
                   content:
-                    t('确定要修改所有子渠道优先级为 ') +
+                    t('确定要修改所有子API接口优先级为 ') +
                     e.target.value +
                     t(' 吗？'),
                   onOk: () => {
@@ -658,9 +658,9 @@ export const getChannelsColumns = ({
               keepFocus={true}
               onBlur={(e) => {
                 Modal.warning({
-                  title: t('修改子渠道权重'),
+                  title: t('修改子API接口权重'),
                   content:
-                    t('确定要修改所有子渠道权重为 ') +
+                    t('确定要修改所有子API接口权重为 ') +
                     e.target.value +
                     t(' 吗？'),
                   onOk: () => {
@@ -701,7 +701,7 @@ export const getChannelsColumns = ({
               type: 'danger',
               onClick: () => {
                 Modal.confirm({
-                  title: t('确定是否要删除此渠道？'),
+                  title: t('确定是否要删除此API接口？'),
                   content: t('此修改将不可逆'),
                   onOk: () => {
                     (async () => {
@@ -727,8 +727,8 @@ export const getChannelsColumns = ({
               type: 'tertiary',
               onClick: () => {
                 Modal.confirm({
-                  title: t('确定是否要复制此渠道？'),
-                  content: t('复制渠道的所有信息'),
+                  title: t('确定是否要复制此API接口？'),
+                  content: t('复制API接口的所有信息'),
                   onOk: () => copySelectedChannel(record),
                 });
               },
@@ -755,14 +755,14 @@ export const getChannelsColumns = ({
                 type: 'tertiary',
                 onClick: () => {
                   if (!upstreamUpdateMeta.enabled) {
-                    showInfo(t('该渠道未开启上游模型更新检测'));
+                    showInfo(t('该API接口未开启上游模型更新检测'));
                     return;
                   }
                   if (
                     upstreamUpdateMeta.pendingAddModels.length === 0 &&
                     upstreamUpdateMeta.pendingRemoveModels.length === 0
                   ) {
-                    showInfo(t('该渠道暂无可处理的上游模型更新'));
+                    showInfo(t('该API接口暂无可处理的上游模型更新'));
                     return;
                   }
                   openUpstreamUpdateModal(
@@ -792,7 +792,7 @@ export const getChannelsColumns = ({
               {(hasSSOPerm('b:ai-web:modelstation:channel:test') ) && (
                 <SplitButtonGroup
                   className='overflow-hidden'
-                  aria-label={t('测试单个渠道操作项目组')}
+                  aria-label={t('测试单个API接口操作项目组')}
                 >
                   <Button
                     size='small'
@@ -841,7 +841,7 @@ export const getChannelsColumns = ({
               {hasSSOPerm('b:ai-web:modelstation:channel:edit') && (
                 <>
                   {record.channel_info?.is_multi_key ? (
-                    <SplitButtonGroup aria-label={t('多密钥渠道操作项目组')}>
+                    <SplitButtonGroup aria-label={t('多密钥API接口操作项目组')}>
                       <Button
                         type='tertiary'
                         size='small'

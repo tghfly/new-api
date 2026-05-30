@@ -125,13 +125,13 @@ const PARAM_OVERRIDE_OPERATIONS_TEMPLATE = {
   ],
 };
 
-// 支持并且已适配通过接口获取模型列表的渠道类型
+// 支持并且已适配通过接口获取模型列表的API接口类型
 const MODEL_FETCHABLE_TYPES = new Set([
   1, 4, 14, 34, 17, 26, 27, 24, 47, 25, 20, 23, 31, 40, 42, 48, 43,
 ]);
 
 function type2secretPrompt(type) {
-  // inputs.type === 15 ? '按照如下格式输入：APIKey|SecretKey' : (inputs.type === 18 ? '按照如下格式输入：APPID|APISecret|APIKey' : '请输入渠道对应的鉴权密钥')
+  // inputs.type === 15 ? '按照如下格式输入：APIKey|SecretKey' : (inputs.type === 18 ? '按照如下格式输入：APPID|APISecret|APIKey' : '请输入API接口对应的鉴权密钥')
   switch (type) {
     case 15:
       return '按照如下格式输入：APIKey|SecretKey';
@@ -144,7 +144,7 @@ function type2secretPrompt(type) {
     case 33:
       return '按照如下格式输入：Ak|Sk|Region';
     case 45:
-      return '请输入渠道对应的鉴权密钥, 豆包语音输入：AppId|AccessToken';
+      return '请输入API接口对应的鉴权密钥, 豆包语音输入：AppId|AccessToken';
     case 50:
       return '按照如下格式输入: AccessKey|SecretKey, 如果上游是New API，则直接输ApiKey';
     case 51:
@@ -152,7 +152,7 @@ function type2secretPrompt(type) {
     case 57:
       return '请输入 JSON 格式的 OAuth 凭据（必须包含 access_token 和 account_id）';
     default:
-      return '请输入渠道对应的鉴权密钥';
+      return '请输入API接口对应的鉴权密钥';
   }
 }
 
@@ -192,7 +192,7 @@ const EditChannelModal = (props) => {
     weight: 0,
     tag: '',
     multi_key_mode: 'random',
-    // 渠道额外设置的默认值
+    // API接口额外设置的默认值
     force_format: false,
     thinking_to_content: false,
     proxy: '',
@@ -253,7 +253,7 @@ const EditChannelModal = (props) => {
   const [useManualInput, setUseManualInput] = useState(false); // 是否使用手动输入模式
   const [keyMode, setKeyMode] = useState('append'); // 密钥模式：replace（覆盖）或 append（追加）
   const [isEnterpriseAccount, setIsEnterpriseAccount] = useState(false); // 是否为企业账户
-  const [doubaoApiEditUnlocked, setDoubaoApiEditUnlocked] = useState(false); // 豆包渠道自定义 API 地址隐藏入口
+  const [doubaoApiEditUnlocked, setDoubaoApiEditUnlocked] = useState(false); // 豆包API接口自定义 API 地址隐藏入口
   const redirectModelList = useMemo(() => {
     const mapping = inputs.model_mapping;
     if (typeof mapping !== 'string') return [];
@@ -515,7 +515,7 @@ const EditChannelModal = (props) => {
 
       setInputs((inputs) => ({
         ...inputs,
-        type: 8, // 自定义渠道
+        type: 8, // 自定义API接口
         name: modelName,
         key: apiKey,
         base_url: baseUrl,
@@ -685,7 +685,7 @@ const EditChannelModal = (props) => {
     }
   };
 
-  // 渠道额外设置状态
+  // API接口额外设置状态
   const [channelSettings, setChannelSettings] = useState({
     force_format: false,
     thinking_to_content: false,
@@ -696,7 +696,7 @@ const EditChannelModal = (props) => {
   const showApiConfigCard = true; // 控制是否显示 API 配置卡片
   const getInitValues = () => ({ ...originInputs });
 
-  // 处理渠道额外设置的更新
+  // 处理API接口额外设置的更新
   const handleChannelSettingsChange = (key, value) => {
     // 更新内部状态
     setChannelSettings((prev) => ({ ...prev, [key]: value }));
@@ -999,7 +999,7 @@ const EditChannelModal = (props) => {
         setBatch(false);
         setMultiToSingle(false);
       }
-      // 解析渠道额外设置并合并到data中
+      // 解析API接口额外设置并合并到data中
       if (data.setting) {
         try {
           const parsedSettings = JSON.parse(data.setting);
@@ -1013,7 +1013,7 @@ const EditChannelModal = (props) => {
           data.system_prompt_override =
             parsedSettings.system_prompt_override || false;
         } catch (error) {
-          console.error('解析渠道设置失败:', error);
+          console.error('解析API接口设置失败:', error);
           data.force_format = false;
           data.thinking_to_content = false;
           data.proxy = '';
@@ -1088,7 +1088,7 @@ const EditChannelModal = (props) => {
           data.upstream_model_update_ignored_models = '';
         }
       } else {
-        // 兼容历史数据：老渠道没有 settings 时，默认按 json 展示
+        // 兼容历史数据：老API接口没有 settings 时，默认按 json 展示
         data.vertex_key_type = 'json';
         data.aws_key_type = 'ak_sk';
         data.is_enterprise_account = false;
@@ -1320,14 +1320,14 @@ const EditChannelModal = (props) => {
     }
   };
 
-  // 查看渠道密钥（透明验证）
+  // 查看API接口密钥（透明验证）
   const handleShow2FAModal = async () => {
     try {
       // 使用 withVerification 包装，会自动处理需要验证的情况
       const result = await withVerification(
         createApiCalls.viewChannelKey(channelId),
         {
-          title: t('查看渠道密钥'),
+          title: t('查看API接口密钥'),
           description: t('为了保护账户安全，请验证您的身份。'),
           preferredMethod: 'passkey', // 优先使用 Passkey
         },
@@ -1380,7 +1380,7 @@ const EditChannelModal = (props) => {
     }
   }, [inputs.type]);
 
-  // 新建渠道时，自动将名称填充到渠道标签，格式为 name=xxx,version=xxx
+  // 新建API接口时，自动将名称填充到API接口标签，格式为 name=xxx,version=xxx
   useEffect(() => {
     if (!isEdit && inputs.name && !inputs.tag) {
       const modelVersion = inputs.model_version || '';
@@ -1497,7 +1497,7 @@ const EditChannelModal = (props) => {
   const resetModalState = () => {
     resolveStatusCodeRiskConfirm(false);
     formApiRef.current?.reset();
-    // 重置渠道设置状态
+    // 重置API接口设置状态
     setChannelSettings({
       force_format: false,
       thinking_to_content: false,
@@ -1665,7 +1665,7 @@ const EditChannelModal = (props) => {
 
     if (localInputs.type === 57) {
       if (batch) {
-        showInfo(t('Codex 渠道不支持批量创建'));
+        showInfo(t('Codex API接口不支持批量创建'));
         return;
       }
 
@@ -1769,7 +1769,7 @@ const EditChannelModal = (props) => {
     delete localInputs.vertex_files;
 
     if (!isEdit && (!localInputs.name || !localInputs.key)) {
-      showInfo(t('请填写渠道名称和渠道密钥！'));
+      showInfo(t('请填写API接口名称和API接口密钥！'));
       return;
     }
     if (!Array.isArray(localInputs.models) || localInputs.models.length === 0) {
@@ -1863,7 +1863,7 @@ const EditChannelModal = (props) => {
       localInputs.other = 'v2.1';
     }
 
-    // 生成渠道额外设置JSON
+    // 生成API接口额外设置JSON
     const channelExtraSettings = {
       force_format: localInputs.force_format || false,
       thinking_to_content: localInputs.thinking_to_content || false,
@@ -1905,7 +1905,7 @@ const EditChannelModal = (props) => {
     // type === 1 (OpenAI) 或 type === 14 (Claude): 设置字段透传控制（显式保存布尔值）
     if (localInputs.type === 1 || localInputs.type === 14) {
       settings.allow_service_tier = localInputs.allow_service_tier === true;
-      // 仅 OpenAI 渠道需要 store / safety_identifier / include_obfuscation
+      // 仅 OpenAI API接口需要 store / safety_identifier / include_obfuscation
       if (localInputs.type === 1) {
         settings.disable_store = localInputs.disable_store === true;
         settings.allow_safety_identifier =
@@ -1995,9 +1995,9 @@ const EditChannelModal = (props) => {
     const { success, message } = res.data;
     if (success) {
       if (isEdit) {
-        showSuccess(t('渠道更新成功！'));
+        showSuccess(t('API接口更新成功！'));
       } else {
-        showSuccess(t('渠道创建成功！'));
+        showSuccess(t('API接口创建成功！'));
 
         // 嵌入模式下调用发布接口（inferenceServiceId）
         if (isEmbedded && inferenceServiceId) {
@@ -2304,7 +2304,7 @@ const EditChannelModal = (props) => {
               {isEdit ? t('编辑') : t('新建')}
             </Tag>
             <Title heading={4} className='m-0'>
-              {isEdit ? t('更新渠道信息') : t('创建新的渠道')}
+              {isEdit ? t('更新API接口信息') : t('创建新的API接口')}
             </Title>
           </Space>
         }
@@ -2394,7 +2394,7 @@ const EditChannelModal = (props) => {
                           {t('基本信息')}
                         </Text>
                         <div className='text-xs text-gray-600'>
-                          {t('渠道的基本配置信息')}
+                          {t('API接口的基本配置信息')}
                         </div>
                       </div>
                     </div>
@@ -2405,7 +2405,7 @@ const EditChannelModal = (props) => {
                         closeIcon={null}
                         className='mb-4 rounded-xl'
                         description={t(
-                          '此渠道由 IO.NET 自动同步，类型、密钥和 API 地址已锁定。',
+                          '此API接口由 IO.NET 自动同步，类型、密钥和 API 地址已锁定。',
                         )}
                       >
                         <Space>
@@ -2427,8 +2427,8 @@ const EditChannelModal = (props) => {
                     <Form.Select
                       field='type'
                       label={t('类型')}
-                      placeholder={t('请选择渠道类型')}
-                      rules={[{ required: true, message: t('请选择渠道类型') }]}
+                      placeholder={t('请选择API接口类型')}
+                      rules={[{ required: true, message: t('请选择API接口类型') }]}
                       optionList={channelOptionList}
                       style={{ width: '100%' }}
                       filter={selectFilter}
@@ -2446,7 +2446,7 @@ const EditChannelModal = (props) => {
                         closeIcon={null}
                         className='mb-4 rounded-xl'
                         description={t(
-                          '免责声明：仅限个人使用，请勿分发或共享任何凭证。该渠道存在前置条件与使用门槛，请在充分了解流程与风险后使用，并遵守 OpenAI 的相关条款与政策。相关凭证与配置仅限接入 Codex CLI 使用，不适用于其他客户端、平台或渠道。',
+                          '免责声明：仅限个人使用，请勿分发或共享任何凭证。该API接口存在前置条件与使用门槛，请在充分了解流程与风险后使用，并遵守 OpenAI 的相关条款与政策。相关凭证与配置仅限接入 Codex CLI 使用，不适用于其他客户端、平台或API接口。',
                         )}
                       />
                     )}
@@ -2471,8 +2471,8 @@ const EditChannelModal = (props) => {
                     <Form.Input
                       field='name'
                       label={t('名称')}
-                      placeholder={t('请为渠道命名')}
-                      rules={[{ required: true, message: t('请为渠道命名') }]}
+                      placeholder={t('请为API接口命名')}
+                      rules={[{ required: true, message: t('请为API接口命名') }]}
                       showClear
                       onChange={(value) => handleInputChange('name', value)}
                       autoComplete='new-password'
@@ -3051,7 +3051,7 @@ const EditChannelModal = (props) => {
                     <Form.Select
                       field='groups'
                       label={t('项目组')}
-                      placeholder={t('请选择可以使用该渠道的分组')}
+                      placeholder={t('请选择可以使用该API接口的分组')}
                       multiple
                       allowAdditions
                       additionLabel={t(
@@ -3119,7 +3119,7 @@ const EditChannelModal = (props) => {
                           <Banner
                             type='warning'
                             description={t(
-                              '2025年5月10日后添加的渠道，不需要再在部署的时候移除模型名称中的"."',
+                              '2025年5月10日后添加的API接口，不需要再在部署的时候移除模型名称中的"."',
                             )}
                             className='!rounded-lg'
                           />
@@ -3199,7 +3199,7 @@ const EditChannelModal = (props) => {
                         <Banner
                           type='warning'
                           description={t(
-                            'Dify渠道只适配chatflow和agent，并且agent不支持图片！',
+                            'DifyAPI接口只适配chatflow和agent，并且agent不支持图片！',
                           )}
                           className='!rounded-lg'
                         />
@@ -3223,7 +3223,7 @@ const EditChannelModal = (props) => {
                               showClear
                               disabled={isIonetLocked}
                               extraText={t(
-                                '对于官方渠道，new-api已经内置地址，除非是第三方代理站点或者Azure的特殊接入地址，否则不需要填写',
+                                '对于官方API接口，系统已经内置地址，除非是第三方代理站点或者Azure的特殊接入地址，否则不需要填写',
                               )}
                             />
                           </div>
@@ -3324,7 +3324,7 @@ const EditChannelModal = (props) => {
                     <Form.Select
                       field='models'
                       label={t('模型')}
-                      placeholder={t('请选择该渠道所支持的模型')}
+                      placeholder={t('请选择该API接口所支持的模型')}
                       rules={[{ required: true, message: t('请选择模型') }]}
                       multiple
                       filter={selectFilter}
@@ -3550,7 +3550,7 @@ const EditChannelModal = (props) => {
                             )
                           }
                           extraText={t(
-                            '开启后由后端定时任务检测该渠道上游模型变化',
+                            '开启后由后端定时任务检测该API接口上游模型变化',
                           )}
                         />
                         <div className='text-xs text-gray-500 mb-2'>
@@ -3605,15 +3605,15 @@ const EditChannelModal = (props) => {
                           {t('高级设置')}
                         </Text>
                         <div className='text-xs text-gray-600'>
-                          {t('渠道的高级配置选项')}
+                          {t('API接口的高级配置选项')}
                         </div>
                       </div>
                     </div>
 
                     <Form.Input
                       field='tag'
-                      label={t('渠道标签')}
-                      placeholder={t('渠道标签')}
+                      label={t('API接口标签')}
+                      placeholder={t('API接口标签')}
                       showClear
                       onChange={(value) => handleInputChange('tag', value)}
                     />
@@ -3630,8 +3630,8 @@ const EditChannelModal = (props) => {
                       <Col span={12}>
                         <Form.InputNumber
                           field='priority'
-                          label={t('渠道优先级')}
-                          placeholder={t('渠道优先级')}
+                          label={t('API接口优先级')}
+                          placeholder={t('API接口优先级')}
                           min={0}
                           onNumberChange={(value) =>
                             handleInputChange('priority', value)
@@ -3642,8 +3642,8 @@ const EditChannelModal = (props) => {
                       <Col span={12}>
                         <Form.InputNumber
                           field='weight'
-                          label={t('渠道权重')}
-                          placeholder={t('渠道权重')}
+                          label={t('API接口权重')}
+                          placeholder={t('API接口权重')}
                           min={0}
                           onNumberChange={(value) =>
                             handleInputChange('weight', value)
@@ -3660,7 +3660,7 @@ const EditChannelModal = (props) => {
                       uncheckedText={t('关')}
                       onChange={(value) => setAutoBan(value)}
                       extraText={t(
-                        '仅当自动禁用开启时有效，关闭后不会自动禁用该渠道',
+                        '仅当自动禁用开启时有效，关闭后不会自动禁用该API接口',
                       )}
                       initValue={autoBan}
                     />
@@ -3678,7 +3678,7 @@ const EditChannelModal = (props) => {
                             )
                         }
                         extraText={t(
-                            '开启后检测到新增模型会自动加入当前渠道模型列表',
+                            '开启后检测到新增模型会自动加入当前API接口模型列表',
                         )}
                     />
 
@@ -3857,7 +3857,7 @@ const EditChannelModal = (props) => {
                               </Text>
                               <div className='text-xs text-tertiary ml-2'>
                                 <div>
-                                  {t('渠道密钥')}: {'{api_key}'}
+                                  {t('API接口密钥')}: {'{api_key}'}
                                 </div>
                               </div>
                             </div>
@@ -3871,7 +3871,7 @@ const EditChannelModal = (props) => {
                       label={t('状态码复写')}
                       placeholder={
                         t(
-                          '此项可选，用于复写返回的状态码，仅影响本地判断，不修改返回到上游的状态码，比如将claude渠道的400错误复写为500（用于重试），请勿滥用该功能，例如：',
+                          '此项可选，用于复写返回的状态码，仅影响本地判断，不修改返回到上游的状态码，比如将claudeAPI接口的400错误复写为500（用于重试），请勿滥用该功能，例如：',
                         ) +
                         '\n' +
                         JSON.stringify(STATUS_CODE_MAPPING_EXAMPLE, null, 2)
@@ -3889,7 +3889,7 @@ const EditChannelModal = (props) => {
                       )}
                     />
 
-                    {/* 字段透传控制 - OpenAI 渠道 */}
+                    {/* 字段透传控制 - OpenAI API接口 */}
                     {inputs.type === 1 && (
                       <>
                         <div className='mt-4 mb-2 text-sm font-medium text-gray-700'>
@@ -3964,7 +3964,7 @@ const EditChannelModal = (props) => {
                       </>
                     )}
 
-                    {/* 字段透传控制 - Claude 渠道 */}
+                    {/* 字段透传控制 - Claude API接口 */}
                     {inputs.type === 14 && (
                       <>
                         <div className='mt-4 mb-2 text-sm font-medium text-gray-700'>
@@ -4025,7 +4025,7 @@ const EditChannelModal = (props) => {
                       </Avatar>
                       <div>
                         <Text className='text-lg font-medium'>
-                          {t('渠道额外设置')}
+                          {t('API接口额外设置')}
                         </Text>
                       </div>
                     </div>
@@ -4043,7 +4043,7 @@ const EditChannelModal = (props) => {
                           )
                         }
                         extraText={t(
-                          '开启后，该渠道请求 Claude 时将强制追加 ?beta=true（无需客户端手动传参）',
+                          '开启后，该API接口请求 Claude 时将强制追加 ?beta=true（无需客户端手动传参）',
                         )}
                       />
                     )}
@@ -4058,7 +4058,7 @@ const EditChannelModal = (props) => {
                           handleChannelSettingsChange('force_format', value)
                         }
                         extraText={t(
-                          '强制将响应格式化为 OpenAI 标准格式（只适用于OpenAI渠道类型）',
+                          '强制将响应格式化为 OpenAI 标准格式（只适用于OpenAIAPI接口类型）',
                         )}
                       />
                     )}
@@ -4182,7 +4182,7 @@ const EditChannelModal = (props) => {
                 />
               </svg>
             </div>
-            {t('渠道密钥信息')}
+            {t('API接口密钥信息')}
           </div>
         }
         visible={keyDisplayState.showModal}

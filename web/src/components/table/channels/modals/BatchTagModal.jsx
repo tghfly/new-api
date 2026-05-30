@@ -50,7 +50,7 @@ const BatchTagModal = ({
       />
       <div className='mt-4'>
         <Typography.Text type='secondary'>
-          {t('已选择 ${count} 个渠道').replace(
+          {t('已选择 ${count} 个API接口').replace(
             '${count}',
             selectedChannels.length,
           )}

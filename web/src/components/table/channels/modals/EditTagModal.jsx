@@ -472,14 +472,14 @@ const EditTagModal = (props) => {
                   <Banner
                     type='info'
                     description={t(
-                      '当前模型列表为该标签下所有渠道模型列表最长的一个，并非所有渠道的并集，请注意可能导致某些渠道模型丢失。',
+                      '当前模型列表为该标签下所有API接口模型列表最长的一个，并非所有API接口的并集，请注意可能导致某些API接口模型丢失。',
                     )}
                     className='!rounded-lg mb-4'
                   />
                   <Form.Select
                     field='models'
                     label={t('模型')}
-                    placeholder={t('请选择该渠道所支持的模型，留空则不更改')}
+                    placeholder={t('请选择该API接口所支持的模型，留空则不更改')}
                     multiple
                     filter={selectFilter}
                     allowCreate
@@ -573,7 +573,7 @@ const EditTagModal = (props) => {
                   <div>
                     <Text className='text-lg font-medium'>{t('高级设置')}</Text>
                     <div className='text-xs text-gray-600'>
-                      {t('渠道的高级配置选项')}
+                      {t('API接口的高级配置选项')}
                     </div>
                   </div>
                 </div>
@@ -703,7 +703,7 @@ const EditTagModal = (props) => {
                           </Text>
                           <div className='text-xs text-tertiary ml-2'>
                             <div>
-                              {t('渠道密钥')}: {'{api_key}'}
+                              {t('API接口密钥')}: {'{api_key}'}
                             </div>
                           </div>
                         </div>
@@ -731,7 +731,7 @@ const EditTagModal = (props) => {
                   <Form.Select
                     field='groups'
                     label={t('分组')}
-                    placeholder={t('请选择可以使用该渠道的分组，留空则不更改')}
+                    placeholder={t('请选择可以使用该API接口的分组，留空则不更改')}
                     multiple
                     allowAdditions
                     additionLabel={t(

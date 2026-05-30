@@ -230,7 +230,7 @@ const ModelTestModal = ({
                 strong
                 className='!text-[var(--semi-color-text-0)] !text-base'
               >
-                {currentTestChannel.name} {t('渠道的模型测试')}
+                {currentTestChannel.name} {t('API接口的模型测试')}
               </Typography.Text>
               <Typography.Text type='tertiary' size='small'>
                 {t('共')} {currentTestChannel.models.split(',').length}{' '}
@@ -309,7 +309,7 @@ const ModelTestModal = ({
             icon={<IconInfoCircle />}
             className='!rounded-lg mb-2'
             description={t(
-              '说明：本页测试为非流式请求；若渠道仅支持流式返回，可能出现测试失败，请以实际使用为准。',
+              '说明：本页测试为非流式请求；若API接口仅支持流式返回，可能出现测试失败，请以实际使用为准。',
             )}
           />
 

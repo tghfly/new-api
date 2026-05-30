@@ -122,14 +122,14 @@ const ChannelsActions = ({
                         onClick={() => {
                           Modal.confirm({
                             title: t('确定？'),
-                            content: t('确定要测试所有未手动禁用渠道吗？'),
+                            content: t('确定要测试所有未手动禁用API接口吗？'),
                             onOk: () => testAllChannels(),
                             size: 'small',
                             centered: true,
                           });
                         }}
                       >
-                        {t('测试所有未手动禁用渠道')}
+                        {t('测试所有未手动禁用API接口')}
                       </Button>
                     </Dropdown.Item>
                   )}
@@ -143,7 +143,7 @@ const ChannelsActions = ({
                           Modal.confirm({
                             title: t('确定是否要修复数据库一致性？'),
                             content: t(
-                              '进行该操作时，可能导致渠道访问错误，请仅在数据库出现问题时使用',
+                              '进行该操作时，可能导致API接口访问错误，请仅在数据库出现问题时使用',
                             ),
                             onOk: () => fixChannelsAbilities(),
                             size: 'sm',
@@ -187,7 +187,7 @@ const ChannelsActions = ({
                           Modal.confirm({
                             title: t('确定？'),
                             content: t(
-                              '确定要仅检测全部渠道上游模型更新吗？（不执行新增/删除）',
+                              '确定要仅检测全部API接口上游模型更新吗？（不执行新增/删除）',
                             ),
                             onOk: () => detectAllUpstreamUpdates(),
                             size: 'sm',
@@ -195,7 +195,7 @@ const ChannelsActions = ({
                           });
                         }}
                       >
-                        {t('检测全部渠道上游更新')}
+                        {t('检测全部API接口上游更新')}
                       </Button>
                     </Dropdown.Item>
                   )}
@@ -211,14 +211,14 @@ const ChannelsActions = ({
                         onClick={() => {
                           Modal.confirm({
                             title: t('确定？'),
-                            content: t('确定要对全部渠道执行上游模型更新吗？'),
+                            content: t('确定要对全部API接口执行上游模型更新吗？'),
                             onOk: () => applyAllUpstreamUpdates(),
                             size: 'sm',
                             centered: true,
                           });
                         }}
                       >
-                        {t('处理全部渠道上游更新')}
+                        {t('处理全部API接口上游更新')}
                       </Button>
                     </Dropdown.Item>
                   )}

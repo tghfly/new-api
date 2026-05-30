@@ -726,7 +726,7 @@ const MultiKeyManageModal = ({ visible, onCancel, channel, onRefresh }) => {
                       />
                     }
                     title={t('暂无密钥数据')}
-                    description={t('请检查渠道配置或刷新重试')}
+                    description={t('请检查API接口配置或刷新重试')}
                     style={{ padding: 30 }}
                   />
                 }
