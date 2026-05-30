@@ -3054,6 +3054,7 @@ const EditChannelModal = (props) => {
                       placeholder={t('请选择可以使用该API接口的分组')}
                       multiple
                       allowAdditions
+                      filter
                       additionLabel={t(
                         '请在系统设置页面编辑分组倍率以添加新的分组：',
                       )}
