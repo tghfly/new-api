@@ -299,7 +299,7 @@ export const getUsersColumns = ({
         renderStatistics(text, record, showEnableDisableModal, t),
     },
     {
-      title: t('剩余额度/总额度'),
+      title: t('剩余额度/总额度(Token)'),
       key: 'quota_usage',
       render: (text, record) => renderQuotaUsage(text, record, t),
     },
