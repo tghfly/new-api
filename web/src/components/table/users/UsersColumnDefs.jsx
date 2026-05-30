@@ -32,38 +32,6 @@ import { IconMore } from '@douyinfe/semi-icons';
 import { renderGroup, renderNumber, renderQuota, hasSSOPerm } from '../../../helpers';
 
 /**
- * Render user role
- */
-const renderRole = (role, t) => {
-  switch (role) {
-    case 1:
-      return (
-        <Tag color='blue' shape='circle'>
-          {t('普通用户')}
-        </Tag>
-      );
-    case 10:
-      return (
-        <Tag color='yellow' shape='circle'>
-          {t('管理员')}
-        </Tag>
-      );
-    case 100:
-      return (
-        <Tag color='orange' shape='circle'>
-          {t('超级管理员')}
-        </Tag>
-      );
-    default:
-      return (
-        <Tag color='red' shape='circle'>
-          {t('未知身份')}
-        </Tag>
-      );
-  }
-};
-
-/**
  * Render username with remark
  */
 const renderUsername = (text, record) => {
@@ -171,29 +139,6 @@ const renderQuotaUsage = (text, record, t) => {
 };
 
 /**
- * Render invite information
- */
-const renderInviteInfo = (text, record, t) => {
-  return (
-    <div>
-      <Space spacing={1}>
-        <Tag color='white' shape='circle' className='!text-xs'>
-          {t('邀请')}: {renderNumber(record.aff_count)}
-        </Tag>
-        <Tag color='white' shape='circle' className='!text-xs'>
-          {t('收益')}: {renderQuota(record.aff_history_quota)}
-        </Tag>
-        <Tag color='white' shape='circle' className='!text-xs'>
-          {record.inviter_id === 0
-            ? t('无邀请人')
-            : `${t('邀请人')}: ${record.inviter_id}`}
-        </Tag>
-      </Space>
-    </div>
-  );
-};
-
-/**
  * Render operations column
  */
 const renderOperations = (
@@ -227,6 +172,23 @@ const renderOperations = (
     });
     moreMenu.push({ node: 'divider' });
   }
+  // 提升
+  if (hasSSOPerm('b:ai-web:modelstation:user:promote')) {
+    moreMenu.push({
+      node: 'item',
+      name: t('提升'),
+      onClick: () => showPromoteModal(record),
+    });
+  }
+
+  // 降级
+  if (hasSSOPerm('b:ai-web:modelstation:user:demote')) {
+    moreMenu.push({
+      node: 'item',
+      name: t('降级'),
+      onClick: () => showDemoteModal(record),
+    });
+  }
 
   // 重置 Passkey
   if (hasSSOPerm('b:ai-web:modelstation:user:resetpasskey')) {
@@ -259,28 +221,27 @@ const renderOperations = (
 
   return (
     <Space>
-      {(hasSSOPerm('b:ai-web:modelstation:user:enable') || hasSSOPerm('b:ai-web:modelstation:user:disable')) && (
+      {(hasSSOPerm('b:ai-web:modelstation:user:enable') ||
+        hasSSOPerm('b:ai-web:modelstation:user:disable')) && (
         <>
-          {record.status === 1 ? (
-            hasSSOPerm('b:ai-web:modelstation:user:disable') && (
-              <Button
-                type='danger'
-                size='small'
-                onClick={() => showEnableDisableModal(record, 'disable')}
-              >
-                {t('禁用')}
-              </Button>
-            )
-          ) : (
-            hasSSOPerm('b:ai-web:modelstation:user:enable') && (
-              <Button
-                size='small'
-                onClick={() => showEnableDisableModal(record, 'enable')}
-              >
-                {t('启用')}
-              </Button>
-            )
-          )}
+          {record.status === 1
+            ? hasSSOPerm('b:ai-web:modelstation:user:disable') && (
+                <Button
+                  type='danger'
+                  size='small'
+                  onClick={() => showEnableDisableModal(record, 'disable')}
+                >
+                  {t('禁用')}
+                </Button>
+              )
+            : hasSSOPerm('b:ai-web:modelstation:user:enable') && (
+                <Button
+                  size='small'
+                  onClick={() => showEnableDisableModal(record, 'enable')}
+                >
+                  {t('启用')}
+                </Button>
+              )}
         </>
       )}
 
@@ -294,26 +255,6 @@ const renderOperations = (
           }}
         >
           {t('编辑')}
-        </Button>
-      )}
-
-      {hasSSOPerm('b:ai-web:modelstation:user:promote') && (
-        <Button
-          type='warning'
-          size='small'
-          onClick={() => showPromoteModal(record)}
-        >
-          {t('提升')}
-        </Button>
-      )}
-
-      {hasSSOPerm('b:ai-web:modelstation:user:demote') && (
-        <Button
-          type='secondary'
-          size='small'
-          onClick={() => showDemoteModal(record)}
-        >
-          {t('降级')}
         </Button>
       )}
 
@@ -397,18 +338,6 @@ export const getUsersColumns = ({
           </Tooltip>
         );
       },
-    },
-    {
-      title: t('角色'),
-      dataIndex: 'role',
-      render: (text, record, index) => {
-        return <div>{renderRole(text, t)}</div>;
-      },
-    },
-    {
-      title: t('邀请信息'),
-      dataIndex: 'invite',
-      render: (text, record, index) => renderInviteInfo(text, record, t),
     },
     {
       title: '',
