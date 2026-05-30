@@ -61,7 +61,7 @@ export const useLogsData = () => {
     COMPLETION: 'completion',
     COST: 'cost',
     // RETRY: 'retry',
-    DETAILS: 'details',
+    // DETAILS: 'details',
   };
 
   // Basic state
@@ -137,7 +137,7 @@ export const useLogsData = () => {
         if (!isAdminUser) {
           merged[COLUMN_KEYS.CHANNEL] = false;
           merged[COLUMN_KEYS.USERNAME] = false;
-          merged[COLUMN_KEYS.RETRY] = false;
+          // merged[COLUMN_KEYS.RETRY] = false;
         }
         setVisibleColumns(merged);
       } catch (e) {
@@ -159,7 +159,7 @@ export const useLogsData = () => {
       [COLUMN_KEYS.ORGANIZATION]: true,
       [COLUMN_KEYS.GROUP]: true,
       [COLUMN_KEYS.IP]: true,
-      [COLUMN_KEYS.TYPE]: true,
+      // [COLUMN_KEYS.TYPE]: true,
       [COLUMN_KEYS.MODEL]: true,
       [COLUMN_KEYS.USE_TIME]: true,
       [COLUMN_KEYS.GPU_TIME]: true,
@@ -167,8 +167,8 @@ export const useLogsData = () => {
       [COLUMN_KEYS.PROMPT]: true,
       [COLUMN_KEYS.COMPLETION]: true,
       [COLUMN_KEYS.COST]: true,
-      [COLUMN_KEYS.RETRY]: isAdminUser,
-      [COLUMN_KEYS.DETAILS]: true,
+      // [COLUMN_KEYS.RETRY]: isAdminUser,
+      // [COLUMN_KEYS.DETAILS]: true,
     };
   };
 
@@ -193,8 +193,9 @@ export const useLogsData = () => {
     allKeys.forEach((key) => {
       if (
         (key === COLUMN_KEYS.CHANNEL ||
-          key === COLUMN_KEYS.USERNAME ||
-          key === COLUMN_KEYS.RETRY) &&
+          key === COLUMN_KEYS.USERNAME
+          // || key === COLUMN_KEYS.RETRY
+        ) &&
         !isAdminUser
       ) {
         updatedColumns[key] = false;
