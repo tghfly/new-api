@@ -271,6 +271,8 @@ func GetAllLogs(logType int, startTimestamp int64, endTimestamp int64, modelName
 	}
 	if tokenName != "" {
 		tx = tx.Where("logs.token_name = ?", tokenName)
+	} else {
+		tx = tx.Where("logs.token_name != '模型测试'")
 	}
 	if requestId != "" {
 		tx = tx.Where("logs.request_id = ?", requestId)
@@ -358,6 +360,8 @@ func GetUserLogs(userId int, logType int, startTimestamp int64, endTimestamp int
 	}
 	if tokenName != "" {
 		tx = tx.Where("logs.token_name = ?", tokenName)
+	} else {
+		tx = tx.Where("logs.token_name != '模型测试'")
 	}
 	if requestId != "" {
 		tx = tx.Where("logs.request_id = ?", requestId)
