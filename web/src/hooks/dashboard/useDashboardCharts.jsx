@@ -174,7 +174,7 @@ export const useDashboardCharts = (
           });
           return array;
         },
-      },ldpg
+      },
     },
     color: {
       specified: modelColorMap,

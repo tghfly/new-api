@@ -304,7 +304,7 @@ export const getUsersColumns = ({
       render: (text, record) => renderQuotaUsage(text, record, t),
     },
     {
-      title: t('分组'),
+      title: t('项目'),
       dataIndex: 'group',
       render: (text, record, index) => {
         return <div>{renderGroup(text)}</div>;
