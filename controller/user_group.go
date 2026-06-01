@@ -579,7 +579,6 @@ func FullSyncUserGroupsFromExternal(c *gin.Context) {
 		isDelete, _ := project["is_delete"].(bool)
 
 		var userGroup *model.UserGroup
-		var needCreate bool
 
 		// 查找是否已存在
 		if existing, exists := byExternalId[externalId]; exists {
@@ -596,7 +595,6 @@ func FullSyncUserGroupsFromExternal(c *gin.Context) {
 
 		if userGroup == nil {
 			// 不存在，创建新的
-			needCreate = true
 			userGroup = &model.UserGroup{
 				ExternalId:  externalId,
 				Symbol:      projectCode,
