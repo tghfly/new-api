@@ -15,7 +15,7 @@ pipeline {
       stage('build project') {
          steps {
                sh '''
-               make image tag=${version}
+               make image tag=gx-${version}
                '''
          }
       }
@@ -27,7 +27,7 @@ withCredentials([usernamePassword(credentialsId: '00a62033-d13b-4b89-a534-dfc806
     sh '''
     docker login registry.tydic.com -u ${harbor_user} -p ${harbor_pass}
     echo ${image_url}/ai-studio/${project_name}:${version}
-    docker push ${image_url}/ai-studio/${project_name}:${version}
+    docker push ${image_url}/ai-studio/${project_name}:gx-${version}
     '''
 }
 

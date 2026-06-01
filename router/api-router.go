@@ -317,6 +317,9 @@ func SetApiRouter(router *gin.Engine) {
 		// 批量同步用户组（cloud-web集成）
 		apiRouter.POST("/user-groups/sync", middleware.UserAuth(), controller.BatchSyncUserGroupsFromExternal)
 
+		// 全部同步用户组（cloud-web集成）
+		apiRouter.POST("/user-groups/fullSync", middleware.AdminAuth(), controller.FullSyncUserGroupsFromExternal)
+
 		// 获取当前用户所属的所有项目（用户组）
 		apiRouter.GET("/user/my-groups", middleware.UserAuth(), controller.GetMyUserGroups)
 

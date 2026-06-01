@@ -517,6 +517,154 @@ func BatchSyncUserGroupsFromExternal(c *gin.Context) {
 	})
 }
 
+// FullSyncUserGroupsFromExternal 全部同步用户组（替换模式）
+// 将传入的所有项目完整替换系统中同步来源的用户组（保留非同步来源的用户组）
+// 1. 查询当前租户下所有用户组，建立 external_id 和 project_code 索引
+// 2. 遍历传入项目：存在则更新，不存在则创建
+// 3. 传入项目中没有的现有用户组，enable 设为 false
+func FullSyncUserGroupsFromExternal(c *gin.Context) {
+	var req struct {
+		TenantId string                   `json:"tenant_id" binding:"required"`
+		Projects []map[string]interface{} `json:"projects" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.SysError("FullSyncUserGroupsFromExternal bind failed: " + err.Error())
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	// 1. 查询当前租户下所有 synced 来源的用户组
+	existingGroups, err := model.GetUserGroupsByTenantId(req.TenantId)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "查询现有用户组失败: " + err.Error(),
+		})
+		return
+	}
+
+	// 2. 构建索引 map
+	byExternalId := make(map[int64]*model.UserGroup)
+	byProjectCode := make(map[string]*model.UserGroup)
+	for _, group := range existingGroups {
+		if group.ExternalId > 0 {
+			byExternalId[group.ExternalId] = group
+		}
+		if group.ProjectCode != "" {
+			byProjectCode[group.ProjectCode] = group
+		}
+	}
+
+	created := 0
+	updated := 0
+	disabled := 0
+
+	// 标记哪些用户组应该在本次同步中被保留
+	handledIds := make(map[int]bool)
+
+	// 3. 遍历传入的项目，同步用户组
+	for _, project := range req.Projects {
+		externalIdFloat, ok := project["external_id"].(float64)
+		if !ok {
+			continue
+		}
+		externalId := int64(externalIdFloat)
+		projectCode, _ := project["project_code"].(string)
+		projectName, _ := project["project_name"].(string)
+		vdcCode, _ := project["vdc_code"].(string)
+		isDelete, _ := project["is_delete"].(bool)
+
+		var userGroup *model.UserGroup
+		var needCreate bool
+
+		// 查找是否已存在
+		if existing, exists := byExternalId[externalId]; exists {
+			userGroup = existing
+		} else if projectCode != "" {
+			if existing, exists := byProjectCode[projectCode]; exists {
+				userGroup = existing
+				// 如果 external_id 不同，更新 external_id
+				userGroup.ExternalId = externalId
+			}
+		}
+
+		enable := !isDelete
+
+		if userGroup == nil {
+			// 不存在，创建新的
+			needCreate = true
+			userGroup = &model.UserGroup{
+				ExternalId:  externalId,
+				Symbol:      projectCode,
+				Name:        projectName,
+				Ratio:       1.0,
+				APIRate:     1000,
+				Public:      false,
+				Promotion:   false,
+				Min:         0,
+				Max:         0,
+				Enable:      &enable,
+				TenantId:    req.TenantId,
+				DeptId:      vdcCode,
+				ProjectCode: projectCode,
+				Source:      "synced",
+			}
+			err = userGroup.Create()
+			if err != nil {
+				common.SysError("FullSyncUserGroupsFromExternal create failed: " + err.Error())
+				continue
+			}
+			created++
+		} else {
+			// 已存在，更新
+			handledIds[userGroup.Id] = true
+			userGroup.Symbol = projectCode
+			userGroup.Name = projectName
+			userGroup.TenantId = req.TenantId
+			userGroup.DeptId = vdcCode
+			userGroup.ProjectCode = projectCode
+			userGroup.Enable = &enable
+			err = model.DB.Model(userGroup).Select("symbol", "name", "tenant_id", "dept_id", "project_code", "external_id", "enable").Updates(userGroup).Error
+			if err != nil {
+				common.SysError("FullSyncUserGroupsFromExternal update failed: " + err.Error())
+				continue
+			}
+			updated++
+		}
+	}
+
+	// 4. 处理传入项目中没有的现有用户组，禁用它们
+	for _, group := range existingGroups {
+		if !handledIds[group.Id] {
+			enable := false
+			group.Enable = &enable
+			err = model.DB.Model(group).Update("enable", false).Error
+			if err != nil {
+				common.SysError("FullSyncUserGroupsFromExternal disable group failed: " + err.Error())
+				continue
+			}
+			disabled++
+		}
+	}
+
+	// 重新加载缓存
+	model.GlobalUserGroupRatio.Load()
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+		"data": gin.H{
+			"created":  created,
+			"updated":  updated,
+			"disabled": disabled,
+		},
+	})
+}
+
 // GetMyUserGroups 获取当前用户所属的所有项目（用户组）
 // 根据 user_group_mappings 表查询用户关联的所有用户组
 func GetMyUserGroups(c *gin.Context) {

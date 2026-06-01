@@ -258,6 +258,88 @@ func BatchSyncUserGroups(tenantId, vdcCode string, projects []map[string]interfa
 	return created, updated, nil
 }
 
+// BatchSyncUserGroupsWithVdcCode 批量同步用户组（vdc_code 在每个 project 中）
+// 返回: (创建数量, 更新数量, 错误)
+func BatchSyncUserGroupsWithVdcCode(tenantId string, vdcCodes map[int64]string, projects []map[string]interface{}) (int, int, error) {
+	created := 0
+	updated := 0
+
+	for _, project := range projects {
+		externalId, ok1 := project["external_id"].(float64)
+		projectCode, ok2 := project["project_code"].(string)
+		projectName, ok3 := project["project_name"].(string)
+
+		if !ok1 || !ok2 || !ok3 {
+			continue
+		}
+
+		vdcCode := vdcCodes[int64(externalId)]
+
+		// 检查是否已存在
+		existing, err := GetUserGroupByExternalId(int64(externalId))
+		if err != nil && err.Error() != "record not found" {
+			return created, updated, err
+		}
+
+		if existing == nil || existing.Id == 0 {
+			// 创建新用户组
+			enable := true
+			userGroup := &UserGroup{
+				Symbol:      projectCode,
+				Name:        projectName,
+				Ratio:       1.0,
+				APIRate:     1000,
+				Public:      false,
+				Promotion:   false,
+				Min:         0,
+				Max:         0,
+				Enable:      &enable,
+				TenantId:    tenantId,
+				DeptId:      vdcCode,
+				ProjectCode: projectCode,
+				ExternalId:  int64(externalId),
+				Source:      "synced",
+			}
+			err = userGroup.Create()
+			if err != nil {
+				return created, updated, err
+			}
+			created++
+		} else {
+			// 更新现有用户组
+			existing.Symbol = projectCode
+			existing.Name = projectName
+			existing.TenantId = tenantId
+			existing.DeptId = vdcCode
+			existing.ProjectCode = projectCode
+			err = DB.Model(existing).Select("symbol", "name", "tenant_id", "dept_id", "project_code").Updates(existing).Error
+			if err != nil {
+				return created, updated, err
+			}
+			updated++
+		}
+	}
+
+	// 重新加载缓存
+	GlobalUserGroupRatio.Load()
+	return created, updated, nil
+}
+
+// DeleteUserGroupsNotInExternalIds 删除不在新列表中的同步来源用户组
+// 仅删除 tenant_id 匹配且 source='synced' 的用户组，且 external_id 不在 newExternalIds 中的记录
+func DeleteUserGroupsNotInExternalIds(tenantId string, newExternalIds []int64) (int64, error) {
+	if tenantId == "" {
+		return 0, nil
+	}
+	// 如果 newExternalIds 为空，删除该租户下所有 synced 用户组
+	if len(newExternalIds) == 0 {
+		result := DB.Where("tenant_id = ? AND source = ?", tenantId, "synced").Delete(&UserGroup{})
+		return result.RowsAffected, result.Error
+	}
+	result := DB.Where("tenant_id = ? AND source = ? AND external_id NOT IN ?", tenantId, "synced", newExternalIds).Delete(&UserGroup{})
+	return result.RowsAffected, result.Error
+}
+
 // GetUserGroupsByTenantAndExternalUserId 根据租户ID和外部用户ID获取用户所属的所有用户组
 // 通过查询该租户下所有 synced 的用户组，因为用户可能属于多个项目
 func GetUserGroupsByTenantAndExternalUserId(tenantId, externalUserId string) ([]*UserGroup, error) {
