@@ -1038,25 +1038,23 @@ svg[class*="vchart"] {
 }
 
 /* ==================== VChart Tooltip 背景修复 ==================== */
-/* 排除 tooltip，确保 tooltip 有不透明背景 */
+/* 强制 tooltip 使用浅色背景（图表已固定为浅色模式） */
 .vchart-tooltip,
 .vchart-tooltip *,
 div[class*="vchart-tooltip"],
 div[class*="vchart-tooltip"] * {
-  background: var(--semi-color-bg-2) !important;
+  background: #ffffff !important;
 }
 
 /* tooltip 容器样式 */
 .vchart-tooltip,
 div[class*="vchart-tooltip"] {
-  background: var(--semi-color-bg-2) !important;
-  border: 1px solid var(--semi-color-border) !important;
+  background: #ffffff !important;
+  color: #1a1a1a !important;
+  border: 1px solid #e0e0e0 !important;
   border-radius: 6px !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
-  /* 防止 tooltip 溢出导致滚动条 */
-  max-width: 300px !important;
-  word-wrap: break-word !important;
-  overflow-wrap: break-word !important;
+  max-width: 600px !important;
 }
 
 /* VChart tooltip 容器 - 限制在视口内 */
