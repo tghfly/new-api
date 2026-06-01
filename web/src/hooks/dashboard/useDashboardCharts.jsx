@@ -50,7 +50,6 @@ export const useDashboardCharts = (
   // ========== 图表规格状态 ==========
   const [spec_pie, setSpecPie] = useState({
     type: 'pie',
-    background: '#ffffff',
     data: [
       {
         id: 'id0',
@@ -108,7 +107,6 @@ export const useDashboardCharts = (
 
   const [spec_line, setSpecLine] = useState({
     type: 'bar',
-    background: '#ffffff',
     data: [
       {
         id: 'barData',
@@ -184,7 +182,6 @@ export const useDashboardCharts = (
   // 模型消耗趋势折线图
   const [spec_model_line, setSpecModelLine] = useState({
     type: 'line',
-    background: '#ffffff',
     data: [
       {
         id: 'lineData',
@@ -221,7 +218,6 @@ export const useDashboardCharts = (
   // 模型调用次数排行柱状图
   const [spec_rank_bar, setSpecRankBar] = useState({
     type: 'bar',
-    background: '#ffffff',
     data: [
       {
         id: 'rankData',
@@ -434,18 +430,11 @@ export const useDashboardCharts = (
   useEffect(() => {
     initVChartSemiTheme({
       isWatchingThemeSwitch: true,
-      // 固定浅色主题
+      // 覆盖默认背景色为透明
       theme: {
-        background: '#ffffff',
+        background: 'transparent',
         panel: {
-          background: '#ffffff',
-        },
-        tooltip: {
-          panel: {
-            fill: '#ffffff',
-            stroke: 'var(--semi-color-border)',
-            lineWidth: 1,
-          },
+          background: 'transparent',
         },
       },
     });
