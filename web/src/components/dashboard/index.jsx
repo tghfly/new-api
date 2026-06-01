@@ -34,6 +34,7 @@ import SearchModal from './modals/SearchModal';
 import { useDashboardData } from '../../hooks/dashboard/useDashboardData';
 import { useDashboardStats } from '../../hooks/dashboard/useDashboardStats';
 import { useDashboardCharts } from '../../hooks/dashboard/useDashboardCharts';
+import { useActualTheme } from '../../context/Theme';
 
 import {
   CHART_CONFIG,
@@ -56,6 +57,7 @@ const Dashboard = () => {
   // ========== Context ==========
   const [userState, userDispatch] = useContext(UserContext);
   const [statusState, statusDispatch] = useContext(StatusContext);
+  const actualTheme = useActualTheme();
 
   // ========== 主要数据管理 ==========
   const dashboardData = useDashboardData(userState, userDispatch, statusState);
@@ -71,6 +73,7 @@ const Dashboard = () => {
     dashboardData.setLineData,
     dashboardData.setModelColors,
     dashboardData.t,
+    actualTheme,
   );
 
   // ========== 统计数据 ==========

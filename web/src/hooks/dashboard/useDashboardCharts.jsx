@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 
 import { useState, useCallback, useEffect } from 'react';
 import { initVChartSemiTheme } from '@visactor/vchart-semi-theme';
+import { useActualTheme } from '../../context/Theme';
 import {
   modelColorMap,
   renderNumber,
@@ -36,6 +37,32 @@ import {
   initializeMaps,
 } from '../../helpers/dashboard';
 
+// 浅色主题配色
+const LIGHT_THEME = {
+  background: '#ffffff',
+  panelBackground: '#ffffff',
+  tooltipFill: '#ffffff',
+  border: 'var(--semi-color-border)',
+  text: '#1a1a1a',
+  subText: '#666666',
+};
+
+// 深色主题配色
+const DARK_THEME = {
+  background: '#1a1a1a',
+  panelBackground: '#282828',
+  tooltipFill: '#282828',
+  border: '#3f3f3f',
+  text: '#e6e6e6',
+  subText: '#999999',
+};
+
+// 获取当前主题配色
+const getThemeColors = (actualTheme) => {
+  // return actualTheme === 'dark' ? DARK_THEME : LIGHT_THEME;
+  return DARK_THEME;
+};
+
 export const useDashboardCharts = (
   dataExportDefaultTime,
   setTrendData,
@@ -46,10 +73,14 @@ export const useDashboardCharts = (
   setLineData,
   setModelColors,
   t,
+  actualTheme = 'light',
+  // actualTheme = 'dark',
 ) => {
   // ========== 图表规格状态 ==========
+  const themeColors = getThemeColors(actualTheme);
   const [spec_pie, setSpecPie] = useState({
     type: 'pie',
+    background: themeColors.background,
     data: [
       {
         id: 'id0',
@@ -107,6 +138,7 @@ export const useDashboardCharts = (
 
   const [spec_line, setSpecLine] = useState({
     type: 'bar',
+    background: themeColors.background,
     data: [
       {
         id: 'barData',
@@ -182,6 +214,7 @@ export const useDashboardCharts = (
   // 模型消耗趋势折线图
   const [spec_model_line, setSpecModelLine] = useState({
     type: 'line',
+    background: themeColors.background,
     data: [
       {
         id: 'lineData',
@@ -218,6 +251,7 @@ export const useDashboardCharts = (
   // 模型调用次数排行柱状图
   const [spec_rank_bar, setSpecRankBar] = useState({
     type: 'bar',
+    background: themeColors.background,
     data: [
       {
         id: 'rankData',
