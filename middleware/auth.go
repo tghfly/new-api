@@ -94,6 +94,8 @@ func authHelper(c *gin.Context, minRole int) {
 					id = user.Id
 					status = user.Status
 					dcloudAuth = true
+					c.Set("vdc_code", claims.VdcCode)
+					c.Set("other_role_map", claims.OtherRoleMap)
 				}
 			}
 		}
@@ -174,7 +176,21 @@ func authHelper(c *gin.Context, minRole int) {
 		c.Abort()
 		return
 	}
-	if role.(int) < minRole {
+	// DCloud 权限 key 绕过 role 检查
+	skipRoleCheck := false
+	if common.DCloudIntegrationEnabled && dcloudAuth {
+		if otherRoleMapRaw, exists := c.Get("other_role_map"); exists {
+			if otherRoleMap, ok := otherRoleMapRaw.(map[string]string); ok {
+				for key := range otherRoleMap {
+					if strings.HasPrefix(key, "new-api:") && strings.HasSuffix(key, ":auth") {
+						skipRoleCheck = true
+						break
+					}
+				}
+			}
+		}
+	}
+	if !skipRoleCheck && role.(int) < minRole {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
 			"message": "无权进行此操作，权限不足",

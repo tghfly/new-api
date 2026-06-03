@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -523,6 +524,8 @@ func BatchSyncUserGroupsFromExternal(c *gin.Context) {
 // 2. 遍历传入项目：存在则更新，不存在则创建
 // 3. 传入项目中没有的现有用户组，enable 设为 false
 func FullSyncUserGroupsFromExternal(c *gin.Context) {
+	common.SysLog("FullSyncUserGroupsFromExternal: 开始同步用户组")
+
 	var req struct {
 		TenantId string                   `json:"tenant_id" binding:"required"`
 		Projects []map[string]interface{} `json:"projects" binding:"required"`
@@ -537,15 +540,20 @@ func FullSyncUserGroupsFromExternal(c *gin.Context) {
 		return
 	}
 
+	common.SysLog(fmt.Sprintf("FullSyncUserGroupsFromExternal: tenant_id=%s, projects_count=%d", req.TenantId, len(req.Projects)))
+
 	// 1. 查询当前租户下所有 synced 来源的用户组
 	existingGroups, err := model.GetUserGroupsByTenantId(req.TenantId)
 	if err != nil {
+		common.SysError("FullSyncUserGroupsFromExternal: 查询现有用户组失败, " + err.Error())
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
 			"message": "查询现有用户组失败: " + err.Error(),
 		})
 		return
 	}
+
+	common.SysLog(fmt.Sprintf("FullSyncUserGroupsFromExternal: 查询到现有用户组数量=%d", len(existingGroups)))
 
 	// 2. 构建索引 map
 	byExternalId := make(map[int64]*model.UserGroup)
@@ -578,16 +586,20 @@ func FullSyncUserGroupsFromExternal(c *gin.Context) {
 		vdcCode, _ := project["vdc_code"].(string)
 		isDelete, _ := project["is_delete"].(bool)
 
+		common.SysLog(fmt.Sprintf("FullSyncUserGroupsFromExternal: 处理项目 external_id=%d, project_code=%s, project_name=%s, is_delete=%v", externalId, projectCode, projectName, isDelete))
+
 		var userGroup *model.UserGroup
 
 		// 查找是否已存在
 		if existing, exists := byExternalId[externalId]; exists {
 			userGroup = existing
+			common.SysLog(fmt.Sprintf("FullSyncUserGroupsFromExternal: 通过 external_id 找到已有用户组 id=%d", userGroup.Id))
 		} else if projectCode != "" {
 			if existing, exists := byProjectCode[projectCode]; exists {
 				userGroup = existing
 				// 如果 external_id 不同，更新 external_id
 				userGroup.ExternalId = externalId
+				common.SysLog(fmt.Sprintf("FullSyncUserGroupsFromExternal: 通过 project_code 找到已有用户组 id=%d, 更新 external_id=%d", userGroup.Id, externalId))
 			}
 		}
 
@@ -595,6 +607,7 @@ func FullSyncUserGroupsFromExternal(c *gin.Context) {
 
 		if userGroup == nil {
 			// 不存在，创建新的
+			common.SysLog(fmt.Sprintf("FullSyncUserGroupsFromExternal: 创建新用户组 external_id=%d, project_code=%s", externalId, projectCode))
 			userGroup = &model.UserGroup{
 				ExternalId:  externalId,
 				Symbol:      projectCode,
@@ -617,6 +630,7 @@ func FullSyncUserGroupsFromExternal(c *gin.Context) {
 				continue
 			}
 			created++
+			common.SysLog(fmt.Sprintf("FullSyncUserGroupsFromExternal: 创建成功, 新用户组 id=%d", userGroup.Id))
 		} else {
 			// 已存在，更新
 			handledIds[userGroup.Id] = true
@@ -632,6 +646,7 @@ func FullSyncUserGroupsFromExternal(c *gin.Context) {
 				continue
 			}
 			updated++
+			common.SysLog(fmt.Sprintf("FullSyncUserGroupsFromExternal: 更新成功, 用户组 id=%d", userGroup.Id))
 		}
 	}
 
@@ -646,11 +661,14 @@ func FullSyncUserGroupsFromExternal(c *gin.Context) {
 				continue
 			}
 			disabled++
+			common.SysLog(fmt.Sprintf("FullSyncUserGroupsFromExternal: 禁用用户组 id=%d, symbol=%s", group.Id, group.Symbol))
 		}
 	}
 
 	// 重新加载缓存
 	model.GlobalUserGroupRatio.Load()
+
+	common.SysLog(fmt.Sprintf("FullSyncUserGroupsFromExternal: 同步完成, created=%d, updated=%d, disabled=%d", created, updated, disabled))
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,

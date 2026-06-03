@@ -1,21 +1,175 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/logger"
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/pkg/permission"
 
 	"github.com/gin-gonic/gin"
 )
 
+// handleGetAllLogs is a helper to fetch logs with optional group filter
+func handleGetAllLogs(c *gin.Context, groupFilter *model.GroupFilter) {
+	pageInfo := common.GetPageQuery(c)
+	logType, _ := strconv.Atoi(c.Query("type"))
+	startTimestamp, _ := strconv.ParseInt(c.Query("start_timestamp"), 10, 64)
+	endTimestamp, _ := strconv.ParseInt(c.Query("end_timestamp"), 10, 64)
+	username := c.Query("username")
+	tokenName := c.Query("token_name")
+	modelName := c.Query("model_name")
+	channel, _ := strconv.Atoi(c.Query("channel"))
+	group := c.Query("group")
+	requestId := c.Query("request_id")
+
+	logs, total, err := model.GetAllLogs(logType, startTimestamp, endTimestamp, modelName, username, tokenName, pageInfo.GetStartIdx(), pageInfo.GetPageSize(), channel, group, requestId, groupFilter)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	pageInfo.SetTotal(int(total))
+	pageInfo.SetItems(logs)
+	common.ApiSuccess(c, pageInfo)
+}
+
+// handleGetUserLogs is a helper to fetch user logs with optional group filter
+func handleGetUserLogs(c *gin.Context, userId int, groupFilter *model.GroupFilter) {
+	pageInfo := common.GetPageQuery(c)
+	logType, _ := strconv.Atoi(c.Query("type"))
+	startTimestamp, _ := strconv.ParseInt(c.Query("start_timestamp"), 10, 64)
+	endTimestamp, _ := strconv.ParseInt(c.Query("end_timestamp"), 10, 64)
+	tokenName := c.Query("token_name")
+	modelName := c.Query("model_name")
+	group := c.Query("group")
+	requestId := c.Query("request_id")
+
+	logs, total, err := model.GetUserLogs(userId, logType, startTimestamp, endTimestamp, modelName, tokenName, pageInfo.GetStartIdx(), pageInfo.GetPageSize(), group, requestId, groupFilter)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	pageInfo.SetTotal(int(total))
+	pageInfo.SetItems(logs)
+	common.ApiSuccess(c, pageInfo)
+}
+
+// handleGetLogsStat is a helper to fetch log statistics with optional group filter
+func handleGetLogsStat(c *gin.Context, username string, groupFilter *model.GroupFilter) {
+	logType, _ := strconv.Atoi(c.Query("type"))
+	startTimestamp, _ := strconv.ParseInt(c.Query("start_timestamp"), 10, 64)
+	endTimestamp, _ := strconv.ParseInt(c.Query("end_timestamp"), 10, 64)
+	tokenName := c.Query("token_name")
+	modelName := c.Query("model_name")
+	channel, _ := strconv.Atoi(c.Query("channel"))
+	group := c.Query("group")
+
+	stat, err := model.SumUsedQuota(logType, startTimestamp, endTimestamp, modelName, username, tokenName, channel, group, groupFilter)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+		"data": gin.H{
+			"quota": stat.Quota,
+			"rpm":   stat.Rpm,
+			"tpm":   stat.Tpm,
+		},
+	})
+}
+
+// getLogOrgs extracts org list from permission data
+func getLogOrgs(data map[string]interface{}) []string {
+	if orgs, ok := data["orgs"].([]string); ok {
+		return orgs
+	}
+	return nil
+}
+
+// getLogScope extracts scope string from permission data
+func getLogScope(data map[string]interface{}) string {
+	if scope, ok := data["scope"].(string); ok {
+		return scope
+	}
+	return ""
+}
+
+// getLogDeptId extracts dept_id string from permission data
+func getLogDeptId(data map[string]interface{}) string {
+	if deptId, ok := data["dept_id"].(string); ok {
+		return deptId
+	}
+	return ""
+}
+
+// buildGroupFilterFromAuth builds a GroupFilter from permission result
+func buildGroupFilterFromAuth(auth permission.Result) *model.GroupFilter {
+	if !auth.HasAuth {
+		return nil
+	}
+	scope := getLogScope(auth.Data)
+	orgs := getLogOrgs(auth.Data)
+	deptId := getLogDeptId(auth.Data)
+
+	switch scope {
+	case permission.LogScopeAll:
+		return nil // no filter
+	case permission.LogScopeSpecDown:
+		return &model.GroupFilter{Mode: "prefix", Orgs: orgs}
+	case permission.LogScopeSpec:
+		return &model.GroupFilter{Mode: "in", Orgs: orgs}
+	case permission.LogScopeLocalDown:
+		return &model.GroupFilter{Mode: "prefix", Orgs: []string{deptId}}
+	case permission.LogScopeLocal:
+		return &model.GroupFilter{Mode: "exact", Orgs: []string{deptId}}
+	case permission.LogScopeMe:
+		return nil // handled at controller level
+	default:
+		return nil
+	}
+}
+
+// resolveDCloudLogAuth resolves DCloud log permission from context
+func resolveDCloudLogAuth(c *gin.Context) permission.Result {
+	if !common.DCloudIntegrationEnabled {
+		return permission.Result{HasAuth: false}
+	}
+	return permission.LogsAuth.Resolve(c)
+}
+
 func GetAllLogs(c *gin.Context) {
 	role := c.GetInt("role")
 
-	// TODO Admin 用户也只能查看自己的日志，只有 Root 用户才能查看所有日志
+	// DCloud 认证用户走分权分域逻辑
+	dcloudAuth := resolveDCloudLogAuth(c)
+	logger.LogInfo(c, fmt.Sprintf("[GetAllLogs] DCloud auth result: hasAuth=%v, scope=%s, data=%v", dcloudAuth.HasAuth, getLogScope(dcloudAuth.Data), dcloudAuth.Data))
+	if dcloudAuth.HasAuth {
+		scope := getLogScope(dcloudAuth.Data)
+		userId := c.GetInt("id")
+		logger.LogInfo(c, fmt.Sprintf("[GetAllLogs] DCloud mode: scope=%s, userId=%d", scope, userId))
+
+		// me 模式下，只能查看自己的日志（通过 GetUserLogs）
+		if scope == permission.LogScopeMe {
+			logger.LogInfo(c, "[GetAllLogs] DCloud me mode - calling handleGetUserLogs")
+			handleGetUserLogs(c, userId, nil)
+			return
+		}
+
+		// 非 me 模式下，使用 groupFilter 限制查询范围
+		groupFilter := buildGroupFilterFromAuth(dcloudAuth)
+		logger.LogInfo(c, fmt.Sprintf("[GetAllLogs] DCloud non-me mode - groupFilter=%v", groupFilter))
+		handleGetAllLogs(c, groupFilter)
+		return
+	}
+
+	logger.LogInfo(c, fmt.Sprintf("[GetAllLogs] Non-DCloud mode: role=%d", role))
+	// 原有的角色权限检查
 	if role == common.RoleAdminUser {
-		// Admin 用户：调用 GetUserLogs 逻辑，只查询当前用户的日志
 		pageInfo := common.GetPageQuery(c)
 		userId := c.GetInt("id")
 		logType, _ := strconv.Atoi(c.Query("type"))
@@ -25,7 +179,8 @@ func GetAllLogs(c *gin.Context) {
 		modelName := c.Query("model_name")
 		group := c.Query("group")
 		requestId := c.Query("request_id")
-		logs, total, err := model.GetUserLogs(userId, logType, startTimestamp, endTimestamp, modelName, tokenName, pageInfo.GetStartIdx(), pageInfo.GetPageSize(), group, requestId)
+		logger.LogInfo(c, fmt.Sprintf("[GetAllLogs] Admin mode: userId=%d, logType=%d, group=%s", userId, logType, group))
+		logs, total, err := model.GetUserLogs(userId, logType, startTimestamp, endTimestamp, modelName, tokenName, pageInfo.GetStartIdx(), pageInfo.GetPageSize(), group, requestId, nil)
 		if err != nil {
 			common.ApiError(c, err)
 			return
@@ -37,28 +192,30 @@ func GetAllLogs(c *gin.Context) {
 	}
 
 	// Root 用户：可以查看所有日志
-	pageInfo := common.GetPageQuery(c)
-	logType, _ := strconv.Atoi(c.Query("type"))
-	startTimestamp, _ := strconv.ParseInt(c.Query("start_timestamp"), 10, 64)
-	endTimestamp, _ := strconv.ParseInt(c.Query("end_timestamp"), 10, 64)
-	username := c.Query("username")
-	tokenName := c.Query("token_name")
-	modelName := c.Query("model_name")
-	channel, _ := strconv.Atoi(c.Query("channel"))
-	group := c.Query("group")
-	requestId := c.Query("request_id")
-	logs, total, err := model.GetAllLogs(logType, startTimestamp, endTimestamp, modelName, username, tokenName, pageInfo.GetStartIdx(), pageInfo.GetPageSize(), channel, group, requestId)
-	if err != nil {
-		common.ApiError(c, err)
-		return
-	}
-	pageInfo.SetTotal(int(total))
-	pageInfo.SetItems(logs)
-	common.ApiSuccess(c, pageInfo)
-	return
+	logger.LogInfo(c, "[GetAllLogs] Root mode - calling handleGetAllLogs with nil filter")
+	handleGetAllLogs(c, nil)
 }
 
 func GetUserLogs(c *gin.Context) {
+	// DCloud 认证用户走分权分域逻辑
+	dcloudAuth := resolveDCloudLogAuth(c)
+	if dcloudAuth.HasAuth {
+		scope := getLogScope(dcloudAuth.Data)
+		userId := c.GetInt("id")
+
+		// me 模式下，只能查看自己的日志
+		if scope == permission.LogScopeMe {
+			handleGetUserLogs(c, userId, nil)
+			return
+		}
+
+		// 非 me 模式下，使用 groupFilter 限制查询范围
+		groupFilter := buildGroupFilterFromAuth(dcloudAuth)
+		handleGetUserLogs(c, userId, groupFilter)
+		return
+	}
+
+	// 原有的用户日志查询
 	pageInfo := common.GetPageQuery(c)
 	userId := c.GetInt("id")
 	logType, _ := strconv.Atoi(c.Query("type"))
@@ -68,7 +225,7 @@ func GetUserLogs(c *gin.Context) {
 	modelName := c.Query("model_name")
 	group := c.Query("group")
 	requestId := c.Query("request_id")
-	logs, total, err := model.GetUserLogs(userId, logType, startTimestamp, endTimestamp, modelName, tokenName, pageInfo.GetStartIdx(), pageInfo.GetPageSize(), group, requestId)
+	logs, total, err := model.GetUserLogs(userId, logType, startTimestamp, endTimestamp, modelName, tokenName, pageInfo.GetStartIdx(), pageInfo.GetPageSize(), group, requestId, nil)
 	if err != nil {
 		common.ApiError(c, err)
 		return
@@ -76,7 +233,6 @@ func GetUserLogs(c *gin.Context) {
 	pageInfo.SetTotal(int(total))
 	pageInfo.SetItems(logs)
 	common.ApiSuccess(c, pageInfo)
-	return
 }
 
 // Deprecated: SearchAllLogs 已废弃，前端未使用该接口。
@@ -120,6 +276,25 @@ func GetLogByKey(c *gin.Context) {
 }
 
 func GetLogsStat(c *gin.Context) {
+	// DCloud 认证用户走分权分域逻辑
+	dcloudAuth := resolveDCloudLogAuth(c)
+	if dcloudAuth.HasAuth {
+		scope := getLogScope(dcloudAuth.Data)
+		username := c.GetString("username")
+
+		// me 模式下，只能查看自己的统计
+		if scope == permission.LogScopeMe {
+			handleGetLogsStat(c, username, nil)
+			return
+		}
+
+		// 非 me 模式下，使用 groupFilter 限制查询范围
+		groupFilter := buildGroupFilterFromAuth(dcloudAuth)
+		handleGetLogsStat(c, username, groupFilter)
+		return
+	}
+
+	// 原有的日志统计查询
 	logType, _ := strconv.Atoi(c.Query("type"))
 	startTimestamp, _ := strconv.ParseInt(c.Query("start_timestamp"), 10, 64)
 	endTimestamp, _ := strconv.ParseInt(c.Query("end_timestamp"), 10, 64)
@@ -128,12 +303,11 @@ func GetLogsStat(c *gin.Context) {
 	modelName := c.Query("model_name")
 	channel, _ := strconv.Atoi(c.Query("channel"))
 	group := c.Query("group")
-	stat, err := model.SumUsedQuota(logType, startTimestamp, endTimestamp, modelName, username, tokenName, channel, group)
+	stat, err := model.SumUsedQuota(logType, startTimestamp, endTimestamp, modelName, username, tokenName, channel, group, nil)
 	if err != nil {
 		common.ApiError(c, err)
 		return
 	}
-	//tokenNum := model.SumUsedToken(logType, startTimestamp, endTimestamp, modelName, username, "")
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
@@ -143,7 +317,6 @@ func GetLogsStat(c *gin.Context) {
 			"tpm":   stat.Tpm,
 		},
 	})
-	return
 }
 
 func GetLogsSelfStat(c *gin.Context) {
@@ -155,12 +328,11 @@ func GetLogsSelfStat(c *gin.Context) {
 	modelName := c.Query("model_name")
 	channel, _ := strconv.Atoi(c.Query("channel"))
 	group := c.Query("group")
-	quotaNum, err := model.SumUsedQuota(logType, startTimestamp, endTimestamp, modelName, username, tokenName, channel, group)
+	quotaNum, err := model.SumUsedQuota(logType, startTimestamp, endTimestamp, modelName, username, tokenName, channel, group, nil)
 	if err != nil {
 		common.ApiError(c, err)
 		return
 	}
-	//tokenNum := model.SumUsedToken(logType, startTimestamp, endTimestamp, modelName, username, tokenName)
 	c.JSON(200, gin.H{
 		"success": true,
 		"message": "",
@@ -168,13 +340,50 @@ func GetLogsSelfStat(c *gin.Context) {
 			"quota": quotaNum.Quota,
 			"rpm":   quotaNum.Rpm,
 			"tpm":   quotaNum.Tpm,
-			//"token": tokenNum,
 		},
 	})
-	return
 }
 
 func DeleteHistoryLogs(c *gin.Context) {
+	// DCloud 认证用户走分权分域逻辑
+	dcloudAuth := resolveDCloudLogAuth(c)
+	if dcloudAuth.HasAuth {
+		scope := getLogScope(dcloudAuth.Data)
+
+		// me 模式下，不允许删除历史日志
+		if scope == permission.LogScopeMe {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "me 模式下不允许删除历史日志",
+			})
+			return
+		}
+
+		// 非 me 模式下，使用 groupFilter 限制删除范围
+		groupFilter := buildGroupFilterFromAuth(dcloudAuth)
+		targetTimestamp, _ := strconv.ParseInt(c.Query("target_timestamp"), 10, 64)
+		if targetTimestamp == 0 {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "target timestamp is required",
+			})
+			return
+		}
+		count, err := model.DeleteOldLog(c.Request.Context(), targetTimestamp, 100, groupFilter)
+		if err != nil {
+			common.ApiError(c, err)
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "",
+			"data":    count,
+		})
+		return
+	}
+
+	// 仅有 Root 用户有权限删除历史日志（已在 middleware 权限检查中确保）
+	// 此处不再做额外角色检查，直接执行删除
 	targetTimestamp, _ := strconv.ParseInt(c.Query("target_timestamp"), 10, 64)
 	if targetTimestamp == 0 {
 		c.JSON(http.StatusOK, gin.H{
@@ -183,7 +392,7 @@ func DeleteHistoryLogs(c *gin.Context) {
 		})
 		return
 	}
-	count, err := model.DeleteOldLog(c.Request.Context(), targetTimestamp, 100)
+	count, err := model.DeleteOldLog(c.Request.Context(), targetTimestamp, 100, nil)
 	if err != nil {
 		common.ApiError(c, err)
 		return
@@ -193,5 +402,4 @@ func DeleteHistoryLogs(c *gin.Context) {
 		"message": "",
 		"data":    count,
 	})
-	return
 }

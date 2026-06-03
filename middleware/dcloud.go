@@ -316,6 +316,9 @@ func DCloudAuth() gin.HandlerFunc {
 		c.Set("tenant_id", user.TenantId)
 		c.Set("external_user_id", user.ExternalUserId)
 		c.Set("use_access_token", false)
+		c.Set("vdc_code", claims.VdcCode)
+		c.Set("other_role_map", claims.OtherRoleMap)
+		//c.Set("other_role_map", TestMap)
 
 		c.Next()
 	}
@@ -398,6 +401,8 @@ func DCloudAuthRequired() gin.HandlerFunc {
 		c.Set("tenant_id", user.TenantId)
 		c.Set("external_user_id", user.ExternalUserId)
 		c.Set("use_access_token", false)
+		c.Set("vdc_code", claims.VdcCode)
+		c.Set("other_role_map", claims.OtherRoleMap)
 
 		c.Next()
 	}
