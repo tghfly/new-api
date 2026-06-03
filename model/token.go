@@ -15,6 +15,7 @@ import (
 type Token struct {
 	Id                 int            `json:"id"`
 	UserId             int            `json:"user_id" gorm:"index"`
+	Username           string         `json:"username" gorm:"-"` // 只用于API响应，不存储到数据库
 	Key                string         `json:"key" gorm:"type:char(48);uniqueIndex"`
 	Status             int            `json:"status" gorm:"default:1"`
 	Name               string         `json:"name" gorm:"index" `
@@ -40,7 +41,7 @@ func (token *Token) Clean() {
 }
 
 func applyGroupFilterToken(tx *gorm.DB, groupFilter *permission.GroupFilterData) *gorm.DB {
-	return groupFilter.Apply(tx, commonGroupCol, "user_id")
+	return groupFilter.Apply(tx, "tokens."+commonGroupCol, "tokens.user_id")
 }
 
 func (token *Token) GetIpLimits() []string {
@@ -72,6 +73,12 @@ func GetAllUserTokens(userId int, startIdx int, num int) ([]*Token, error) {
 	return tokens, err
 }
 
+// tokenWithUsername 用于查询时携带用户名
+type tokenWithUsername struct {
+	Token
+	Username string
+}
+
 func GetAllTokensWithFilter(groupFilter *permission.GroupFilterData, startIdx int, num int) ([]*Token, int64, error) {
 	var tokens []*Token
 	var total int64
@@ -79,11 +86,29 @@ func GetAllTokensWithFilter(groupFilter *permission.GroupFilterData, startIdx in
 	if groupFilter != nil {
 		tx = applyGroupFilterToken(tx, groupFilter)
 	}
-	err := tx.Model(&Token{}).Count(&total).Error
+	// COUNT 查询单独执行，避免和后续 Select/Joins 冲突
+	countTx := DB.Model(&Token{})
+	if groupFilter != nil {
+		countTx = applyGroupFilterToken(countTx, groupFilter)
+	}
+	err := countTx.Count(&total).Error
 	if err != nil {
 		return nil, 0, err
 	}
-	err = tx.Order("id desc").Limit(num).Offset(startIdx).Find(&tokens).Error
+	// JOIN 查询用户表获取用户名
+	var results []tokenWithUsername
+	err = tx.Select("tokens.*, COALESCE(users.username, '') as username").
+		Joins("LEFT JOIN users ON users.id = tokens.user_id").
+		Order("tokens.id desc").Limit(num).Offset(startIdx).Find(&results).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	// 转换结果
+	tokens = make([]*Token, len(results))
+	for i := range results {
+		tokens[i] = &results[i].Token
+		tokens[i].Username = results[i].Username
+	}
 	return tokens, total, err
 }
 
@@ -161,7 +186,7 @@ func SearchTokensWithFilter(groupFilter *permission.GroupFilterData, userId int,
 	if groupFilter != nil {
 		baseQuery = applyGroupFilterToken(baseQuery, groupFilter)
 	} else {
-		baseQuery = baseQuery.Where("user_id = ?", userId)
+		baseQuery = baseQuery.Where("tokens.user_id = ?", userId)
 	}
 
 	// 非空才加 LIKE 条件，空则跳过（不过滤该字段）
@@ -170,7 +195,7 @@ func SearchTokensWithFilter(groupFilter *permission.GroupFilterData, userId int,
 		if err != nil {
 			return nil, 0, err
 		}
-		baseQuery = baseQuery.Where("name LIKE ? ESCAPE '!'", keywordPattern)
+		baseQuery = baseQuery.Where("tokens.name LIKE ? ESCAPE '!'", keywordPattern)
 	}
 	if token != "" {
 		tokenPattern, err := sanitizeLikePattern(token)
@@ -181,17 +206,46 @@ func SearchTokensWithFilter(groupFilter *permission.GroupFilterData, userId int,
 	}
 
 	// 先查匹配总数（用于分页，受 maxTokens 上限保护，避免全表 COUNT）
-	err = baseQuery.Limit(maxTokens).Count(&total).Error
+	countQuery := DB.Model(&Token{})
+	if groupFilter != nil {
+		countQuery = applyGroupFilterToken(countQuery, groupFilter)
+	} else {
+		countQuery = countQuery.Where("tokens.user_id = ?", userId)
+	}
+	if keyword != "" {
+		keywordPattern, err := sanitizeLikePattern(keyword)
+		if err != nil {
+			return nil, 0, err
+		}
+		countQuery = countQuery.Where("tokens.name LIKE ? ESCAPE '!'", keywordPattern)
+	}
+	if token != "" {
+		tokenPattern, err := sanitizeLikePattern(token)
+		if err != nil {
+			return nil, 0, err
+		}
+		countQuery = countQuery.Where(commonKeyCol+" LIKE ? ESCAPE '!'", tokenPattern)
+	}
+	err = countQuery.Limit(maxTokens).Count(&total).Error
 	if err != nil {
 		common.SysError("failed to count search tokens: " + err.Error())
 		return nil, 0, errors.New("搜索令牌失败")
 	}
 
-	// 再分页查数据
-	err = baseQuery.Order("id desc").Offset(offset).Limit(limit).Find(&tokens).Error
+	// 再分页查数据，JOIN 用户表获取用户名
+	var results []tokenWithUsername
+	err = baseQuery.Select("tokens.*, COALESCE(users.username, '') as username").
+		Joins("LEFT JOIN users ON users.id = tokens.user_id").
+		Order("tokens.id desc").Offset(offset).Limit(limit).Find(&results).Error
 	if err != nil {
 		common.SysError("failed to search tokens: " + err.Error())
 		return nil, 0, errors.New("搜索令牌失败")
+	}
+	// 转换结果
+	tokens = make([]*Token, len(results))
+	for i := range results {
+		tokens[i] = &results[i].Token
+		tokens[i].Username = results[i].Username
 	}
 	return tokens, total, nil
 }

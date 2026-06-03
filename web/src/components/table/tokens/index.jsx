@@ -39,6 +39,7 @@ import TokensFilters from './TokensFilters';
 import TokensDescription from './TokensDescription';
 import EditTokenModal from './modals/EditTokenModal';
 import CCSwitchModal from './modals/CCSwitchModal';
+import UserInfoModal from '../usage-logs/modals/UserInfoModal';
 import { useTokensData } from '../../../hooks/tokens/useTokensData';
 import { useIsMobile } from '../../../hooks/common/useIsMobile';
 import { createCardProPagination } from '../../../helpers/utils';
@@ -364,6 +365,11 @@ function TokensPage() {
     compactMode,
     setCompactMode,
 
+    // User info state
+    userInfoData,
+    showUserInfoModal,
+    setShowUserInfoModal,
+
     // Translation
     t,
   } = tokensData;
@@ -382,6 +388,13 @@ function TokensPage() {
         onClose={() => setCCSwitchVisible(false)}
         tokenKey={ccSwitchKey}
         modelOptions={modelOptions}
+      />
+
+      <UserInfoModal
+        showUserInfo={showUserInfoModal}
+        setShowUserInfoModal={setShowUserInfoModal}
+        userInfoData={userInfoData}
+        t={t}
       />
 
       <CardPro

@@ -40,6 +40,7 @@ import {
   getModelCategories,
   showError,
   hasSSOPerm,
+  stringToColor,
 } from '../../../helpers';
 import {
   IconTreeTriangleDown,
@@ -449,11 +450,39 @@ export const getTokensColumns = ({
   setEditingToken,
   setShowEdit,
   refresh,
+  isAdminUser,
+  showUserInfoFunc,
 }) => {
   return [
     {
       title: t('名称'),
       dataIndex: 'name',
+    },
+    {
+      title: t('用户'),
+      dataIndex: 'username',
+      key: 'username',
+      render: (text, record) => {
+        if (!text || !isAdminUser) {
+          return <></>;
+        }
+        return (
+          <div>
+            <Avatar
+              size='extra-small'
+              color={stringToColor(text || '')}
+              style={{ marginRight: 4 }}
+              onClick={(event) => {
+                event.stopPropagation();
+                showUserInfoFunc?.(record.user_id);
+              }}
+            >
+              {typeof text === 'string' && text.slice(0, 1)}
+            </Avatar>
+            {text}
+          </div>
+        );
+      },
     },
     {
       title: t('状态'),

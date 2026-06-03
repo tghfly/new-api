@@ -26,6 +26,7 @@ import {
   showError,
   showSuccess,
   encodeToBase64,
+  isAdmin,
 } from '../../helpers';
 import { ITEMS_PER_PAGE } from '../../constants';
 import { useTableCompactMode } from '../common/useTableCompactMode';
@@ -55,6 +56,11 @@ export const useTokensData = (openFluentNotification, openCCSwitchModal) => {
   const [compactMode, setCompactMode] = useTableCompactMode('tokens');
   const [showKeys, setShowKeys] = useState({});
 
+  // User info state
+  const isAdminUser = isAdmin();
+  const [showUserInfoModal, setShowUserInfoModal] = useState(false);
+  const [userInfoData, setUserInfoData] = useState(null);
+
   // Form state
   const [formApi, setFormApi] = useState(null);
   const formInitValues = {
@@ -79,6 +85,21 @@ export const useTokensData = (openFluentNotification, openCCSwitchModal) => {
         id: undefined,
       });
     }, 500);
+  };
+
+  // User info function
+  const showUserInfoFunc = async (userId) => {
+    if (!isAdminUser) {
+      return;
+    }
+    const res = await API.get(`/api/user/${userId}`);
+    const { success, message, data } = res.data;
+    if (success) {
+      setUserInfoData(data);
+      setShowUserInfoModal(true);
+    } else {
+      showError(message);
+    }
   };
 
   // Sync page data from API response
@@ -392,6 +413,14 @@ export const useTokensData = (openFluentNotification, openCCSwitchModal) => {
     setCompactMode,
     showKeys,
     setShowKeys,
+
+    // User info state
+    isAdminUser,
+    showUserInfoFunc,
+    userInfoData,
+    setUserInfoData,
+    showUserInfoModal,
+    setShowUserInfoModal,
 
     // Form state
     formApi,
