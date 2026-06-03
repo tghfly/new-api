@@ -110,7 +110,7 @@ func GetAllLogs(c *gin.Context) {
 		}
 
 		// 非 me 模式下，使用 groupFilter 限制查询范围
-		groupFilter := permission.ExtractGroupFilterData(dcloudAuth)
+		groupFilter := permission.ExtractGroupFilterData(dcloudAuth, userId)
 		logger.LogInfo(c, fmt.Sprintf("[GetAllLogs] DCloud non-me mode - groupFilter=%v", groupFilter))
 		handleGetAllLogs(c, groupFilter)
 		return
@@ -159,7 +159,7 @@ func GetUserLogs(c *gin.Context) {
 		}
 
 		// 非 me 模式下，使用 groupFilter 限制查询范围
-		groupFilter := permission.ExtractGroupFilterData(dcloudAuth)
+		groupFilter := permission.ExtractGroupFilterData(dcloudAuth, userId)
 		handleGetUserLogs(c, userId, groupFilter)
 		return
 	}
@@ -230,6 +230,7 @@ func GetLogsStat(c *gin.Context) {
 	if dcloudAuth.HasAuth {
 		scope := permission.GetScope(dcloudAuth.Data)
 		username := c.GetString("username")
+		userId := c.GetInt("id")
 
 		// me 模式下，只能查看自己的统计
 		if scope == permission.ScopeMe {
@@ -238,7 +239,7 @@ func GetLogsStat(c *gin.Context) {
 		}
 
 		// 非 me 模式下，使用 groupFilter 限制查询范围
-		groupFilter := permission.ExtractGroupFilterData(dcloudAuth)
+		groupFilter := permission.ExtractGroupFilterData(dcloudAuth, userId)
 		handleGetLogsStat(c, username, groupFilter)
 		return
 	}
@@ -298,7 +299,7 @@ func DeleteHistoryLogs(c *gin.Context) {
 	dcloudAuth := resolveDCloudLogAuth(c)
 	if dcloudAuth.HasAuth {
 		scope := permission.GetScope(dcloudAuth.Data)
-
+		userId := c.GetInt("id")
 		// me 模式下，不允许删除历史日志
 		if scope == permission.ScopeMe {
 			c.JSON(http.StatusOK, gin.H{
@@ -309,7 +310,7 @@ func DeleteHistoryLogs(c *gin.Context) {
 		}
 
 		// 非 me 模式下，使用 groupFilter 限制删除范围
-		groupFilter := permission.ExtractGroupFilterData(dcloudAuth)
+		groupFilter := permission.ExtractGroupFilterData(dcloudAuth, userId)
 		targetTimestamp, _ := strconv.ParseInt(c.Query("target_timestamp"), 10, 64)
 		if targetTimestamp == 0 {
 			c.JSON(http.StatusOK, gin.H{

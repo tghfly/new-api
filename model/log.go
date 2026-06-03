@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
@@ -55,39 +54,9 @@ const (
 	LogTypeRefund  = 6
 )
 
-// applyGroupFilterWithTable 将 GroupFilter 应用到 GORM tx。
-// tablePrefix: 表名前缀，如 "logs."，为空时不加前缀。
-func applyGroupFilterWithTable(tx *gorm.DB, groupFilter *permission.GroupFilterData, tablePrefix string) *gorm.DB {
-	if groupFilter == nil || len(groupFilter.Orgs) == 0 {
-		return tx
-	}
-
-	groupCol := tablePrefix + logGroupCol
-
-	switch groupFilter.Mode {
-	case "prefix":
-		conditions := make([]string, 0, len(groupFilter.Orgs))
-		args := make([]interface{}, 0, len(groupFilter.Orgs))
-		for _, org := range groupFilter.Orgs {
-			conditions = append(conditions, groupCol+" LIKE ?")
-			args = append(args, org+"%")
-		}
-		return tx.Where(strings.Join(conditions, " OR "), args...)
-	case "exact":
-		if len(groupFilter.Orgs) == 1 {
-			return tx.Where(groupCol+" = ?", groupFilter.Orgs[0])
-		}
-		return tx.Where(groupCol+" IN ?", groupFilter.Orgs)
-	case "in":
-		return tx.Where(groupCol+" IN ?", groupFilter.Orgs)
-	default:
-		return tx
-	}
-}
-
-// applyGroupFilter 便捷封装，默认使用 "logs." 表名前缀。
+// applyGroupFilter applies the group filter to a GORM tx.
 func applyGroupFilter(tx *gorm.DB, groupFilter *permission.GroupFilterData) *gorm.DB {
-	return applyGroupFilterWithTable(tx, groupFilter, "logs.")
+	return groupFilter.Apply(tx, logGroupCol, "user_id")
 }
 
 func formatUserLogs(logs []*Log, startIdx int) {

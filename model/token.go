@@ -39,6 +39,11 @@ func (token *Token) Clean() {
 	token.Key = ""
 }
 
+// applyGroupFilterToken applies the group filter to a GORM tx for Token model.
+func applyGroupFilterToken(tx *gorm.DB, groupFilter *permission.GroupFilterData) *gorm.DB {
+	return groupFilter.Apply(tx, commonGroupCol, "user_id")
+}
+
 func (token *Token) GetIpLimits() []string {
 	// delete empty spaces
 	//split with \n
@@ -73,7 +78,7 @@ func GetAllTokensWithFilter(groupFilter *permission.GroupFilterData, startIdx in
 	var total int64
 	tx := DB.Model(&Token{})
 	if groupFilter != nil {
-		tx = applyGroupFilter(tx, groupFilter)
+		tx = applyGroupFilterToken(tx, groupFilter)
 	}
 	err := tx.Model(&Token{}).Count(&total).Error
 	if err != nil {

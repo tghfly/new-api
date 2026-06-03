@@ -1,5 +1,11 @@
 package permission
 
+import (
+	"strings"
+
+	"gorm.io/gorm"
+)
+
 // scope 值（logs、tokens、tokengroup 共用同一套 scope）
 const (
 	ScopeAll       = "all"
@@ -65,12 +71,53 @@ func GetDeptId(data map[string]interface{}) string {
 
 // GroupFilterData holds the raw filter parameters extracted from permission data
 type GroupFilterData struct {
-	Mode string
-	Orgs []string
+	Mode   string
+	Orgs   []string
+	UserId int // 当 scope 为 spec_down/spec/local_down/local 时，过滤该用户创建的记录
 }
 
-// ExtractGroupFilterData extracts group filter parameters from a Result
-func ExtractGroupFilterData(auth Result) *GroupFilterData {
+// Apply applies the GroupFilterData to a GORM tx.
+// tableName: 表名，用于列名前缀，如 "logs"，为空时直接使用列名。
+func (gfd *GroupFilterData) Apply(tx *gorm.DB, groupCol string, userCol string) *gorm.DB {
+	if gfd == nil {
+		return tx
+	}
+
+	// 收集 OR 条件两边的语句和参数
+	var orConditions []string
+	var orArgs []interface{}
+
+	// 1. 添加用户ID过滤条件（作为 OR 的一边）
+	if gfd.UserId > 0 {
+		orConditions = append(orConditions, userCol+" = ?")
+		orArgs = append(orArgs, gfd.UserId)
+	}
+
+	// 2. 添加组织过滤条件（作为 OR 的另一边）
+	if len(gfd.Orgs) > 0 {
+		switch gfd.Mode {
+		case "prefix":
+			for _, org := range gfd.Orgs {
+				orConditions = append(orConditions, groupCol+" LIKE ?")
+				orArgs = append(orArgs, org+"%")
+			}
+		case "exact", "in":
+			orConditions = append(orConditions, groupCol+" IN ?")
+			orArgs = append(orArgs, gfd.Orgs)
+		}
+	}
+
+	// 3. 如果有 OR 条件，统一拼接并加到 Where 中
+	if len(orConditions) > 0 {
+		tx = tx.Where(strings.Join(orConditions, " OR "), orArgs...)
+	}
+
+	return tx
+}
+
+// ExtractGroupFilterData extracts group filter parameters from a Result.
+// userId is used to filter records created by the specified user.
+func ExtractGroupFilterData(auth Result, userId int) *GroupFilterData {
 	if !auth.HasAuth {
 		return nil
 	}
@@ -82,13 +129,13 @@ func ExtractGroupFilterData(auth Result) *GroupFilterData {
 	case ScopeAll:
 		return nil
 	case ScopeSpecDown:
-		return &GroupFilterData{Mode: "prefix", Orgs: orgs}
+		return &GroupFilterData{Mode: "prefix", Orgs: orgs, UserId: userId}
 	case ScopeSpec:
-		return &GroupFilterData{Mode: "in", Orgs: orgs}
+		return &GroupFilterData{Mode: "in", Orgs: orgs, UserId: userId}
 	case ScopeLocalDown:
-		return &GroupFilterData{Mode: "prefix", Orgs: []string{deptId}}
+		return &GroupFilterData{Mode: "prefix", Orgs: []string{deptId}, UserId: userId}
 	case ScopeLocal:
-		return &GroupFilterData{Mode: "exact", Orgs: []string{deptId}}
+		return &GroupFilterData{Mode: "exact", Orgs: []string{deptId}, UserId: userId}
 	case ScopeMe:
 		return nil
 	default:

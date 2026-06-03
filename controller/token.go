@@ -39,12 +39,8 @@ func handleGetAllTokens(c *gin.Context, userId int) {
 }
 
 // handleGetAllTokensWithFilter fetches tokens with group filter
-func handleGetAllTokensWithFilter(c *gin.Context, gfd *permission.GroupFilterData) {
+func handleGetAllTokensWithFilter(c *gin.Context, groupFilter *permission.GroupFilterData) {
 	pageInfo := common.GetPageQuery(c)
-	var groupFilter *permission.GroupFilterData
-	if gfd != nil {
-		groupFilter = &permission.GroupFilterData{Mode: gfd.Mode, Orgs: gfd.Orgs}
-	}
 	tokens, total, err := model.GetAllTokensWithFilter(groupFilter, pageInfo.GetStartIdx(), pageInfo.GetPageSize())
 	if err != nil {
 		common.ApiError(c, err)
@@ -69,7 +65,7 @@ func GetAllTokens(c *gin.Context) {
 		}
 
 		// 非 me 模式下，使用 groupFilter 限制查询范围
-		groupFilter := permission.ExtractGroupFilterData(dcloudAuth)
+		groupFilter := permission.ExtractGroupFilterData(dcloudAuth, userId)
 		handleGetAllTokensWithFilter(c, groupFilter)
 		return
 	}
