@@ -14,7 +14,7 @@ import (
 )
 
 // handleGetAllLogs is a helper to fetch logs with optional group filter
-func handleGetAllLogs(c *gin.Context, groupFilter *model.GroupFilter) {
+func handleGetAllLogs(c *gin.Context, groupFilter *permission.GroupFilterData) {
 	pageInfo := common.GetPageQuery(c)
 	logType, _ := strconv.Atoi(c.Query("type"))
 	startTimestamp, _ := strconv.ParseInt(c.Query("start_timestamp"), 10, 64)
@@ -37,7 +37,7 @@ func handleGetAllLogs(c *gin.Context, groupFilter *model.GroupFilter) {
 }
 
 // handleGetUserLogs is a helper to fetch user logs with optional group filter
-func handleGetUserLogs(c *gin.Context, userId int, groupFilter *model.GroupFilter) {
+func handleGetUserLogs(c *gin.Context, userId int, groupFilter *permission.GroupFilterData) {
 	pageInfo := common.GetPageQuery(c)
 	logType, _ := strconv.Atoi(c.Query("type"))
 	startTimestamp, _ := strconv.ParseInt(c.Query("start_timestamp"), 10, 64)
@@ -58,7 +58,7 @@ func handleGetUserLogs(c *gin.Context, userId int, groupFilter *model.GroupFilte
 }
 
 // handleGetLogsStat is a helper to fetch log statistics with optional group filter
-func handleGetLogsStat(c *gin.Context, username string, groupFilter *model.GroupFilter) {
+func handleGetLogsStat(c *gin.Context, username string, groupFilter *permission.GroupFilterData) {
 	logType, _ := strconv.Atoi(c.Query("type"))
 	startTimestamp, _ := strconv.ParseInt(c.Query("start_timestamp"), 10, 64)
 	endTimestamp, _ := strconv.ParseInt(c.Query("end_timestamp"), 10, 64)
@@ -83,57 +83,6 @@ func handleGetLogsStat(c *gin.Context, username string, groupFilter *model.Group
 	})
 }
 
-// getLogOrgs extracts org list from permission data
-func getLogOrgs(data map[string]interface{}) []string {
-	if orgs, ok := data["orgs"].([]string); ok {
-		return orgs
-	}
-	return nil
-}
-
-// getLogScope extracts scope string from permission data
-func getLogScope(data map[string]interface{}) string {
-	if scope, ok := data["scope"].(string); ok {
-		return scope
-	}
-	return ""
-}
-
-// getLogDeptId extracts dept_id string from permission data
-func getLogDeptId(data map[string]interface{}) string {
-	if deptId, ok := data["dept_id"].(string); ok {
-		return deptId
-	}
-	return ""
-}
-
-// buildGroupFilterFromAuth builds a GroupFilter from permission result
-func buildGroupFilterFromAuth(auth permission.Result) *model.GroupFilter {
-	if !auth.HasAuth {
-		return nil
-	}
-	scope := getLogScope(auth.Data)
-	orgs := getLogOrgs(auth.Data)
-	deptId := getLogDeptId(auth.Data)
-
-	switch scope {
-	case permission.LogScopeAll:
-		return nil // no filter
-	case permission.LogScopeSpecDown:
-		return &model.GroupFilter{Mode: "prefix", Orgs: orgs}
-	case permission.LogScopeSpec:
-		return &model.GroupFilter{Mode: "in", Orgs: orgs}
-	case permission.LogScopeLocalDown:
-		return &model.GroupFilter{Mode: "prefix", Orgs: []string{deptId}}
-	case permission.LogScopeLocal:
-		return &model.GroupFilter{Mode: "exact", Orgs: []string{deptId}}
-	case permission.LogScopeMe:
-		return nil // handled at controller level
-	default:
-		return nil
-	}
-}
-
 // resolveDCloudLogAuth resolves DCloud log permission from context
 func resolveDCloudLogAuth(c *gin.Context) permission.Result {
 	if !common.DCloudIntegrationEnabled {
@@ -147,21 +96,21 @@ func GetAllLogs(c *gin.Context) {
 
 	// DCloud 认证用户走分权分域逻辑
 	dcloudAuth := resolveDCloudLogAuth(c)
-	logger.LogInfo(c, fmt.Sprintf("[GetAllLogs] DCloud auth result: hasAuth=%v, scope=%s, data=%v", dcloudAuth.HasAuth, getLogScope(dcloudAuth.Data), dcloudAuth.Data))
+	logger.LogInfo(c, fmt.Sprintf("[GetAllLogs] DCloud auth result: hasAuth=%v, scope=%s, data=%v", dcloudAuth.HasAuth, permission.GetScope(dcloudAuth.Data), dcloudAuth.Data))
 	if dcloudAuth.HasAuth {
-		scope := getLogScope(dcloudAuth.Data)
+		scope := permission.GetScope(dcloudAuth.Data)
 		userId := c.GetInt("id")
 		logger.LogInfo(c, fmt.Sprintf("[GetAllLogs] DCloud mode: scope=%s, userId=%d", scope, userId))
 
 		// me 模式下，只能查看自己的日志（通过 GetUserLogs）
-		if scope == permission.LogScopeMe {
+		if scope == permission.ScopeMe {
 			logger.LogInfo(c, "[GetAllLogs] DCloud me mode - calling handleGetUserLogs")
 			handleGetUserLogs(c, userId, nil)
 			return
 		}
 
 		// 非 me 模式下，使用 groupFilter 限制查询范围
-		groupFilter := buildGroupFilterFromAuth(dcloudAuth)
+		groupFilter := permission.ExtractGroupFilterData(dcloudAuth)
 		logger.LogInfo(c, fmt.Sprintf("[GetAllLogs] DCloud non-me mode - groupFilter=%v", groupFilter))
 		handleGetAllLogs(c, groupFilter)
 		return
@@ -200,17 +149,17 @@ func GetUserLogs(c *gin.Context) {
 	// DCloud 认证用户走分权分域逻辑
 	dcloudAuth := resolveDCloudLogAuth(c)
 	if dcloudAuth.HasAuth {
-		scope := getLogScope(dcloudAuth.Data)
+		scope := permission.GetScope(dcloudAuth.Data)
 		userId := c.GetInt("id")
 
 		// me 模式下，只能查看自己的日志
-		if scope == permission.LogScopeMe {
+		if scope == permission.ScopeMe {
 			handleGetUserLogs(c, userId, nil)
 			return
 		}
 
 		// 非 me 模式下，使用 groupFilter 限制查询范围
-		groupFilter := buildGroupFilterFromAuth(dcloudAuth)
+		groupFilter := permission.ExtractGroupFilterData(dcloudAuth)
 		handleGetUserLogs(c, userId, groupFilter)
 		return
 	}
@@ -279,17 +228,17 @@ func GetLogsStat(c *gin.Context) {
 	// DCloud 认证用户走分权分域逻辑
 	dcloudAuth := resolveDCloudLogAuth(c)
 	if dcloudAuth.HasAuth {
-		scope := getLogScope(dcloudAuth.Data)
+		scope := permission.GetScope(dcloudAuth.Data)
 		username := c.GetString("username")
 
 		// me 模式下，只能查看自己的统计
-		if scope == permission.LogScopeMe {
+		if scope == permission.ScopeMe {
 			handleGetLogsStat(c, username, nil)
 			return
 		}
 
 		// 非 me 模式下，使用 groupFilter 限制查询范围
-		groupFilter := buildGroupFilterFromAuth(dcloudAuth)
+		groupFilter := permission.ExtractGroupFilterData(dcloudAuth)
 		handleGetLogsStat(c, username, groupFilter)
 		return
 	}
@@ -348,10 +297,10 @@ func DeleteHistoryLogs(c *gin.Context) {
 	// DCloud 认证用户走分权分域逻辑
 	dcloudAuth := resolveDCloudLogAuth(c)
 	if dcloudAuth.HasAuth {
-		scope := getLogScope(dcloudAuth.Data)
+		scope := permission.GetScope(dcloudAuth.Data)
 
 		// me 模式下，不允许删除历史日志
-		if scope == permission.LogScopeMe {
+		if scope == permission.ScopeMe {
 			c.JSON(http.StatusOK, gin.H{
 				"success": false,
 				"message": "me 模式下不允许删除历史日志",
@@ -360,7 +309,7 @@ func DeleteHistoryLogs(c *gin.Context) {
 		}
 
 		// 非 me 模式下，使用 groupFilter 限制删除范围
-		groupFilter := buildGroupFilterFromAuth(dcloudAuth)
+		groupFilter := permission.ExtractGroupFilterData(dcloudAuth)
 		targetTimestamp, _ := strconv.ParseInt(c.Query("target_timestamp"), 10, 64)
 		if targetTimestamp == 0 {
 			c.JSON(http.StatusOK, gin.H{

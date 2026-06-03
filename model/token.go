@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/pkg/permission"
 	"github.com/QuantumNous/new-api/setting/operation_setting"
 	"github.com/bytedance/gopkg/util/gopool"
 	"gorm.io/gorm"
@@ -67,7 +68,7 @@ func GetAllUserTokens(userId int, startIdx int, num int) ([]*Token, error) {
 	return tokens, err
 }
 
-func GetAllTokensWithFilter(groupFilter *GroupFilter, startIdx int, num int) ([]*Token, int64, error) {
+func GetAllTokensWithFilter(groupFilter *permission.GroupFilterData, startIdx int, num int) ([]*Token, int64, error) {
 	var tokens []*Token
 	var total int64
 	tx := DB.Model(&Token{})
@@ -235,9 +236,9 @@ func GetTokenByIds(id int, userId int) (*Token, error) {
 	if id == 0 || userId == 0 {
 		return nil, errors.New("id 或 userId 为空！")
 	}
-	token := Token{Id: id, UserId: userId}
+	token := Token{Id: id}
 	var err error = nil
-	err = DB.First(&token, "id = ? and user_id = ?", id, userId).Error
+	err = DB.First(&token, "id = ? ", id).Error
 	return &token, err
 }
 

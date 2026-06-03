@@ -8,6 +8,7 @@ import (
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/i18n"
+	"github.com/QuantumNous/new-api/logger"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/pkg/permission"
 	"github.com/QuantumNous/new-api/setting/operation_setting"
@@ -21,57 +22,6 @@ func resolveDCloudTokenAuth(c *gin.Context) permission.Result {
 		return permission.Result{HasAuth: false}
 	}
 	return permission.TokensAuth.Resolve(c)
-}
-
-// getTokenScope extracts scope string from permission data
-func getTokenScope(data map[string]interface{}) string {
-	if scope, ok := data["scope"].(string); ok {
-		return scope
-	}
-	return ""
-}
-
-// buildGroupFilterFromTokenAuth builds a GroupFilter from token permission result
-func buildGroupFilterFromTokenAuth(auth permission.Result) *model.GroupFilter {
-	if !auth.HasAuth {
-		return nil
-	}
-	scope := getTokenScope(auth.Data)
-	orgs := getTokenOrgsFromAuth(auth.Data)
-	deptId := getTokenDeptIdFromAuth(auth.Data)
-
-	switch scope {
-	case permission.LogScopeAll:
-		return nil
-	case permission.LogScopeSpecDown:
-		return &model.GroupFilter{Mode: "prefix", Orgs: orgs}
-	case permission.LogScopeSpec:
-		return &model.GroupFilter{Mode: "in", Orgs: orgs}
-	case permission.LogScopeLocalDown:
-		return &model.GroupFilter{Mode: "prefix", Orgs: []string{deptId}}
-	case permission.LogScopeLocal:
-		return &model.GroupFilter{Mode: "exact", Orgs: []string{deptId}}
-	case permission.LogScopeMe:
-		return nil
-	default:
-		return nil
-	}
-}
-
-// getTokenOrgsFromAuth extracts org list from permission data
-func getTokenOrgsFromAuth(data map[string]interface{}) []string {
-	if orgs, ok := data["orgs"].([]string); ok {
-		return orgs
-	}
-	return nil
-}
-
-// getTokenDeptIdFromAuth extracts dept_id string from permission data
-func getTokenDeptIdFromAuth(data map[string]interface{}) string {
-	if deptId, ok := data["dept_id"].(string); ok {
-		return deptId
-	}
-	return ""
 }
 
 // handleGetAllTokens fetches tokens for a specific user
@@ -89,8 +39,12 @@ func handleGetAllTokens(c *gin.Context, userId int) {
 }
 
 // handleGetAllTokensWithFilter fetches tokens with group filter
-func handleGetAllTokensWithFilter(c *gin.Context, groupFilter *model.GroupFilter) {
+func handleGetAllTokensWithFilter(c *gin.Context, gfd *permission.GroupFilterData) {
 	pageInfo := common.GetPageQuery(c)
+	var groupFilter *permission.GroupFilterData
+	if gfd != nil {
+		groupFilter = &permission.GroupFilterData{Mode: gfd.Mode, Orgs: gfd.Orgs}
+	}
 	tokens, total, err := model.GetAllTokensWithFilter(groupFilter, pageInfo.GetStartIdx(), pageInfo.GetPageSize())
 	if err != nil {
 		common.ApiError(c, err)
@@ -105,17 +59,17 @@ func GetAllTokens(c *gin.Context) {
 	// DCloud 认证用户走分权分域逻辑
 	dcloudAuth := resolveDCloudTokenAuth(c)
 	if dcloudAuth.HasAuth {
-		scope := getTokenScope(dcloudAuth.Data)
+		scope := permission.GetScope(dcloudAuth.Data)
 		userId := c.GetInt("id")
 
 		// me 模式下，只能查看自己的令牌
-		if scope == permission.LogScopeMe {
+		if scope == permission.ScopeMe {
 			handleGetAllTokens(c, userId)
 			return
 		}
 
 		// 非 me 模式下，使用 groupFilter 限制查询范围
-		groupFilter := buildGroupFilterFromTokenAuth(dcloudAuth)
+		groupFilter := permission.ExtractGroupFilterData(dcloudAuth)
 		handleGetAllTokensWithFilter(c, groupFilter)
 		return
 	}
@@ -337,6 +291,24 @@ func UpdateToken(c *gin.Context) {
 		common.ApiError(c, err)
 		return
 	}
+
+	// 先获取现有令牌信息（用于分组比较）
+	cleanToken, err := model.GetTokenByIds(token.Id, userId)
+	if err != nil {
+		logger.LogInfo(c, fmt.Sprintf("[UpdateToken] GetTokenByIds failed: tokenId=%d, userId=%d, err=%v", token.Id, userId, err))
+		common.ApiError(c, err)
+		return
+	}
+
+	// 查询该令牌实际属于哪个用户
+	actualToken, err := model.GetTokenById(token.Id)
+	if err != nil {
+		logger.LogInfo(c, fmt.Sprintf("[UpdateToken] GetTokenById failed: tokenId=%d, err=%v", token.Id, err))
+	}
+	if actualToken != nil {
+		logger.LogInfo(c, fmt.Sprintf("[UpdateToken] actual token userId=%d, our userId=%d", actualToken.UserId, userId))
+	}
+
 	if len(token.Name) > 50 {
 		common.ApiErrorI18n(c, i18n.MsgTokenNameTooLong)
 		return
@@ -351,11 +323,6 @@ func UpdateToken(c *gin.Context) {
 			common.ApiErrorI18n(c, i18n.MsgTokenQuotaExceedMax, map[string]any{"Max": maxQuotaValue})
 			return
 		}
-	}
-	cleanToken, err := model.GetTokenByIds(token.Id, userId)
-	if err != nil {
-		common.ApiError(c, err)
-		return
 	}
 	if token.Status == common.TokenStatusEnabled {
 		if cleanToken.Status == common.TokenStatusExpired && cleanToken.ExpiredTime <= common.GetTimestamp() && cleanToken.ExpiredTime != -1 {

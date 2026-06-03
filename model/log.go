@@ -11,6 +11,7 @@ import (
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/constant"
 	"github.com/QuantumNous/new-api/logger"
+	"github.com/QuantumNous/new-api/pkg/permission"
 	"github.com/QuantumNous/new-api/types"
 
 	"github.com/gin-gonic/gin"
@@ -54,15 +55,9 @@ const (
 	LogTypeRefund  = 6
 )
 
-// GroupFilter 组织过滤条件
-type GroupFilter struct {
-	Mode string   // "prefix" | "exact" | "in"
-	Orgs []string // 组织编码列表
-}
-
 // applyGroupFilterWithTable 将 GroupFilter 应用到 GORM tx。
 // tablePrefix: 表名前缀，如 "logs."，为空时不加前缀。
-func applyGroupFilterWithTable(tx *gorm.DB, groupFilter *GroupFilter, tablePrefix string) *gorm.DB {
+func applyGroupFilterWithTable(tx *gorm.DB, groupFilter *permission.GroupFilterData, tablePrefix string) *gorm.DB {
 	if groupFilter == nil || len(groupFilter.Orgs) == 0 {
 		return tx
 	}
@@ -91,7 +86,7 @@ func applyGroupFilterWithTable(tx *gorm.DB, groupFilter *GroupFilter, tablePrefi
 }
 
 // applyGroupFilter 便捷封装，默认使用 "logs." 表名前缀。
-func applyGroupFilter(tx *gorm.DB, groupFilter *GroupFilter) *gorm.DB {
+func applyGroupFilter(tx *gorm.DB, groupFilter *permission.GroupFilterData) *gorm.DB {
 	return applyGroupFilterWithTable(tx, groupFilter, "logs.")
 }
 
@@ -297,7 +292,7 @@ func RecordTaskBillingLog(params RecordTaskBillingLogParams) {
 	}
 }
 
-func GetAllLogs(logType int, startTimestamp int64, endTimestamp int64, modelName string, username string, tokenName string, startIdx int, num int, channel int, group string, requestId string, groupFilter *GroupFilter) (logs []*Log, total int64, err error) {
+func GetAllLogs(logType int, startTimestamp int64, endTimestamp int64, modelName string, username string, tokenName string, startIdx int, num int, channel int, group string, requestId string, groupFilter *permission.GroupFilterData) (logs []*Log, total int64, err error) {
 	var tx *gorm.DB
 	if logType == LogTypeUnknown {
 		tx = LOG_DB
@@ -388,7 +383,7 @@ func GetAllLogs(logType int, startTimestamp int64, endTimestamp int64, modelName
 
 const logSearchCountLimit = 10000
 
-func GetUserLogs(userId int, logType int, startTimestamp int64, endTimestamp int64, modelName string, tokenName string, startIdx int, num int, group string, requestId string, groupFilter *GroupFilter) (logs []*Log, total int64, err error) {
+func GetUserLogs(userId int, logType int, startTimestamp int64, endTimestamp int64, modelName string, tokenName string, startIdx int, num int, group string, requestId string, groupFilter *permission.GroupFilterData) (logs []*Log, total int64, err error) {
 	var tx *gorm.DB
 	if logType == LogTypeUnknown {
 		tx = LOG_DB.Where("logs.user_id = ?", userId)
@@ -486,7 +481,7 @@ type Stat struct {
 	Tpm   int `json:"tpm"`
 }
 
-func SumUsedQuota(logType int, startTimestamp int64, endTimestamp int64, modelName string, username string, tokenName string, channel int, group string, groupFilter *GroupFilter) (stat Stat, err error) {
+func SumUsedQuota(logType int, startTimestamp int64, endTimestamp int64, modelName string, username string, tokenName string, channel int, group string, groupFilter *permission.GroupFilterData) (stat Stat, err error) {
 	tx := LOG_DB.Table("logs").Select("sum(quota) quota")
 
 	// 为rpm和tpm创建单独的查询
@@ -567,7 +562,7 @@ func SumUsedToken(logType int, startTimestamp int64, endTimestamp int64, modelNa
 	return token
 }
 
-func DeleteOldLog(ctx context.Context, targetTimestamp int64, limit int, groupFilter *GroupFilter) (int64, error) {
+func DeleteOldLog(ctx context.Context, targetTimestamp int64, limit int, groupFilter *permission.GroupFilterData) (int64, error) {
 	var total int64 = 0
 
 	tx := LOG_DB
