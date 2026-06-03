@@ -9,12 +9,118 @@ import (
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/i18n"
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/pkg/permission"
 	"github.com/QuantumNous/new-api/setting/operation_setting"
 
 	"github.com/gin-gonic/gin"
 )
 
+// resolveDCloudTokenAuth resolves DCloud token permission from context
+func resolveDCloudTokenAuth(c *gin.Context) permission.Result {
+	if !common.DCloudIntegrationEnabled {
+		return permission.Result{HasAuth: false}
+	}
+	return permission.TokensAuth.Resolve(c)
+}
+
+// getTokenScope extracts scope string from permission data
+func getTokenScope(data map[string]interface{}) string {
+	if scope, ok := data["scope"].(string); ok {
+		return scope
+	}
+	return ""
+}
+
+// buildGroupFilterFromTokenAuth builds a GroupFilter from token permission result
+func buildGroupFilterFromTokenAuth(auth permission.Result) *model.GroupFilter {
+	if !auth.HasAuth {
+		return nil
+	}
+	scope := getTokenScope(auth.Data)
+	orgs := getTokenOrgsFromAuth(auth.Data)
+	deptId := getTokenDeptIdFromAuth(auth.Data)
+
+	switch scope {
+	case permission.LogScopeAll:
+		return nil
+	case permission.LogScopeSpecDown:
+		return &model.GroupFilter{Mode: "prefix", Orgs: orgs}
+	case permission.LogScopeSpec:
+		return &model.GroupFilter{Mode: "in", Orgs: orgs}
+	case permission.LogScopeLocalDown:
+		return &model.GroupFilter{Mode: "prefix", Orgs: []string{deptId}}
+	case permission.LogScopeLocal:
+		return &model.GroupFilter{Mode: "exact", Orgs: []string{deptId}}
+	case permission.LogScopeMe:
+		return nil
+	default:
+		return nil
+	}
+}
+
+// getTokenOrgsFromAuth extracts org list from permission data
+func getTokenOrgsFromAuth(data map[string]interface{}) []string {
+	if orgs, ok := data["orgs"].([]string); ok {
+		return orgs
+	}
+	return nil
+}
+
+// getTokenDeptIdFromAuth extracts dept_id string from permission data
+func getTokenDeptIdFromAuth(data map[string]interface{}) string {
+	if deptId, ok := data["dept_id"].(string); ok {
+		return deptId
+	}
+	return ""
+}
+
+// handleGetAllTokens fetches tokens for a specific user
+func handleGetAllTokens(c *gin.Context, userId int) {
+	pageInfo := common.GetPageQuery(c)
+	tokens, err := model.GetAllUserTokens(userId, pageInfo.GetStartIdx(), pageInfo.GetPageSize())
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	total, _ := model.CountUserTokens(userId)
+	pageInfo.SetTotal(int(total))
+	pageInfo.SetItems(tokens)
+	common.ApiSuccess(c, pageInfo)
+}
+
+// handleGetAllTokensWithFilter fetches tokens with group filter
+func handleGetAllTokensWithFilter(c *gin.Context, groupFilter *model.GroupFilter) {
+	pageInfo := common.GetPageQuery(c)
+	tokens, total, err := model.GetAllTokensWithFilter(groupFilter, pageInfo.GetStartIdx(), pageInfo.GetPageSize())
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	pageInfo.SetTotal(int(total))
+	pageInfo.SetItems(tokens)
+	common.ApiSuccess(c, pageInfo)
+}
+
 func GetAllTokens(c *gin.Context) {
+	// DCloud 认证用户走分权分域逻辑
+	dcloudAuth := resolveDCloudTokenAuth(c)
+	if dcloudAuth.HasAuth {
+		scope := getTokenScope(dcloudAuth.Data)
+		userId := c.GetInt("id")
+
+		// me 模式下，只能查看自己的令牌
+		if scope == permission.LogScopeMe {
+			handleGetAllTokens(c, userId)
+			return
+		}
+
+		// 非 me 模式下，使用 groupFilter 限制查询范围
+		groupFilter := buildGroupFilterFromTokenAuth(dcloudAuth)
+		handleGetAllTokensWithFilter(c, groupFilter)
+		return
+	}
+
+	// 原有的用户令牌查询
 	userId := c.GetInt("id")
 	pageInfo := common.GetPageQuery(c)
 	tokens, err := model.GetAllUserTokens(userId, pageInfo.GetStartIdx(), pageInfo.GetPageSize())

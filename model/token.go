@@ -67,6 +67,21 @@ func GetAllUserTokens(userId int, startIdx int, num int) ([]*Token, error) {
 	return tokens, err
 }
 
+func GetAllTokensWithFilter(groupFilter *GroupFilter, startIdx int, num int) ([]*Token, int64, error) {
+	var tokens []*Token
+	var total int64
+	tx := DB.Model(&Token{})
+	if groupFilter != nil {
+		tx = applyGroupFilter(tx, groupFilter)
+	}
+	err := tx.Model(&Token{}).Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	err = tx.Order("id desc").Limit(num).Offset(startIdx).Find(&tokens).Error
+	return tokens, total, err
+}
+
 // sanitizeLikePattern 校验并清洗用户输入的 LIKE 搜索模式。
 // 规则：
 //  1. 转义 ! 和 _（使用 ! 作为 ESCAPE 字符，兼容 MySQL/PostgreSQL/SQLite）

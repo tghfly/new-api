@@ -19,7 +19,7 @@ const (
 //	"local_down" → {scope: "local_down"}
 //	"local" → {scope: "local"}
 //	"me" → {scope: "me"}
-func parseLogAuthValue(value string) (map[string]interface{}, bool) {
+func parseAuthValue(value string) (map[string]interface{}, bool) {
 	scope, orgs, ok := parseScopeValue(value)
 	if !ok {
 		return nil, false
@@ -34,4 +34,6 @@ func parseLogAuthValue(value string) (map[string]interface{}, bool) {
 }
 
 // LogsAuth 日志权限解析器
-var LogsAuth = NewResolver("new-api:logs:auth", "new-api:auth", parseLogAuthValue)
+var LogsAuth = NewResolver("new-api:logs:auth", "new-api:auth", parseAuthValue)
+
+var TokensAuth = NewResolver("new-api:tokens:auth", "new-api:auth", parseAuthValue)
