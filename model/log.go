@@ -54,7 +54,6 @@ const (
 	LogTypeRefund  = 6
 )
 
-// applyGroupFilter applies the group filter to a GORM tx.
 func applyGroupFilter(tx *gorm.DB, groupFilter *permission.GroupFilterData) *gorm.DB {
 	return groupFilter.Apply(tx, logGroupCol, "user_id")
 }

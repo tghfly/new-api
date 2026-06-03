@@ -13,6 +13,7 @@ const (
 	ScopeSpec      = "spec"
 	ScopeLocalDown = "local_down"
 	ScopeLocal     = "local"
+	ScopeProject   = "project"
 	ScopeMe        = "me"
 )
 
@@ -69,6 +70,14 @@ func GetDeptId(data map[string]interface{}) string {
 	return ""
 }
 
+// GetDeptId extracts dept_id string from permission data
+func GetProjectId(data map[string]interface{}) string {
+	if projectId, ok := data["group"].(string); ok {
+		return projectId
+	}
+	return ""
+}
+
 // GroupFilterData holds the raw filter parameters extracted from permission data
 type GroupFilterData struct {
 	Mode   string
@@ -76,7 +85,6 @@ type GroupFilterData struct {
 	UserId int // 当 scope 为 spec_down/spec/local_down/local 时，过滤该用户创建的记录
 }
 
-// Apply applies the GroupFilterData to a GORM tx.
 // tableName: 表名，用于列名前缀，如 "logs"，为空时直接使用列名。
 func (gfd *GroupFilterData) Apply(tx *gorm.DB, groupCol string, userCol string) *gorm.DB {
 	if gfd == nil {
@@ -124,6 +132,7 @@ func ExtractGroupFilterData(auth Result, userId int) *GroupFilterData {
 	scope := GetScope(auth.Data)
 	orgs := GetOrgs(auth.Data)
 	deptId := GetDeptId(auth.Data)
+	projectId := GetProjectId(auth.Data)
 
 	switch scope {
 	case ScopeAll:
@@ -135,7 +144,9 @@ func ExtractGroupFilterData(auth Result, userId int) *GroupFilterData {
 	case ScopeLocalDown:
 		return &GroupFilterData{Mode: "prefix", Orgs: []string{deptId}, UserId: userId}
 	case ScopeLocal:
-		return &GroupFilterData{Mode: "exact", Orgs: []string{deptId}, UserId: userId}
+		return &GroupFilterData{Mode: "in", Orgs: []string{deptId}, UserId: userId}
+	case ScopeProject:
+		return &GroupFilterData{Mode: "in", Orgs: []string{projectId}, UserId: userId}
 	case ScopeMe:
 		return nil
 	default:

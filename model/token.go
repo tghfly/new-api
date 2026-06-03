@@ -39,7 +39,6 @@ func (token *Token) Clean() {
 	token.Key = ""
 }
 
-// applyGroupFilterToken applies the group filter to a GORM tx for Token model.
 func applyGroupFilterToken(tx *gorm.DB, groupFilter *permission.GroupFilterData) *gorm.DB {
 	return groupFilter.Apply(tx, commonGroupCol, "user_id")
 }
@@ -128,6 +127,10 @@ func sanitizeLikePattern(input string) (string, error) {
 const searchHardLimit = 100
 
 func SearchUserTokens(userId int, keyword string, token string, offset int, limit int) (tokens []*Token, total int64, err error) {
+	return SearchTokensWithFilter(nil, userId, keyword, token, offset, limit)
+}
+
+func SearchTokensWithFilter(groupFilter *permission.GroupFilterData, userId int, keyword string, token string, offset int, limit int) (tokens []*Token, total int64, err error) {
 	// model 层强制截断
 	if limit <= 0 || limit > searchHardLimit {
 		limit = searchHardLimit
@@ -154,7 +157,12 @@ func SearchUserTokens(userId int, keyword string, token string, offset int, limi
 		}
 	}
 
-	baseQuery := DB.Model(&Token{}).Where("user_id = ?", userId)
+	baseQuery := DB.Model(&Token{})
+	if groupFilter != nil {
+		baseQuery = applyGroupFilterToken(baseQuery, groupFilter)
+	} else {
+		baseQuery = baseQuery.Where("user_id = ?", userId)
+	}
 
 	// 非空才加 LIKE 条件，空则跳过（不过滤该字段）
 	if keyword != "" {

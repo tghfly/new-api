@@ -85,14 +85,15 @@ func GetAllTokens(c *gin.Context) {
 	return
 }
 
-func SearchTokens(c *gin.Context) {
+// handleSearchTokens fetches tokens with optional group filter
+func handleSearchTokens(c *gin.Context, groupFilter *permission.GroupFilterData) {
 	userId := c.GetInt("id")
 	keyword := c.Query("keyword")
 	token := c.Query("token")
 
 	pageInfo := common.GetPageQuery(c)
 
-	tokens, total, err := model.SearchUserTokens(userId, keyword, token, pageInfo.GetStartIdx(), pageInfo.GetPageSize())
+	tokens, total, err := model.SearchTokensWithFilter(groupFilter, userId, keyword, token, pageInfo.GetStartIdx(), pageInfo.GetPageSize())
 	if err != nil {
 		common.ApiError(c, err)
 		return
@@ -100,7 +101,48 @@ func SearchTokens(c *gin.Context) {
 	pageInfo.SetTotal(int(total))
 	pageInfo.SetItems(tokens)
 	common.ApiSuccess(c, pageInfo)
-	return
+}
+
+func SearchTokens(c *gin.Context) {
+	// DCloud 认证用户走分权分域逻辑
+	dcloudAuth := resolveDCloudTokenAuth(c)
+	if dcloudAuth.HasAuth {
+		scope := permission.GetScope(dcloudAuth.Data)
+		userId := c.GetInt("id")
+
+		// me 模式下，只能查看自己的令牌
+		if scope == permission.ScopeMe {
+			userId := c.GetInt("id")
+			pageInfo := common.GetPageQuery(c)
+			tokens, total, err := model.SearchUserTokens(userId, c.Query("keyword"), c.Query("token"), pageInfo.GetStartIdx(), pageInfo.GetPageSize())
+			if err != nil {
+				common.ApiError(c, err)
+				return
+			}
+			pageInfo.SetTotal(int(total))
+			pageInfo.SetItems(tokens)
+			common.ApiSuccess(c, pageInfo)
+			return
+		}
+
+		// 非 me 模式下，使用 groupFilter 限制查询范围
+		groupFilter := permission.ExtractGroupFilterData(dcloudAuth, userId)
+		handleSearchTokens(c, groupFilter)
+		return
+	}
+
+	// 原有的用户令牌搜索
+	userId := c.GetInt("id")
+	pageInfo := common.GetPageQuery(c)
+
+	tokens, total, err := model.SearchUserTokens(userId, c.Query("keyword"), c.Query("token"), pageInfo.GetStartIdx(), pageInfo.GetPageSize())
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	pageInfo.SetTotal(int(total))
+	pageInfo.SetItems(tokens)
+	common.ApiSuccess(c, pageInfo)
 }
 
 func GetToken(c *gin.Context) {
