@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { API, showError, showSuccess, hasSSOPerm } from '../../../helpers';
 import CardPro from '../../common/ui/CardPro';
@@ -33,7 +33,6 @@ import {
   Form,
   Input,
   InputNumber,
-  Select,
   Modal,
   Typography,
   Card,
@@ -60,7 +59,7 @@ const UserGroupsPage = () => {
   const [showSideSheet, setShowSideSheet] = useState(false);
   const [editingGroup, setEditingGroup] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
-  const [promotionValue, setPromotionValue] = useState('false');
+  const promotionRef = useRef(false);
 
   const loadUserGroups = useCallback(async () => {
     setLoading(true);
@@ -101,14 +100,12 @@ const UserGroupsPage = () => {
 
   const handleAdd = () => {
     setEditingGroup(null);
-    setPromotionValue('false');
     setShowSideSheet(true);
   };
 
   const handleEdit = (record) => {
     setEditingGroup(record);
-    const promoValue = record.promotion ? 'true' : 'false';
-    setPromotionValue(promoValue);
+    promotionRef.current = !!record.promotion;
     setShowSideSheet(true);
   };
 
@@ -117,10 +114,8 @@ const UserGroupsPage = () => {
     if (showSideSheet && formApi) {
       if (editingGroup) {
         // 编辑模式：回填数据
-        const promoValue = editingGroup.promotion ? 'true' : 'false';
         formApi.setValues({
           ...editingGroup,
-          promotion: promoValue,
           min: editingGroup.min || 0,
           max: editingGroup.max || 0,
         });
@@ -132,7 +127,6 @@ const UserGroupsPage = () => {
           ratio: 1,
           api_rate_total: 0,
           api_rate_success: 1000,
-          promotion: 'false',
           min: 0,
           max: 0,
         });
@@ -188,7 +182,7 @@ const UserGroupsPage = () => {
       const submitValues = {
         ...values,
         public: editingGroup ? editingGroup.public : false,
-        promotion: values.promotion === 'true',
+        promotion: editingGroup ? promotionRef.current : false,
       };
       let res;
       if (editingGroup) {
@@ -255,17 +249,6 @@ const UserGroupsPage = () => {
       key: 'api_rate_success',
       width: 130,
       render: (rate) => t('userGroups.apiRateValue', { rate }),
-    },
-    {
-      title: t('userGroups.autoUpgrade'),
-      dataIndex: 'promotion',
-      key: 'promotion',
-      width: 100,
-      render: (promotion) => (
-        <Tag color={promotion ? 'blue' : 'grey'} shape='circle' size='small'>
-          {promotion ? t('userGroups.yes') : t('userGroups.no')}
-        </Tag>
-      ),
     },
     {
       title: t('userGroups.isEnabled'),
@@ -404,11 +387,6 @@ const UserGroupsPage = () => {
               const first = Object.values(errs)[0];
               if (first) showError(Array.isArray(first) ? first[0] : first);
             }}
-            onValueChange={(values) => {
-              if (values.promotion !== undefined) {
-                setPromotionValue(values.promotion);
-              }
-            }}
           >
             <div className='p-2'>
               <Card className='!rounded-2xl shadow-sm border-0'>
@@ -466,33 +444,6 @@ const UserGroupsPage = () => {
                   min={0}
                   style={{ width: '100%' }}
                 />
-                <Form.Select
-                  field='promotion'
-                  label={t('自动升级')}
-                  placeholder={t('请选择是否自动升级')}
-                  style={{ width: '100%' }}
-                >
-                  <Select.Option value='true'>{t('是')}</Select.Option>
-                  <Select.Option value='false'>{t('否')}</Select.Option>
-                </Form.Select>
-                {promotionValue === 'true' && (
-                  <>
-                    <Form.InputNumber
-                      field='min'
-                      label={t('最小金额')}
-                      placeholder={t('请输入最小金额')}
-                      min={0}
-                      style={{ width: '100%' }}
-                    />
-                    <Form.InputNumber
-                      field='max'
-                      label={t('最大金额')}
-                      placeholder={t('请输入最大金额')}
-                      min={0}
-                      style={{ width: '100%' }}
-                    />
-                  </>
-                )}
               </Card>
             </div>
           </Form>
