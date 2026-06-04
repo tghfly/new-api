@@ -120,7 +120,6 @@ const UserGroupsPage = () => {
         const promoValue = editingGroup.promotion ? 'true' : 'false';
         formApi.setValues({
           ...editingGroup,
-          public: editingGroup.public ? 'true' : 'false',
           promotion: promoValue,
           min: editingGroup.min || 0,
           max: editingGroup.max || 0,
@@ -133,7 +132,6 @@ const UserGroupsPage = () => {
           ratio: 1,
           api_rate_total: 0,
           api_rate_success: 1000,
-          public: 'false',
           promotion: 'false',
           min: 0,
           max: 0,
@@ -189,7 +187,7 @@ const UserGroupsPage = () => {
       // 将字符串 'true'/'false' 转换为布尔值
       const submitValues = {
         ...values,
-        public: values.public === 'true',
+        public: editingGroup ? editingGroup.public : false,
         promotion: values.promotion === 'true',
       };
       let res;
@@ -257,17 +255,6 @@ const UserGroupsPage = () => {
       key: 'api_rate_success',
       width: 130,
       render: (rate) => t('userGroups.apiRateValue', { rate }),
-    },
-    {
-      title: t('userGroups.isPublic'),
-      dataIndex: 'public',
-      key: 'public',
-      width: 90,
-      render: (public_) => (
-        <Tag color={public_ ? 'green' : 'grey'} shape='circle' size='small'>
-          {public_ ? t('userGroups.yes') : t('userGroups.no')}
-        </Tag>
-      ),
     },
     {
       title: t('userGroups.autoUpgrade'),
@@ -479,15 +466,6 @@ const UserGroupsPage = () => {
                   min={0}
                   style={{ width: '100%' }}
                 />
-                <Form.Select
-                  field='public'
-                  label={t('是否公开')}
-                  placeholder={t('请选择是否公开')}
-                  style={{ width: '100%' }}
-                >
-                  <Select.Option value='true'>{t('是')}</Select.Option>
-                  <Select.Option value='false'>{t('否')}</Select.Option>
-                </Form.Select>
                 <Form.Select
                   field='promotion'
                   label={t('自动升级')}
