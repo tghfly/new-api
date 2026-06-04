@@ -9,6 +9,7 @@ import (
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/i18n"
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/pkg/permission"
 	"github.com/gin-gonic/gin"
 )
 
@@ -776,4 +777,90 @@ func GetAllUserGroupsMap(c *gin.Context) {
 		"message": "",
 		"data":    groupMap,
 	})
+}
+
+// resolveDCloudUserGroupsAuth resolves DCloud user groups permission from context
+func resolveDCloudUserGroupsAuth(c *gin.Context) permission.Result {
+	if !common.DCloudIntegrationEnabled {
+		return permission.Result{HasAuth: false}
+	}
+	return permission.UserGroupsAuth.Resolve(c)
+}
+
+// GetAllUserGroupsWithAuth 获取所有用户组（支持分权分域）
+func GetAllUserGroupsWithAuth(c *gin.Context) {
+	dcloudAuth := resolveDCloudUserGroupsAuth(c)
+	if dcloudAuth.HasAuth {
+		scope := permission.GetScope(dcloudAuth.Data)
+		userId := c.GetInt("id")
+
+		var userGroups []*model.UserGroup
+		var err error
+		// me 模式下，只能查看自己的用户组
+		if scope == permission.ScopeMe {
+			userGroups, err = model.GetUserGroupsByUserId(userId)
+		} else {
+			// 非 me 模式下，使用 groupFilter 限制查询范围
+			groupFilter := permission.ExtractGroupFilterData(dcloudAuth, userId)
+			userGroups, err = model.GetUserGroupsWithFilter(groupFilter)
+
+		}
+
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
+		// 公共用户组
+		publicGroups, publicErr := model.GetUserGroupsWithPublic()
+		if publicErr != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": publicErr.Error(),
+			})
+			return
+		}
+
+		// 核心：symbol 去重（用 map 记录已存在的 symbol）
+		existsMap := make(map[string]struct{})
+		list := make([]map[string]string, 0, len(userGroups)+len(publicGroups))
+
+		// 1. 添加公共用户组（自动跳过已存在的 symbol）
+		for _, ug := range publicGroups {
+			symbol := ug.Symbol
+			if _, exists := existsMap[symbol]; !exists {
+				existsMap[symbol] = struct{}{}
+				list = append(list, map[string]string{
+					"symbol": symbol,
+					"name":   ug.Name,
+				})
+			}
+		}
+
+		// 2. 添加自己的用户组（去重）
+		for _, ug := range userGroups {
+			symbol := ug.Symbol
+			if _, exists := existsMap[symbol]; !exists {
+				existsMap[symbol] = struct{}{}
+				list = append(list, map[string]string{
+					"symbol": symbol,
+					"name":   ug.Name,
+				})
+			}
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "",
+			"data":    list,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": false,
+		"message": "权限",
+	})
+	return
 }

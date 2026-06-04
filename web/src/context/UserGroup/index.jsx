@@ -41,12 +41,16 @@ export const UserGroupProvider = ({ children }) => {
     dispatch({ type: actionTypes.SET_LOADING, payload: true });
     try {
       let response;
-      // 管理员: role >= 10 (RoleAdminUser=10, RoleRootUser=100)
-      const isAdmin = Number(user?.role) >= 10;
-      if (isAdmin) {
-        response = await API.get('/api/admin/user_groups/all');
-      } else {
-        response = await API.get('/api/user/self/groups');
+
+      response = await API.get('/api/user-groups/all');
+      if (!response.data.success) {
+        // 管理员: role >= 10 (RoleAdminUser=10, RoleRootUser=100)
+        const isAdmin = Number(user?.role) >= 10;
+        if (isAdmin) {
+          response = await API.get('/api/admin/user_groups/all');
+        } else {
+          response = await API.get('/api/user/self/groups');
+        }
       }
 
       if (response.data.success) {

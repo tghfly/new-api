@@ -2,10 +2,12 @@ package model
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/common/limiter"
+	"github.com/QuantumNous/new-api/pkg/permission"
 	"github.com/QuantumNous/new-api/setting"
 	"github.com/go-redis/redis/v8"
 )
@@ -80,6 +82,65 @@ func GetUserGroupsAll(isPublic bool) ([]*UserGroup, error) {
 	}
 
 	err := db.Find(&userGroups).Error
+	return userGroups, err
+}
+
+// GetUserGroupsWithPublic 查询所有 enable=true 且 public=true 的用户组
+func GetUserGroupsWithPublic() ([]*UserGroup, error) {
+	var userGroups []*UserGroup
+	err := DB.Where("enable = ? AND public = ?", true, true).Find(&userGroups).Error
+	return userGroups, err
+}
+
+func GetUserGroupsWithFilter(groupFilter *permission.GroupFilterData) ([]*UserGroup, error) {
+	var userGroups []*UserGroup
+
+	tx := DB.Model(&UserGroup{}).Where("user_groups.enable = ?", true)
+
+	if groupFilter == nil {
+		err := tx.Find(&userGroups).Error
+		return userGroups, err
+	}
+
+	// 核心：构建一整组带括号的 OR 条件
+	var orConditions []string
+	var orArgs []interface{}
+
+	// ======================================
+	// 条件1：按 UserId 查询（需要 JOIN）
+	// ======================================
+	if groupFilter.UserId > 0 {
+		orConditions = append(orConditions, "user_group_mappings.user_id = ?")
+		orArgs = append(orArgs, groupFilter.UserId)
+		// 必须 JOIN，只加一次
+		tx = tx.Joins("JOIN user_group_mappings ON user_group_mappings.group_id = user_groups.id")
+	}
+
+	// ======================================
+	// 条件2：按 Orgs 查询
+	// ======================================
+	if len(groupFilter.Orgs) > 0 {
+		switch groupFilter.Mode {
+		case "prefix":
+			for _, org := range groupFilter.Orgs {
+				orConditions = append(orConditions, "user_groups.symbol LIKE ?")
+				orArgs = append(orArgs, org+"%")
+			}
+		case "exact", "in":
+			orConditions = append(orConditions, "user_groups.symbol IN ?")
+			orArgs = append(orArgs, groupFilter.Orgs)
+		}
+	}
+
+	// ======================================
+	// 把所有 OR 条件包进括号！关键！
+	// ======================================
+	if len(orConditions) > 0 {
+		orSQL := "(" + strings.Join(orConditions, " OR ") + ")"
+		tx = tx.Where(orSQL, orArgs...)
+	}
+
+	err := tx.Find(&userGroups).Error
 	return userGroups, err
 }
 

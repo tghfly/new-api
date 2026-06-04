@@ -329,6 +329,9 @@ func SetApiRouter(router *gin.Engine) {
 		// 管理员获取所有用户组映射
 		apiRouter.GET("/admin/user_groups/all", middleware.AdminAuth(), controller.GetAllUserGroupsMap)
 
+		// 用户组分权分域接口
+		apiRouter.GET("/user-groups/all", middleware.UserAuth(), controller.GetAllUserGroupsWithAuth)
+
 		prefillGroupRoute := apiRouter.Group("/prefill_group")
 		prefillGroupRoute.Use(middleware.AdminAuth())
 		{

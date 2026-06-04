@@ -46,6 +46,10 @@ var TokensAuth = NewResolver("new-api:tokens:auth", "new-api:auth", parseAuthVal
 
 var TokenGroupAuth = NewResolver("new-api:tokengroup:auth", "new-api:auth", parseAuthValue)
 
+var UserGroupsAuth = NewResolver("new-api:usergroups:auth", "new-api:auth", parseAuthValue)
+
+var ChannelAuth = NewResolver("new-api:channel:auth", "new-api:auth", parseAuthValue)
+
 // GetScope extracts scope string from permission data
 func GetScope(data map[string]interface{}) string {
 	if scope, ok := data["scope"].(string); ok {
@@ -76,6 +80,37 @@ func GetProjectId(data map[string]interface{}) string {
 		return projectId
 	}
 	return ""
+}
+
+// ApplyChannelGroupFilter applies group filter to a channel in-memory.
+// Returns true if the channel should be included, false otherwise.
+func ApplyChannelGroupFilter(channelGroup string, gfd *GroupFilterData) bool {
+	if gfd == nil {
+		return true
+	}
+
+	// UserId filter: if set, channels are filtered by the user who created them.
+	// This is handled differently in the query path, not in-memory.
+	// For in-memory filtering of channels (tag_mode), we only filter by org/group.
+
+	switch gfd.Mode {
+	case "prefix":
+		for _, org := range gfd.Orgs {
+			if strings.HasPrefix(channelGroup, org) {
+				return true
+			}
+		}
+		return false
+	case "exact", "in":
+		for _, org := range gfd.Orgs {
+			if channelGroup == org {
+				return true
+			}
+		}
+		return false
+	default:
+		return true
+	}
 }
 
 // GroupFilterData holds the raw filter parameters extracted from permission data
