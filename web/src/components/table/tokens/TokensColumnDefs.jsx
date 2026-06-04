@@ -462,25 +462,19 @@ export const getTokensColumns = ({
       title: t('用户'),
       dataIndex: 'username',
       key: 'username',
-      render: (text, record) => {
-        if (!text || !isAdminUser) {
-          return <></>;
-        }
+      render: (text) => {
+        if (!text) return <></>;
         return (
-          <div>
-            <Avatar
-              size='extra-small'
-              color={stringToColor(text || '')}
-              style={{ marginRight: 4 }}
-              onClick={(event) => {
-                event.stopPropagation();
-                showUserInfoFunc?.(record.user_id);
-              }}
-            >
-              {typeof text === 'string' && text.slice(0, 1)}
-            </Avatar>
-            {text}
-          </div>
+            <div>
+              <Avatar
+                  size='extra-small'
+                  color={stringToColor(text)}
+                  style={{ marginRight: 4 }}
+              >
+                {text.slice(0, 1)}
+              </Avatar>
+              {text}
+            </div>
         );
       },
     },

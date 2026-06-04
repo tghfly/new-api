@@ -28,6 +28,7 @@ import {
   Tag,
   Tooltip,
   Typography,
+  Avatar,
 } from '@douyinfe/semi-ui';
 import {
   timestamp2string,
@@ -39,6 +40,7 @@ import {
   showError,
   showInfo,
   hasSSOPerm,
+  stringToColor,
 } from '../../../helpers';
 import {
   CHANNEL_OPTIONS,
@@ -455,6 +457,26 @@ export const getChannelsColumns = ({
               </Space>
             )}
           </Space>
+        );
+      },
+    },
+    {
+      key: COLUMN_KEYS.USER,
+      title: t('用户'),
+      dataIndex: 'username',
+      render: (text) => {
+        if (!text) return <></>;
+        return (
+          <div>
+            <Avatar
+              size='extra-small'
+              color={stringToColor(text)}
+              style={{ marginRight: 4 }}
+            >
+              {text.slice(0, 1)}
+            </Avatar>
+            {text}
+          </div>
         );
       },
     },

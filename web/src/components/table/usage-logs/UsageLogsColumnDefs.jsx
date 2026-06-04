@@ -439,24 +439,19 @@ export const getLogsColumns = ({
       key: COLUMN_KEYS.USERNAME,
       title: t('用户'),
       dataIndex: 'username',
-      render: (text, record, index) => {
-        return isAdminUser ? (
-          <div>
-            <Avatar
-              size='extra-small'
-              color={stringToColor(text)}
-              style={{ marginRight: 4 }}
-              onClick={(event) => {
-                event.stopPropagation();
-                showUserInfoFunc(record.user_id);
-              }}
-            >
-              {typeof text === 'string' && text.slice(0, 1)}
-            </Avatar>
-            {text}
-          </div>
-        ) : (
-          <></>
+      render: (text) => {
+        if (!text) return <></>;
+        return (
+            <div>
+              <Avatar
+                  size='extra-small'
+                  color={stringToColor(text)}
+                  style={{ marginRight: 4 }}
+              >
+                {text.slice(0, 1)}
+              </Avatar>
+              {text}
+            </div>
         );
       },
     },

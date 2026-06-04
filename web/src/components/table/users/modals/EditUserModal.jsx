@@ -91,7 +91,7 @@ const EditUserModal = (props) => {
 
   const fetchGroups = async () => {
     try {
-      let res = await API.get(`/api/group/`);
+      let res = await API.get(`/api/user-groups/all`);
       setGroupOptions(
         res.data.data.map((g) => ({
           label: g.name || g.symbol,

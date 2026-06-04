@@ -13,9 +13,11 @@ import (
 	"github.com/QuantumNous/new-api/constant"
 	"github.com/QuantumNous/new-api/dto"
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/pkg/permission"
 	"github.com/QuantumNous/new-api/relay/channel/gemini"
 	"github.com/QuantumNous/new-api/relay/channel/ollama"
 	"github.com/QuantumNous/new-api/service"
+	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 )
@@ -67,6 +69,44 @@ func clearChannelInfo(channel *model.Channel) {
 	}
 }
 
+func populateChannelUserNames(channels []*model.Channel) {
+	if len(channels) == 0 {
+		return
+	}
+	// Collect unique user IDs
+	userIdSet := make(map[int]struct{})
+	for _, ch := range channels {
+		if ch.UserId > 0 {
+			userIdSet[ch.UserId] = struct{}{}
+		}
+	}
+	if len(userIdSet) == 0 {
+		return
+	}
+	// Batch query usernames
+	userIds := make([]int, 0, len(userIdSet))
+	for uid := range userIdSet {
+		userIds = append(userIds, uid)
+	}
+	var users []struct {
+		Id       int
+		Username string
+	}
+	model.DB.Model(&model.User{}).Select("id, username").Where("id IN ?", userIds).Find(&users)
+	userNameMap := make(map[int]string, len(users))
+	for _, u := range users {
+		userNameMap[u.Id] = u.Username
+	}
+	// Assign usernames to channels
+	for _, ch := range channels {
+		if ch.UserId > 0 {
+			if name, ok := userNameMap[ch.UserId]; ok {
+				ch.UserName = name
+			}
+		}
+	}
+}
+
 func GetAllChannels(c *gin.Context) {
 	pageInfo := common.GetPageQuery(c)
 	channelData := make([]*model.Channel, 0)
@@ -85,40 +125,67 @@ func GetAllChannels(c *gin.Context) {
 	}
 
 	var total int64
+	var groupFilter *permission.GroupFilterData
+	var onlyMyChannels bool
+
+	// DCloud 分权分域检查
+	if common.DCloudIntegrationEnabled {
+		authResult := permission.ChannelAuth.Resolve(c)
+		if authResult.HasAuth {
+			scope := permission.GetScope(authResult.Data)
+			userId := c.GetInt("id")
+			if scope == permission.ScopeMe {
+				onlyMyChannels = true
+			} else if scope != permission.ScopeAll {
+				// 非 all/me 范围，应用分组过滤
+				groupFilter = permission.ExtractGroupFilterData(authResult, userId)
+			}
+			// scope == all 时，groupFilter 为 nil，不过滤
+		}
+	}
 
 	if enableTagMode {
-		tags, err := model.GetPaginatedTags(pageInfo.GetStartIdx(), pageInfo.GetPageSize())
+		baseQuery := model.DB.Model(&model.Channel{}).Where("tag != ''")
+		// 应用 ScopeMe 过滤
+		if onlyMyChannels {
+			baseQuery = baseQuery.Where("user_id = ?", c.GetInt("id"))
+		}
+		// 应用分组过滤
+		if groupFilter != nil {
+			baseQuery = model.ApplyChannelGroupFilter(baseQuery, groupFilter)
+		}
+		if typeFilter >= 0 {
+			baseQuery = baseQuery.Where("type = ?", typeFilter)
+		}
+		if statusFilter == common.ChannelStatusEnabled {
+			baseQuery = baseQuery.Where("status = ?", common.ChannelStatusEnabled)
+		} else if statusFilter == 0 {
+			baseQuery = baseQuery.Where("status != ?", common.ChannelStatusEnabled)
+		}
+
+		baseQuery.Count(&total)
+
+		order := "priority desc"
+		if idSort {
+			order = "id desc"
+		}
+
+		err := baseQuery.Order(order).Limit(pageInfo.GetPageSize()).Offset(pageInfo.GetStartIdx()).Omit("key").Find(&channelData).Error
 		if err != nil {
-			common.SysError("failed to get paginated tags: " + err.Error())
-			c.JSON(http.StatusOK, gin.H{"success": false, "message": "获取标签失败，请稍后重试"})
+			common.SysError("failed to get channels: " + err.Error())
+			c.JSON(http.StatusOK, gin.H{"success": false, "message": "获取渠道列表失败，请稍后重试"})
 			return
 		}
-		for _, tag := range tags {
-			if tag == nil || *tag == "" {
-				continue
-			}
-			tagChannels, err := model.GetChannelsByTag(*tag, idSort, false)
-			if err != nil {
-				continue
-			}
-			filtered := make([]*model.Channel, 0)
-			for _, ch := range tagChannels {
-				if statusFilter == common.ChannelStatusEnabled && ch.Status != common.ChannelStatusEnabled {
-					continue
-				}
-				if statusFilter == 0 && ch.Status == common.ChannelStatusEnabled {
-					continue
-				}
-				if typeFilter >= 0 && ch.Type != typeFilter {
-					continue
-				}
-				filtered = append(filtered, ch)
-			}
-			channelData = append(channelData, filtered...)
-		}
-		total, _ = model.CountAllTags()
 	} else {
 		baseQuery := model.DB.Model(&model.Channel{})
+		// 应用 ScopeMe 过滤
+		if onlyMyChannels {
+			baseQuery = baseQuery.Where("user_id = ?", c.GetInt("id"))
+		}
+		// 应用分组过滤
+		if groupFilter != nil {
+			baseQuery = model.ApplyChannelGroupFilter(baseQuery, groupFilter)
+		}
 		if typeFilter >= 0 {
 			baseQuery = baseQuery.Where("type = ?", typeFilter)
 		}
@@ -146,8 +213,19 @@ func GetAllChannels(c *gin.Context) {
 	for _, datum := range channelData {
 		clearChannelInfo(datum)
 	}
+	populateChannelUserNames(channelData)
 
 	countQuery := model.DB.Model(&model.Channel{})
+	if enableTagMode {
+		countQuery = countQuery.Where("tag != ''")
+	}
+	// type_counts 也需要应用权限过滤
+	if onlyMyChannels {
+		countQuery = countQuery.Where("user_id = ?", c.GetInt("id"))
+	}
+	if groupFilter != nil {
+		countQuery = model.ApplyChannelGroupFilter(countQuery, groupFilter)
+	}
 	if statusFilter == common.ChannelStatusEnabled {
 		countQuery = countQuery.Where("status = ?", common.ChannelStatusEnabled)
 	} else if statusFilter == 0 {
@@ -162,13 +240,10 @@ func GetAllChannels(c *gin.Context) {
 	for _, r := range results {
 		typeCounts[r.Type] = r.Count
 	}
-	common.ApiSuccess(c, gin.H{
-		"items":       channelData,
-		"total":       total,
-		"page":        pageInfo.GetPage(),
-		"page_size":   pageInfo.GetPageSize(),
-		"type_counts": typeCounts,
-	})
+	pageInfo.SetTotal(int(total))
+	pageInfo.SetItems(channelData)
+	pageInfo.TypeCounts = typeCounts
+	common.ApiSuccess(c, pageInfo)
 	return
 }
 
@@ -243,62 +318,65 @@ func FixChannelsAbilities(c *gin.Context) {
 
 func SearchChannels(c *gin.Context) {
 	keyword := c.Query("keyword")
-	group := c.Query("group")
+	groupQuery := c.Query("group")
 	modelKeyword := c.Query("model")
 	statusParam := c.Query("status")
 	statusFilter := parseStatusFilter(statusParam)
 	idSort, _ := strconv.ParseBool(c.Query("id_sort"))
 	enableTagMode, _ := strconv.ParseBool(c.Query("tag_mode"))
-	channelData := make([]*model.Channel, 0)
+
+	pageInfo := common.GetPageQuery(c)
+
+	var groupFilter *permission.GroupFilterData
+	var onlyMyChannels bool
+
+	// DCloud 分权分域检查
+	if common.DCloudIntegrationEnabled {
+		authResult := permission.ChannelAuth.Resolve(c)
+		if authResult.HasAuth {
+			scope := permission.GetScope(authResult.Data)
+			userId := c.GetInt("id")
+			if scope == permission.ScopeMe {
+				onlyMyChannels = true
+			} else if scope != permission.ScopeAll {
+				groupFilter = permission.ExtractGroupFilterData(authResult, userId)
+			}
+		}
+	}
+
+	order := "priority desc"
+	if idSort {
+		order = "id desc"
+	}
+
+	var baseQuery *gorm.DB
 	if enableTagMode {
-		tags, err := model.SearchTags(keyword, group, modelKeyword, idSort)
-		if err != nil {
-			c.JSON(http.StatusOK, gin.H{
-				"success": false,
-				"message": err.Error(),
-			})
-			return
-		}
-		for _, tag := range tags {
-			if tag != nil && *tag != "" {
-				tagChannel, err := model.GetChannelsByTag(*tag, idSort, false)
-				if err == nil {
-					channelData = append(channelData, tagChannel...)
-				}
-			}
-		}
+		baseQuery = model.BuildSearchChannelQuery(keyword, groupQuery, modelKeyword).Omit("key").Where("tag != ''")
 	} else {
-		channels, err := model.SearchChannels(keyword, group, modelKeyword, idSort)
-		if err != nil {
-			c.JSON(http.StatusOK, gin.H{
-				"success": false,
-				"message": err.Error(),
-			})
-			return
-		}
-		channelData = channels
+		baseQuery = model.BuildSearchChannelQuery(keyword, groupQuery, modelKeyword).Omit("key")
 	}
 
-	if statusFilter == common.ChannelStatusEnabled || statusFilter == 0 {
-		filtered := make([]*model.Channel, 0, len(channelData))
-		for _, ch := range channelData {
-			if statusFilter == common.ChannelStatusEnabled && ch.Status != common.ChannelStatusEnabled {
-				continue
-			}
-			if statusFilter == 0 && ch.Status == common.ChannelStatusEnabled {
-				continue
-			}
-			filtered = append(filtered, ch)
-		}
-		channelData = filtered
+	// 应用 ScopeMe 过滤
+	if onlyMyChannels {
+		baseQuery = baseQuery.Where("user_id = ?", c.GetInt("id"))
+	}
+	// 应用分组过滤
+	if groupFilter != nil {
+		baseQuery = model.ApplyChannelGroupFilter(baseQuery, groupFilter)
 	}
 
-	// calculate type counts for search results
-	typeCounts := make(map[int64]int64)
-	for _, channel := range channelData {
-		typeCounts[int64(channel.Type)]++
+	// 应用状态过滤
+	if statusFilter == common.ChannelStatusEnabled {
+		baseQuery = baseQuery.Where("status = ?", common.ChannelStatusEnabled)
+	} else if statusFilter == 0 {
+		baseQuery = baseQuery.Where("status != ?", common.ChannelStatusEnabled)
 	}
 
+	// 计算总数
+	var total int64
+	baseQuery.Count(&total)
+
+	// type filter（在 count 之后应用，不影响 total）
 	typeParam := c.Query("type")
 	typeFilter := -1
 	if typeParam != "" {
@@ -306,52 +384,55 @@ func SearchChannels(c *gin.Context) {
 			typeFilter = tp
 		}
 	}
-
 	if typeFilter >= 0 {
-		filtered := make([]*model.Channel, 0, len(channelData))
-		for _, ch := range channelData {
-			if ch.Type == typeFilter {
-				filtered = append(filtered, ch)
-			}
-		}
-		channelData = filtered
+		baseQuery = baseQuery.Where("type = ?", typeFilter)
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("p", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
-	if page < 1 {
-		page = 1
-	}
-	if pageSize <= 0 {
-		pageSize = 20
-	}
-
-	total := len(channelData)
-	startIdx := (page - 1) * pageSize
-	if startIdx > total {
-		startIdx = total
-	}
-	endIdx := startIdx + pageSize
-	if endIdx > total {
-		endIdx = total
+	var channelData []*model.Channel
+	err := baseQuery.Order(order).Limit(pageInfo.GetPageSize()).Offset(pageInfo.GetStartIdx()).Find(&channelData).Error
+	if err != nil {
+		common.SysError("failed to search channels: " + err.Error())
+		c.JSON(http.StatusOK, gin.H{"success": false, "message": "搜索渠道失败，请稍后重试"})
+		return
 	}
 
-	pagedData := channelData[startIdx:endIdx]
-
-	for _, datum := range pagedData {
+	for _, datum := range channelData {
 		clearChannelInfo(datum)
 	}
+	populateChannelUserNames(channelData)
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-		"data": gin.H{
-			"items":       pagedData,
-			"total":       total,
-			"type_counts": typeCounts,
-		},
-	})
-	return
+	// 计算 type_counts（基于未应用 type filter 的结果集，与旧行为一致）
+	var countQuery *gorm.DB
+	if enableTagMode {
+		countQuery = model.BuildSearchChannelQuery(keyword, groupQuery, modelKeyword).Where("tag != ''")
+	} else {
+		countQuery = model.BuildSearchChannelQuery(keyword, groupQuery, modelKeyword)
+	}
+	if onlyMyChannels {
+		countQuery = countQuery.Where("user_id = ?", c.GetInt("id"))
+	}
+	if groupFilter != nil {
+		countQuery = model.ApplyChannelGroupFilter(countQuery, groupFilter)
+	}
+	if statusFilter == common.ChannelStatusEnabled {
+		countQuery = countQuery.Where("status = ?", common.ChannelStatusEnabled)
+	} else if statusFilter == 0 {
+		countQuery = countQuery.Where("status != ?", common.ChannelStatusEnabled)
+	}
+	var results []struct {
+		Type  int64
+		Count int64
+	}
+	_ = countQuery.Select("type, count(*) as count").Group("type").Find(&results).Error
+	typeCounts := make(map[int64]int64)
+	for _, r := range results {
+		typeCounts[r.Type] = r.Count
+	}
+
+	pageInfo.SetTotal(int(total))
+	pageInfo.SetItems(channelData)
+	pageInfo.TypeCounts = typeCounts
+	common.ApiSuccess(c, pageInfo)
 }
 
 func GetChannel(c *gin.Context) {
@@ -367,6 +448,7 @@ func GetChannel(c *gin.Context) {
 	}
 	if channel != nil {
 		clearChannelInfo(channel)
+		populateChannelUserNames([]*model.Channel{channel})
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
@@ -630,6 +712,8 @@ func AddChannel(c *gin.Context) {
 		return
 	}
 
+	addChannelRequest.Channel.UserId = c.GetInt("id")
+
 	channels := make([]model.Channel, 0, len(keys))
 	for _, key := range keys {
 		if key == "" {
@@ -873,6 +957,9 @@ func UpdateChannel(c *gin.Context) {
 
 	// Always copy the original ChannelInfo so that fields like IsMultiKey and MultiKeySize are retained.
 	channel.ChannelInfo = originChannel.ChannelInfo
+
+	// Preserve the original UserId so it cannot be changed via update.
+	channel.UserId = originChannel.UserId
 
 	// If the request explicitly specifies a new MultiKeyMode, apply it on top of the original info.
 	if channel.MultiKeyMode != nil && *channel.MultiKeyMode != "" {

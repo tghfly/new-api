@@ -148,6 +148,7 @@ export const useChannelsData = ({
   const COLUMN_KEYS = {
     ID: 'id',
     NAME: 'name',
+    USER: 'user',
     ORGANIZATION: 'openai_organization',
     GROUP: 'group',
     IP: 'base_url',
@@ -247,6 +248,7 @@ export const useChannelsData = ({
     return {
       [COLUMN_KEYS.ID]: true,
       [COLUMN_KEYS.NAME]: true,
+      [COLUMN_KEYS.USER]: true,
       [COLUMN_KEYS.ORGANIZATION]: true,
       [COLUMN_KEYS.GROUP]: true,
       [COLUMN_KEYS.IP]: false,
@@ -643,7 +645,7 @@ export const useChannelsData = ({
   // Fetch groups
   const fetchGroups = async () => {
     try {
-      let res = await API.get(`/api/group/`);
+      let res = await API.get(`/api/user-groups/all`);
       if (res === undefined) return;
       setGroupOptions(
         res.data.data.map((group) => ({

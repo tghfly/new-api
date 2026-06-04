@@ -10,8 +10,9 @@ type PageInfo struct {
 	Page     int `json:"page"`      // page num 页码
 	PageSize int `json:"page_size"` // page size 页大小
 
-	Total int `json:"total"` // 总条数，后设置
-	Items any `json:"items"` // 数据，后设置
+	Total      int             `json:"total"`                 // 总条数，后设置
+	Items      any             `json:"items"`                 // 数据，后设置
+	TypeCounts map[int64]int64 `json:"type_counts,omitempty"` // type counts（渠道专用）
 }
 
 func (p *PageInfo) GetStartIdx() int {

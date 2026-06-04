@@ -294,23 +294,19 @@ export const getTaskLogsColumns = ({
       key: COLUMN_KEYS.USERNAME,
       title: t('用户'),
       dataIndex: 'username',
-      render: (userId, record, index) => {
-        if (!isAdminUser) {
-          return <></>;
-        }
-        const displayText = String(record.username || userId || '?');
+      render: (text) => {
+        if (!text) return <></>;
         return (
-          <Space>
-            <Avatar
-              size='extra-small'
-              color={stringToColor(displayText)}
-            >
-              {displayText.slice(0, 1)}
-            </Avatar>
-            <Typography.Text>
-              {displayText}
-            </Typography.Text>
-          </Space>
+            <div>
+              <Avatar
+                  size='extra-small'
+                  color={stringToColor(text)}
+                  style={{ marginRight: 4 }}
+              >
+                {text.slice(0, 1)}
+              </Avatar>
+              {text}
+            </div>
         );
       },
     },

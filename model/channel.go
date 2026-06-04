@@ -12,6 +12,7 @@ import (
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/constant"
 	"github.com/QuantumNous/new-api/dto"
+	"github.com/QuantumNous/new-api/pkg/permission"
 	"github.com/QuantumNous/new-api/types"
 
 	"github.com/samber/lo"
@@ -24,6 +25,8 @@ type Channel struct {
 	Key                string  `json:"key" gorm:"not null"`
 	OpenAIOrganization *string `json:"openai_organization"`
 	TestModel          *string `json:"test_model"`
+	UserId             int     `json:"user_id" gorm:"default:0;index"`
+	UserName           string  `json:"username" gorm:"-"`
 	Status             int     `json:"status" gorm:"default:1"`
 	Name               string  `json:"name" gorm:"index"`
 	Weight             *uint   `json:"weight" gorm:"default:0"`
@@ -249,6 +252,15 @@ func (channel *Channel) GetAutoBan() bool {
 	return *channel.AutoBan == 1
 }
 
+// ApplyChannelGroupFilter applies group filter to a GORM query for channels.
+// Follows the same pattern as applyGroupFilterToken in token.go.
+func ApplyChannelGroupFilter(tx *gorm.DB, gfd *permission.GroupFilterData) *gorm.DB {
+	if gfd == nil {
+		return tx
+	}
+	return gfd.ApplyGroup(tx, "channels."+commonGroupCol, "channels.user_id")
+}
+
 func (channel *Channel) Save() error {
 	return DB.Save(channel).Error
 }
@@ -348,6 +360,49 @@ func SearchChannels(keyword string, group string, model string, idSort bool) ([]
 		return nil, err
 	}
 	return channels, nil
+}
+
+// BuildSearchChannelQuery builds a GORM query with search WHERE clause applied, without executing.
+func BuildSearchChannelQuery(keyword string, group string, modelKeyword string) *gorm.DB {
+	modelsCol := "`models`"
+	if common.UsingPostgreSQL {
+		modelsCol = `"models"`
+	}
+
+	baseURLCol := "`base_url`"
+	if common.UsingPostgreSQL {
+		baseURLCol = `"base_url"`
+	}
+
+	baseQuery := DB.Model(&Channel{})
+
+	var whereClause string
+	var args []interface{}
+
+	var groups []string
+	if group != "" && group != "null" {
+		groups = strings.Split(group, ",")
+	}
+
+	if len(groups) > 0 {
+		groupConditions := make([]string, len(groups))
+		for i, g := range groups {
+			if common.UsingMySQL {
+				groupConditions[i] = `CONCAT(',', ` + commonGroupCol + `, ',') LIKE ?`
+			} else {
+				groupConditions[i] = `(',' || ` + commonGroupCol + ` || ',') LIKE ?`
+			}
+			args = append(args, "%,"+g+",%")
+		}
+		groupCondition := "(" + strings.Join(groupConditions, " OR ") + ")"
+		whereClause = "(id = ? OR name LIKE ? OR " + commonKeyCol + " = ? OR " + baseURLCol + " LIKE ?) AND " + modelsCol + ` LIKE ? AND ` + groupCondition
+		args = append([]interface{}{common.String2Int(keyword), "%" + keyword + "%", keyword, "%" + keyword + "%", "%" + modelKeyword + "%"}, args...)
+	} else {
+		whereClause = "(id = ? OR name LIKE ? OR " + commonKeyCol + " = ? OR " + baseURLCol + " LIKE ?) AND " + modelsCol + " LIKE ?"
+		args = append(args, common.String2Int(keyword), "%"+keyword+"%", keyword, "%"+keyword+"%", "%"+modelKeyword+"%")
+	}
+
+	return baseQuery.Where(whereClause, args...)
 }
 
 func GetChannelById(id int, selectAll bool) (*Channel, error) {
