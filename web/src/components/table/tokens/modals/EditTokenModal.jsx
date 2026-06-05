@@ -74,7 +74,7 @@ const EditTokenModal = (props) => {
   const getInitValues = () => ({
     name: '',
     remain_quota: 0,
-    expired_time: -1,
+    expired_time: '2099-12-31 23:59:59',
     unlimited_quota: true,
     model_limits_enabled: false,
     model_limits: [],
@@ -100,7 +100,11 @@ const EditTokenModal = (props) => {
       timestamp += seconds;
       formApiRef.current.setValue('expired_time', timestamp2string(timestamp));
     } else {
-      formApiRef.current.setValue('expired_time', -1);
+      // 永不过期：设置为 2099-12-31 23:59:59
+      formApiRef.current.setValue(
+        'expired_time',
+        timestamp2string(new Date('2099-12-31T23:59:59').getTime() / 1000),
+      );
     }
   };
 
@@ -265,7 +269,15 @@ const EditTokenModal = (props) => {
     if (isEdit) {
       let { tokenCount: _tc, ...localInputs } = values;
       localInputs.remain_quota = parseInt(localInputs.remain_quota);
-      if (localInputs.expired_time !== -1) {
+      // 永不过期判断：值为 -1，或格式化后等于 2099-12-31 23:59:59，或直接为该字符串
+      if (
+        localInputs.expired_time === -1 ||
+        localInputs.expired_time === '2099-12-31 23:59:59' ||
+        (typeof localInputs.expired_time === 'number' &&
+          timestamp2string(localInputs.expired_time) === '2099-12-31 23:59:59')
+      ) {
+        localInputs.expired_time = -1;
+      } else {
         let time = Date.parse(localInputs.expired_time);
         if (isNaN(time)) {
           showError(t('过期时间格式错误！'));
@@ -303,7 +315,15 @@ const EditTokenModal = (props) => {
         }
         localInputs.remain_quota = parseInt(localInputs.remain_quota);
 
-        if (localInputs.expired_time !== -1) {
+        // 永不过期判断：值为 -1，或格式化后等于 2099-12-31 23:59:59，或直接为该字符串
+        if (
+          localInputs.expired_time === -1 ||
+          localInputs.expired_time === '2099-12-31 23:59:59' ||
+          (typeof localInputs.expired_time === 'number' &&
+            timestamp2string(localInputs.expired_time) === '2099-12-31 23:59:59')
+        ) {
+          localInputs.expired_time = -1;
+        } else {
           let time = Date.parse(localInputs.expired_time);
           if (isNaN(time)) {
             showError(t('过期时间格式错误！'));
