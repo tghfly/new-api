@@ -3393,15 +3393,6 @@ const EditChannelModal = (props) => {
                           >
                             {t('填入相关模型')}
                           </Button>
-                          <Button
-                            size='small'
-                            type='secondary'
-                            onClick={() =>
-                              handleInputChange('models', fullModels)
-                            }
-                          >
-                            {t('填入所有模型')}
-                          </Button>
                           {MODEL_FETCHABLE_CHANNEL_TYPES.has(inputs.type) && (
                             <Button
                               size='small'
