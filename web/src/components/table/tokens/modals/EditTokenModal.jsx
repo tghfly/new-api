@@ -552,7 +552,7 @@ const EditTokenModal = (props) => {
                   <Col span={24}>
                     <Form.AutoComplete
                       field='remain_quota'
-                      label={t('额度')}
+                      label={t('Token额度')}
                       placeholder={t('请输入额度')}
                       type='number'
                       disabled={values.unlimited_quota}
@@ -643,7 +643,7 @@ const EditTokenModal = (props) => {
                   <Col span={24}>
                     <Form.TextArea
                       field='allow_ips'
-                      label={t('IP白名单（支持CIDR表达式）')}
+                      label={t('IP白名单')}
                       placeholder={t('允许的IP，一行一个，不填写则不限制')}
                       autosize
                       rows={1}
