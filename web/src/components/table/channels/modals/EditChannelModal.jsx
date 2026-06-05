@@ -3384,15 +3384,6 @@ const EditChannelModal = (props) => {
                       }}
                       extraText={
                         <Space wrap>
-                          <Button
-                            size='small'
-                            type='primary'
-                            onClick={() =>
-                              handleInputChange('models', basicModels)
-                            }
-                          >
-                            {t('填入相关模型')}
-                          </Button>
                           {MODEL_FETCHABLE_CHANNEL_TYPES.has(inputs.type) && (
                             <Button
                               size='small'
