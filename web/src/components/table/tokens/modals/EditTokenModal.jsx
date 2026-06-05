@@ -68,8 +68,8 @@ const EditTokenModal = (props) => {
   const isEdit = props.editingToken.id !== undefined;
 
   // 使用 hook 获取当前项目信息，支持响应项目切换
-  const { project_code, vdc_name } = useCurrentProject();
-  const namePrefix = vdc_name ? `${vdc_name}-` : '';
+  const { project_code, vdc_name, project_name } = useCurrentProject();
+  const namePrefix = vdc_name ? `${vdc_name}-${project_name}-` : '';
 
   const getInitValues = () => ({
     name: '',
