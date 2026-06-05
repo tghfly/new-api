@@ -3226,7 +3226,7 @@ const EditChannelModal = (props) => {
                           <div>
                             <Form.Input
                               field='base_url'
-                              label={t('API地址')}
+                            label={t('API地址（不在AI中台注册的模型，才需要编辑）')}
                               placeholder={t(
                                 '此项可选，用于通过自定义API地址来进行 API 调用，末尾不要带/v1和/',
                               )}
@@ -3236,7 +3236,7 @@ const EditChannelModal = (props) => {
                               showClear
                               disabled={isIonetLocked}
                               extraText={t(
-                                '对于官方API接口，系统已经内置地址，除非是第三方代理站点或者Azure的特殊接入地址，否则不需要填写',
+                                'API地址默认填写，无需修改，修改则不能使用',
                               )}
                             />
                           </div>
