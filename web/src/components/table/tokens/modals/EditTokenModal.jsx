@@ -116,23 +116,23 @@ const EditTokenModal = (props) => {
         const categories = getModelCategories(t);
         let localModelOptions = data
           ? data.map((model) => {
-              let icon = null;
-              for (const [key, category] of Object.entries(categories)) {
-                if (key !== 'all' && category.filter({ model_name: model })) {
-                  icon = category.icon;
-                  break;
-                }
+            let icon = null;
+            for (const [key, category] of Object.entries(categories)) {
+              if (key !== 'all' && category.filter({ model_name: model })) {
+                icon = category.icon;
+                break;
               }
-              return {
-                label: (
-                  <span className='flex items-center gap-1'>
-                    {icon}
-                    {model}
-                  </span>
-                ),
-                value: model,
-              };
-            })
+            }
+            return {
+              label: (
+                <span className='flex items-center gap-1'>
+                  {icon}
+                  {model}
+                </span>
+              ),
+              value: model,
+            };
+          })
           : [];
         // 无论 data 是否为空，都更新模型列表
         setModels(localModelOptions);
@@ -156,16 +156,16 @@ const EditTokenModal = (props) => {
     if (success) {
       let localGroupOptions = Array.isArray(data)
         ? data.map((item) => ({
-            label: item.name,
-            value: item.symbol,
-            desc: item.desc,
-            ratio: item.ratio,
-          }))
+          label: item.name,
+          value: item.symbol,
+          desc: item.desc,
+          ratio: item.ratio,
+        }))
         : data ? Object.entries(data).map(([group, info]) => ({
-            label: info.desc || info.name || group,
-            value: group,
-            ratio: info.ratio,
-          })) : [];
+          label: info.desc || info.name || group,
+          value: group,
+          ratio: info.ratio,
+        })) : [];
       if (statusState?.status?.default_use_auto_group) {
         if (localGroupOptions.some((group) => group.value === 'auto')) {
           localGroupOptions.sort((a, b) => (a.value === 'auto' ? -1 : 1));
@@ -570,6 +570,26 @@ const EditTokenModal = (props) => {
                         { value: 250000000, label: '500$' },
                         { value: 500000000, label: '1000$' },
                       ]}
+                    />
+                  </Col>
+                  <Col span={12}>
+                    <Form.InputNumber
+                      field='api_rate_total'
+                      label={t('总请求限速')}
+                      placeholder={t('每周期最大请求数')}
+                      min={0}
+                      extraText={t('包括成功和失败的请求')}
+                      style={{ width: '100%' }}
+                    />
+                  </Col>
+                  <Col span={12}>
+                    <Form.InputNumber
+                      field='api_rate_success'
+                      label={t('成功请求限速')}
+                      placeholder={t('每周期最大成功请求数')}
+                      min={0}
+                      extraText={t('仅统计成功的请求')}
+                      style={{ width: '100%' }}
                     />
                   </Col>
                   <Col span={24}>
