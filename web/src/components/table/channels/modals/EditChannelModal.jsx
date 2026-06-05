@@ -2596,6 +2596,9 @@ const EditChannelModal = (props) => {
                           disabled={isIonetLocked}
                           extraText={
                             <div className='flex items-center gap-2 flex-wrap'>
+                              <Text type='tertiary' size='small'>
+                                {t('第三方API提供时，才需要填写')}
+                              </Text>
                               {isEdit &&
                                 isMultiKeyChannel &&
                                 keyMode === 'append' && (
@@ -2652,6 +2655,9 @@ const EditChannelModal = (props) => {
                               disabled={isIonetLocked}
                               extraText={
                                 <div className='flex flex-col gap-2'>
+                                  <Text type='tertiary' size='small'>
+                                    {t('第三方API提供时，才需要填写')}
+                                  </Text>
                                   <Text type='tertiary' size='small'>
                                     {t(
                                       '仅支持 JSON 对象，必须包含 access_token 与 account_id',
@@ -2809,6 +2815,9 @@ const EditChannelModal = (props) => {
                                 extraText={
                                   <div className='flex items-center gap-2'>
                                     <Text type='tertiary' size='small'>
+                                      {t('第三方API提供时，才需要填写')}
+                                    </Text>
+                                    <Text type='tertiary' size='small'>
                                       {t('请输入完整的 JSON 格式密钥内容')}
                                     </Text>
                                     {isEdit &&
@@ -2892,6 +2901,9 @@ const EditChannelModal = (props) => {
                             }
                             extraText={
                               <div className='flex items-center gap-2'>
+                                <Text type='tertiary' size='small'>
+                                  {t('第三方API提供时，才需要填写')}
+                                </Text>
                                 {isEdit &&
                                   isMultiKeyChannel &&
                                   keyMode === 'append' && (
