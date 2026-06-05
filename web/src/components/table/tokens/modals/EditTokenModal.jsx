@@ -538,20 +538,6 @@ const EditTokenModal = (props) => {
                       </Space>
                     </Form.Slot>
                   </Col>
-                  {!isEdit && (
-                    <Col span={24}>
-                      <Form.InputNumber
-                        field='tokenCount'
-                        label={t('新建数量')}
-                        min={1}
-                        extraText={t('批量创建时会在名称后自动添加随机后缀')}
-                        rules={[
-                          { required: true, message: t('请输入新建数量') },
-                        ]}
-                        style={{ width: '100%' }}
-                      />
-                    </Col>
-                  )}
                 </Row>
               </Card>
 
