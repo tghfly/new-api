@@ -3,6 +3,7 @@ package controller
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -790,9 +791,11 @@ func resolveDCloudUserGroupsAuth(c *gin.Context) permission.Result {
 // GetAllUserGroupsWithAuth 获取所有用户组（支持分权分域）
 func GetAllUserGroupsWithAuth(c *gin.Context) {
 	dcloudAuth := resolveDCloudUserGroupsAuth(c)
+	log.Printf("GetAllUserGroupsWithAuth - HasAuth: %v, DCloudEnabled: %v", dcloudAuth.HasAuth, common.DCloudIntegrationEnabled)
 	if dcloudAuth.HasAuth {
 		scope := permission.GetScope(dcloudAuth.Data)
 		userId := c.GetInt("id")
+		log.Printf("GetAllUserGroupsWithAuth - scope: %s, userId: %d", scope, userId)
 
 		var userGroups []*model.UserGroup
 		var err error
@@ -858,9 +861,7 @@ func GetAllUserGroupsWithAuth(c *gin.Context) {
 		})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"success": false,
-		"message": "权限",
-	})
+	log.Printf("GetAllUserGroupsWithAuth - no dcloud auth, falling back to GetGroups")
+	GetGroups(c)
 	return
 }
