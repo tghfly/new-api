@@ -862,6 +862,38 @@ func GetAllUserGroupsWithAuth(c *gin.Context) {
 		return
 	}
 	log.Printf("GetAllUserGroupsWithAuth - no dcloud auth, falling back to GetGroups")
+	role := c.GetInt("role")
+	if role == common.RoleAdminUser || role == common.RoleRootUser {
+		log.Printf("GetAllUserGroupsWithAuth - role all")
+		// 获取所有用户组（包括私有的）
+		userGroups, err := model.GetUserGroupsAll(false)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
+		// 构建映射
+		groups := make([]GroupInfo, 0)
+		for _, ug := range userGroups {
+			name := ug.Name
+			if name == "" {
+				name = ug.Symbol
+			}
+			groups = append(groups, GroupInfo{
+				Symbol: ug.Symbol,
+				Name:   name,
+			})
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "",
+			"data":    groups,
+		})
+		return
+	}
 	GetGroups(c)
 	return
 }
