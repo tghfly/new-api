@@ -1,9 +1,11 @@
 package controller
 
 import (
+	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/service"
 	"github.com/QuantumNous/new-api/setting/ratio_setting"
+	"log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -41,6 +43,34 @@ func GetPricing(c *gin.Context) {
 		if _, ok := usableGroup[group]; !ok {
 			delete(groupRatio, group)
 		}
+	}
+
+	role := c.GetInt("role")
+	if role < 1 {
+		c.JSON(200, gin.H{
+			"success": false,
+			"message": "未登录",
+		})
+		return
+	}
+	log.Printf("GetPricing - userId: %v, group: %s, role: %d, groupRatio keys: %d", userId, group, role, len(groupRatio))
+
+	// 非管理员只返回自己可用分组的模型定价
+	if role < common.RoleAdminUser {
+		filtered := make([]model.Pricing, 0, len(pricing))
+		for _, p := range pricing {
+			if len(p.EnableGroup) == 0 {
+				filtered = append(filtered, p)
+				continue
+			}
+			for _, eg := range p.EnableGroup {
+				if _, ok := usableGroup[eg]; ok {
+					filtered = append(filtered, p)
+					break
+				}
+			}
+		}
+		pricing = filtered
 	}
 
 	c.JSON(200, gin.H{
