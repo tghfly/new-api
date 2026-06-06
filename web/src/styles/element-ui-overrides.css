@@ -1,0 +1,1031 @@
+/*
+ * ElementUI 风格覆盖样式
+ * 用于将 @douyinfe/semi-ui 的组件外观对齐到 ElementUI 风格
+ * 已覆盖组件: Button, Tag, Table
+ */
+
+.semi-layout-content{
+    padding: 0 !important;
+}
+/* =====================================================
+ * 设计 token（与 ElementUI 2.x 保持一致）
+ * ===================================================== */
+:root {
+  --el-color-primary: #409eff;
+  --el-color-primary-light-3: #79bbff;
+  --el-color-primary-light-5: #a0cfff;
+  --el-color-primary-light-7: #c6e2ff;
+  --el-color-primary-light-8: #d9ecff;
+  --el-color-primary-light-9: #ecf5ff;
+  --el-color-primary-dark-2: #337ecc;
+
+  --el-color-success: #67c23a;
+  --el-color-success-light-3: #95d475;
+  --el-color-success-light-5: #b3e19d;
+  --el-color-success-light-7: #d1edc4;
+  --el-color-success-light-8: #e1f3d8;
+  --el-color-success-light-9: #f0f9eb;
+  --el-color-success-dark-2: #529b2e;
+
+  --el-color-warning: #e6a23c;
+  --el-color-warning-light-3: #eebe77;
+  --el-color-warning-light-5: #f3d19e;
+  --el-color-warning-light-7: #f8e3c5;
+  --el-color-warning-light-8: #faecd8;
+  --el-color-warning-light-9: #fdf6ec;
+  --el-color-warning-dark-2: #b88230;
+
+  --el-color-danger: #f56c6c;
+  --el-color-danger-light-3: #f89898;
+  --el-color-danger-light-5: #fab6b6;
+  --el-color-danger-light-7: #fcd3d3;
+  --el-color-danger-light-8: #fde2e2;
+  --el-color-danger-light-9: #fef0f0;
+  --el-color-danger-dark-2: #c45656;
+
+  --el-color-info: #909399;
+  --el-color-info-light-3: #b1b3b8;
+  --el-color-info-light-5: #c8c9cc;
+  --el-color-info-light-7: #dedfe0;
+  --el-color-info-light-8: #e9e9eb;
+  --el-color-info-light-9: #f4f4f5;
+  --el-color-info-dark-2: #73767a;
+
+  --el-color-text-primary: #303133;
+  --el-color-text-regular: #606266;
+  --el-color-text-secondary: #909399;
+  --el-color-text-placeholder: #a8abb2;
+
+  --el-border-color: #dcdfe6;
+  --el-border-color-light: #e4e7ed;
+  --el-border-color-lighter: #ebeef5;
+  --el-border-color-extra-light: #f2f6fc;
+
+  --el-color-white: #ffffff;
+  --el-color-black: #000000;
+
+  --el-border-radius-base: 4px;
+  --el-border-radius-small: 2px;
+  --el-border-radius-round: 20px;
+  --el-border-radius-circle: 100%;
+
+  --el-font-size-extra-small: 11px;
+  --el-font-size-small: 12px;
+  --el-font-size-base: 14px;
+  --el-font-size-medium: 16px;
+  --el-font-size-large: 18px;
+
+  --el-transition-duration: 0.2s;
+  --el-transition-function-ease-in-out-bezier: cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+/* =====================================================
+ * 通用过渡：所有按钮形态统一动画
+ * ===================================================== */
+.semi-button,
+.semi-button * {
+  transition:
+    color var(--el-transition-duration) var(--el-transition-function-ease-in-out-bezier),
+    background-color var(--el-transition-duration) var(--el-transition-function-ease-in-out-bezier),
+    border-color var(--el-transition-duration) var(--el-transition-function-ease-in-out-bezier),
+    box-shadow var(--el-transition-duration) var(--el-transition-function-ease-in-out-bezier) !important;
+}
+
+/* =====================================================
+ * Default 主题（白底 + 灰边）：对应 type=secondary / theme=outline
+ * ===================================================== */
+.semi-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  background: var(--el-color-white);
+  border: 1px solid var(--el-border-color);
+  color: var(--el-color-text-primary);
+  font-weight: 500;
+  border-radius: var(--el-border-radius-base);
+  font-size: var(--el-font-size-base);
+  padding: 8px 15px;
+  outline: none;
+  user-select: none;
+  vertical-align: middle;
+  -webkit-appearance: none;
+}
+
+.semi-button:hover,
+.semi-button:hover .semi-button-content,
+.semi-button:focus,
+.semi-button:focus .semi-button-content {
+  color: var(--el-color-primary);
+  border-color: var(--el-color-primary-light-7);
+  background-color: var(--el-color-primary-light-9);
+}
+
+.semi-button:active,
+.semi-button:active .semi-button-content {
+  color: var(--el-color-primary-dark-2);
+  border-color: var(--el-color-primary-dark-2);
+  outline: none;
+}
+
+/* =====================================================
+ * Primary 主题
+ * ===================================================== */
+.semi-button-primary,
+.semi-button[type='primary'] {
+  color: var(--el-color-white);
+  background-color: var(--el-color-primary);
+  border-color: var(--el-color-primary);
+}
+
+.semi-button-primary:hover,
+.semi-button-primary:focus,
+.semi-button[type='primary']:hover,
+.semi-button[type='primary']:focus {
+  background: var(--el-color-primary-light-3);
+  border-color: var(--el-color-primary-light-3);
+  color: var(--el-color-white);
+}
+
+.semi-button-primary:active,
+.semi-button[type='primary']:active {
+  background: var(--el-color-primary-dark-2);
+  border-color: var(--el-color-primary-dark-2);
+  color: var(--el-color-white);
+}
+
+/* =====================================================
+ * Success 主题
+ * ===================================================== */
+.semi-button-success {
+  color: var(--el-color-white);
+  background-color: var(--el-color-success);
+  border-color: var(--el-color-success);
+}
+
+.semi-button-success:hover,
+.semi-button-success:focus {
+  background: var(--el-color-success-light-3);
+  border-color: var(--el-color-success-light-3);
+  color: var(--el-color-white);
+}
+
+.semi-button-success:active {
+  background: var(--el-color-success-dark-2);
+  border-color: var(--el-color-success-dark-2);
+  color: var(--el-color-white);
+}
+
+/* =====================================================
+ * Warning 主题
+ * ===================================================== */
+.semi-button-warning {
+  color: var(--el-color-white);
+  background-color: var(--el-color-warning);
+  border-color: var(--el-color-warning);
+}
+
+.semi-button-warning:hover,
+.semi-button-warning:focus {
+  background: var(--el-color-warning-light-3);
+  border-color: var(--el-color-warning-light-3);
+  color: var(--el-color-white);
+}
+
+.semi-button-warning:active {
+  background: var(--el-color-warning-dark-2);
+  border-color: var(--el-color-warning-dark-2);
+  color: var(--el-color-white);
+}
+
+/* =====================================================
+ * Danger 主题
+ * ===================================================== */
+.semi-button-danger {
+  color: var(--el-color-white);
+  background-color: var(--el-color-danger);
+  border-color: var(--el-color-danger);
+}
+
+.semi-button-danger:hover,
+.semi-button-danger:focus {
+  background: var(--el-color-danger-light-3);
+  border-color: var(--el-color-danger-light-3);
+  color: var(--el-color-white);
+}
+
+.semi-button-danger:active {
+  background: var(--el-color-danger-dark-2);
+  border-color: var(--el-color-danger-dark-2);
+  color: var(--el-color-white);
+}
+
+/* =====================================================
+ * Info 主题
+ * ===================================================== */
+.semi-button-info {
+  color: var(--el-color-white);
+  background-color: var(--el-color-info);
+  border-color: var(--el-color-info);
+}
+
+.semi-button-info:hover,
+.semi-button-info:focus {
+  background: var(--el-color-info-light-3);
+  border-color: var(--el-color-info-light-3);
+  color: var(--el-color-white);
+}
+
+.semi-button-info:active {
+  background: var(--el-color-info-dark-2);
+  border-color: var(--el-color-info-dark-2);
+  color: var(--el-color-white);
+}
+
+/* =====================================================
+ * Tertiary / Light 主题：浅色填充（ElementUI 里的 plain 效果）
+ * ===================================================== */
+.semi-button-tertiary,
+.semi-button-light {
+  color: var(--el-color-text-primary);
+  background-color: var(--el-color-white);
+  border-color: var(--el-border-color);
+}
+
+.semi-button-tertiary:hover,
+.semi-button-light:hover,
+.semi-button-tertiary:focus,
+.semi-button-light:focus {
+  color: var(--el-color-primary);
+  border-color: var(--el-color-primary);
+  background-color: var(--el-color-primary-light-9);
+}
+
+.semi-button-tertiary:active,
+.semi-button-light:active {
+  color: var(--el-color-primary-dark-2);
+  border-color: var(--el-color-primary-dark-2);
+  background-color: var(--el-color-primary-light-9);
+}
+
+/* =====================================================
+ * Borderless 主题（无边框）：ElementUI text 按钮
+ * ===================================================== */
+.semi-button-borderless {
+  background: transparent;
+  border-color: transparent;
+  color: var(--el-color-text-regular);
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.semi-button-borderless:hover,
+.semi-button-borderless:focus {
+  color: var(--el-color-primary);
+  background: transparent;
+  border-color: transparent;
+}
+
+.semi-button-borderless:active {
+  color: var(--el-color-primary-dark-2);
+  background: transparent;
+  border-color: transparent;
+}
+
+/* =====================================================
+ * 尺寸
+ * ===================================================== */
+.semi-button-size-large {
+  font-size: var(--el-font-size-medium);
+  padding: 12px 19px;
+  border-radius: var(--el-border-radius-base);
+}
+
+.semi-button-size-default {
+  font-size: var(--el-font-size-base);
+  padding: 8px 15px;
+  border-radius: var(--el-border-radius-base);
+}
+
+.semi-button-size-small {
+  font-size: var(--el-font-size-small);
+  padding: 6px 11px;
+  border-radius: calc(var(--el-border-radius-base) - 1px);
+}
+
+/* =====================================================
+ * 圆角按钮（ElementUI round 变体）
+ * ===================================================== */
+.semi-button[shape='round'],
+.semi-button-round {
+  border-radius: var(--el-border-radius-round);
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.semi-button-size-small[shape='round'],
+.semi-button-round.semi-button-size-small {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.semi-button-size-large[shape='round'],
+.semi-button-round.semi-button-size-large {
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+/* =====================================================
+ * 圆形图标按钮
+ * ===================================================== */
+.semi-button[shape='circle'],
+.semi-button-circle {
+  border-radius: 50%;
+  padding: 8px;
+}
+
+.semi-button-size-small[shape='circle'],
+.semi-button-circle.semi-button-size-small {
+  padding: 6px;
+}
+
+.semi-button-size-large[shape='circle'],
+.semi-button-circle.semi-button-size-large {
+  padding: 12px;
+}
+
+/* =====================================================
+ * 禁用态：所有 type 都生效
+ * ===================================================== */
+.semi-button-disabled,
+.semi-button[disabled],
+.semi-button-disabled:hover,
+.semi-button[disabled]:hover,
+.semi-button-disabled:focus,
+.semi-button[disabled]:focus,
+.semi-button-disabled:active,
+.semi-button[disabled]:active {
+  cursor: not-allowed !important;
+  opacity: 0.5;
+  box-shadow: none;
+  /* 显式覆盖 primary 系列的悬停色，避免白底文字被覆盖 */
+  color: var(--el-color-white);
+  background-color: var(--el-color-primary);
+  border-color: var(--el-color-primary);
+}
+
+.semi-button-disabled,
+.semi-button-disabled:hover,
+.semi-button-disabled:focus,
+.semi-button-disabled:active {
+  color: var(--el-color-text-placeholder);
+  background-color: var(--el-color-white);
+  border-color: var(--el-border-color-lighter);
+}
+
+.semi-button-success.semi-button-disabled,
+.semi-button-success.semi-button-disabled:hover,
+.semi-button-success.semi-button-disabled:focus,
+.semi-button-success.semi-button-disabled:active {
+  background-color: var(--el-color-success);
+  border-color: var(--el-color-success);
+}
+
+.semi-button-warning.semi-button-disabled,
+.semi-button-warning.semi-button-disabled:hover,
+.semi-button-warning.semi-button-disabled:focus,
+.semi-button-warning.semi-button-disabled:active {
+  background-color: var(--el-color-warning);
+  border-color: var(--el-color-warning);
+}
+
+.semi-button-danger.semi-button-disabled,
+.semi-button-danger.semi-button-disabled:hover,
+.semi-button-danger.semi-button-disabled:focus,
+.semi-button-danger.semi-button-disabled:active {
+  background-color: var(--el-color-danger);
+  border-color: var(--el-color-danger);
+}
+
+.semi-button-info.semi-button-disabled,
+.semi-button-info.semi-button-disabled:hover,
+.semi-button-info.semi-button-disabled:focus,
+.semi-button-info.semi-button-disabled:active {
+  background-color: var(--el-color-info);
+  border-color: var(--el-color-info);
+}
+
+/* =====================================================
+ * 加载中态
+ * ===================================================== */
+.semi-button-loading,
+.semi-button-loading:hover {
+  cursor: wait;
+  opacity: 0.85;
+}
+
+/* =====================================================
+ * 文字（按钮内部 span）
+ * ===================================================== */
+.semi-button-content {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
+}
+
+/* =====================================================
+ * 暗色模式适配（沿用 Semi 的 html.dark）
+ * ===================================================== */
+html.dark .semi-button {
+  color: var(--el-color-text-regular);
+  background-color: transparent;
+  border-color: var(--el-border-color);
+}
+
+html.dark .semi-button:hover,
+html.dark .semi-button:focus {
+  color: var(--el-color-primary-light-3);
+  border-color: var(--el-color-primary-light-3);
+  background-color: rgba(64, 158, 255, 0.1);
+}
+
+html.dark .semi-button-primary,
+html.dark .semi-button[type='primary'] {
+  color: var(--el-color-white);
+  background-color: var(--el-color-primary);
+  border-color: var(--el-color-primary);
+}
+
+html.dark .semi-button-tertiary:hover,
+html.dark .semi-button-light:hover,
+html.dark .semi-button-borderless:hover {
+  color: var(--el-color-primary-light-3);
+  background-color: rgba(64, 158, 255, 0.1);
+}
+
+/* =====================================================
+ * Tag 标签
+ * 匹配 ElementUI 的 light 效果（浅色背景 + 同色系文字 + 无边框）
+ * shape='circle' 对应 ElementUI 的圆角标签（border-radius: 4px 或 pill）
+ * size: small->mini, default->small, large->medium
+ * ===================================================== */
+
+/* ---- 基础样式 ---- */
+.semi-tag {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  font-weight: 400;
+  line-height: 1.2;
+  vertical-align: middle;
+  border: 0 !important;
+  font-family: inherit;
+  white-space: nowrap;
+  border-radius: var(--el-border-radius-base);
+  transition:
+    color var(--el-transition-duration) var(--el-transition-function-ease-in-out-bezier),
+    background-color var(--el-transition-duration) var(--el-transition-function-ease-in-out-bezier),
+    border-color var(--el-transition-duration) var(--el-transition-function-ease-in-out-bezier) !important;
+}
+
+/* ---- 尺寸 ---- */
+.semi-tag.semi-tag-small {
+  font-size: var(--el-font-size-small);
+  height: 20px;
+  padding: 0 6px;
+}
+
+.semi-tag.semi-tag-default {
+  font-size: var(--el-font-size-small);
+  height: 24px;
+  padding: 0 8px;
+}
+
+.semi-tag.semi-tag-large {
+  font-size: var(--el-font-size-base);
+  height: 28px;
+  padding: 0 10px;
+}
+
+/* ---- 圆角变体（shape='circle' → 更高的圆角） ---- */
+.semi-tag.semi-tag-circle {
+  border-radius: 10px;
+}
+.semi-tag.semi-tag-circle.semi-tag-small {
+  border-radius: 10px;
+}
+.semi-tag.semi-tag-circle.semi-tag-large {
+  border-radius: 14px;
+}
+
+/* ---- 标签内容区 ---- */
+.semi-tag .semi-tag-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ---- 关闭按钮 ---- */
+.semi-tag .semi-tag-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 2px;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity var(--el-transition-duration) ease;
+}
+
+.semi-tag .semi-tag-close:hover {
+  opacity: 1;
+}
+
+/* ---- 可删除标签额外内边距 ---- */
+.semi-tag.semi-tag-closable {
+  padding-right: 4px;
+}
+
+/* =====================================================
+ * 色彩映射
+ * Semi 的 color 值 → ElementUI 视觉风格
+ * 使用 ElementUI 品牌色系: primary(blue) / success(green) / warning(orange) / danger(red) / info(grey)
+ * ===================================================== */
+
+/* --- Primary (蓝色) --- */
+.semi-tag.semi-tag-blue {
+  color: var(--el-color-primary);
+  background-color: var(--el-color-primary-light-9);
+}
+.semi-tag.semi-tag-blue.semi-tag-closable .semi-tag-close {
+  color: var(--el-color-primary);
+}
+
+/* --- Success (绿色) --- */
+.semi-tag.semi-tag-green {
+  color: var(--el-color-success);
+  background-color: var(--el-color-success-light-9);
+}
+.semi-tag.semi-tag-green.semi-tag-closable .semi-tag-close {
+  color: var(--el-color-success);
+}
+
+/* --- Warning (橘色) --- */
+.semi-tag.semi-tag-orange,
+.semi-tag.semi-tag-yellow,
+.semi-tag.semi-tag-amber {
+  color: var(--el-color-warning);
+  background-color: var(--el-color-warning-light-9);
+}
+.semi-tag.semi-tag-orange .semi-tag-close,
+.semi-tag.semi-tag-yellow .semi-tag-close,
+.semi-tag.semi-tag-amber .semi-tag-close {
+  color: var(--el-color-warning);
+}
+
+/* --- Danger (红色) --- */
+.semi-tag.semi-tag-red {
+  color: var(--el-color-danger);
+  background-color: var(--el-color-danger-light-9);
+}
+.semi-tag.semi-tag-red.semi-tag-closable .semi-tag-close {
+  color: var(--el-color-danger);
+}
+
+/* --- Info (灰色) --- */
+.semi-tag.semi-tag-grey {
+  color: var(--el-color-info);
+  background-color: var(--el-color-info-light-9);
+}
+.semi-tag.semi-tag-grey.semi-tag-closable .semi-tag-close {
+  color: var(--el-color-info);
+}
+
+/* --- Cyan / Teal / Lime 等扩展色（使用对应色值但不偏离 ElementUI 基调）--- */
+.semi-tag.semi-tag-cyan {
+  color: #0891b2;
+  background-color: #ecfeff;
+}
+.semi-tag.semi-tag-teal {
+  color: #0d9488;
+  background-color: #f0fdfa;
+}
+.semi-tag.semi-tag-lime {
+  color: #65a30d;
+  background-color: #f7fee7;
+}
+.semi-tag.semi-tag-purple {
+  color: #7c3aed;
+  background-color: #f5f3ff;
+}
+.semi-tag.semi-tag-violet {
+  color: #6d28d9;
+  background-color: #f5f3ff;
+}
+.semi-tag.semi-tag-pink {
+  color: #db2777;
+  background-color: #fdf2f8;
+}
+.semi-tag.semi-tag-indigo {
+  color: #4338ca;
+  background-color: #eef2ff;
+}
+.semi-tag.semi-tag-light-blue {
+  color: #0284c7;
+  background-color: #f0f9ff;
+}
+.semi-tag.semi-tag-light-green {
+  color: #16a34a;
+  background-color: #f0fdf4;
+}
+
+/* --- White 标签（文字灰，白底有边框） --- */
+.semi-tag.semi-tag-white {
+  color: var(--el-color-text-regular);
+  background-color: var(--el-color-white);
+  border: 1px solid var(--el-border-color) !important;
+}
+.semi-tag.semi-tag-white .semi-tag-close {
+  color: var(--el-color-text-regular);
+}
+
+/* =====================================================
+ * 暗色模式
+ * ===================================================== */
+html.dark .semi-tag.semi-tag-blue {
+  color: var(--el-color-primary-light-3);
+  background-color: rgba(64, 158, 255, 0.15);
+}
+html.dark .semi-tag.semi-tag-green {
+  color: var(--el-color-success-light-3);
+  background-color: rgba(103, 194, 58, 0.15);
+}
+html.dark .semi-tag.semi-tag-orange,
+html.dark .semi-tag.semi-tag-yellow,
+html.dark .semi-tag.semi-tag-amber {
+  color: var(--el-color-warning-light-3);
+  background-color: rgba(230, 162, 60, 0.15);
+}
+html.dark .semi-tag.semi-tag-red {
+  color: var(--el-color-danger-light-3);
+  background-color: rgba(245, 108, 108, 0.15);
+}
+html.dark .semi-tag.semi-tag-grey {
+  color: var(--el-color-info-light-3);
+  background-color: rgba(144, 147, 153, 0.15);
+}
+html.dark .semi-tag.semi-tag-white {
+  color: var(--el-color-text-secondary);
+  background-color: transparent;
+  border-color: var(--el-border-color) !important;
+}
+
+/* =====================================================
+ * Table 表格
+ * 对齐 ElementUI 的极简风格：浅灰表头 + 横线条 + hover 高亮
+ * ===================================================== */
+
+/* ---- 表格外层容器 ---- */
+.semi-table-wrapper {
+  border: none !important;
+  font-size: var(--el-font-size-base);
+  color: var(--el-color-text-regular);
+  background: transparent;
+}
+
+/* ---- 表格主体 ---- */
+.semi-table {
+  background: var(--el-color-white);
+  border-radius: var(--el-border-radius-base);
+  font-size: var(--el-font-size-base);
+  color: var(--el-color-text-regular);
+  border: 0 !important;
+}
+
+/* ---- 表头 ---- */
+.semi-table-thead > .semi-table-row-head {
+  background-color: #f5f7fa;
+  border-bottom: 1px solid var(--el-border-color-light);
+}
+
+.semi-table-thead .semi-table-row-head > .semi-table-column {
+  font-weight: 600;
+  color: var(--el-color-text-secondary);
+  font-size: var(--el-font-size-base);
+  background-color: #f5f7fa;
+  border-bottom: none;
+  padding: 12px 0;
+}
+
+/* ---- 表头单元格 ---- */
+.semi-table-thead .semi-table-column {
+  border-right: none;
+  transition: background-color var(--el-transition-duration) ease;
+}
+
+/* 最后一个表头单元格右边框 */
+.semi-table-thead .semi-table-column:last-child {
+  border-right: none;
+}
+
+/* ---- 表头排序触发器 ---- */
+.semi-table-column .semi-table-column-sorter {
+  color: var(--el-color-text-placeholder);
+  margin-left: 4px;
+}
+
+.semi-table-column-sorter .semi-table-column-sorter-up,
+.semi-table-column-sorter .semi-table-column-sorter-down {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.semi-table-column-sorter .semi-icon-chevron-up,
+.semi-table-column-sorter .semi-icon-chevron-down {
+  font-size: 12px !important;
+  color: var(--el-color-text-placeholder);
+}
+
+/* ---- 表体 ---- */
+.semi-table-body {
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+/* ---- 表格行 ---- */
+.semi-table-row {
+  border-bottom: 1px solid var(--el-border-color-extra-light);
+  transition: background-color 0.15s ease;
+}
+
+.semi-table-row:last-child {
+  border-bottom: none;
+}
+
+/* ---- 行 hover ---- */
+.semi-table-row:hover > .semi-table-column {
+  background-color: #f5f7fa;
+}
+
+/* ---- 斑马纹 ---- */
+.semi-table:not(.semi-table-bordered) .semi-table-row:nth-child(even) > .semi-table-column {
+  background-color: #fafafa;
+}
+
+.semi-table:not(.semi-table-bordered) .semi-table-row:nth-child(even):hover > .semi-table-column {
+  background-color: #f0f2f5;
+}
+
+/* ---- 表格单元格 ---- */
+.semi-table-column {
+  padding: 11px 0;
+  border-right: none;
+  border-bottom: none;
+  font-size: var(--el-font-size-base);
+  color: var(--el-color-text-regular);
+  line-height: 1.5;
+  vertical-align: middle;
+  transition: background-color 0.15s ease;
+}
+
+/* ---- 固定列 ---- */
+.semi-table-column-fixed-left,
+.semi-table-column-fixed-right {
+  background: var(--el-color-white);
+}
+
+/* ---- 固定列阴影 ---- */
+.semi-table-column-fixed-left::after,
+.semi-table-column-fixed-right::after {
+  display: none;
+}
+
+/* ---- 展开行 ---- */
+.semi-table-row-expand {
+  background-color: #fafafa;
+}
+
+/* ---- 空状态 ---- */
+.semi-table-empty {
+  border-bottom: none !important;
+}
+
+/* ---- 选中行高亮 ---- */
+.semi-table-row.selected > .semi-table-column,
+.semi-table-row.semi-table-row-selected > .semi-table-column {
+  background-color: var(--el-color-primary-light-9);
+}
+
+/* =====================================================
+ * 复选框列（表格行选择）
+ * ===================================================== */
+.semi-table .semi-checkbox {
+  margin-right: 4px;
+}
+
+.semi-table .semi-checkbox-inner {
+  border-radius: 2px;
+  border-color: var(--el-border-color);
+}
+
+.semi-table .semi-checkbox-inner:hover {
+  border-color: var(--el-color-primary);
+}
+
+/* =====================================================
+ * 分页器（Table 内嵌分页 + 独立 Pagination）
+ * ===================================================== */
+.semi-table-pagination {
+  padding: 16px 0 8px;
+  border-top: none;
+  margin-top: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* ---- 分页列表 ---- */
+.semi-page {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--el-font-size-base);
+  user-select: none;
+}
+
+/* ---- 页码项 ---- */
+.semi-page-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 6px;
+  border-radius: var(--el-border-radius-base);
+  background: transparent;
+  color: var(--el-color-text-regular);
+  font-weight: 400;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    color var(--el-transition-duration) ease,
+    background-color var(--el-transition-duration) ease,
+    border-color var(--el-transition-duration) ease;
+}
+
+.semi-page-item:hover {
+  color: var(--el-color-primary);
+  border-color: var(--el-color-primary-light-7);
+  background-color: var(--el-color-primary-light-9);
+}
+
+.semi-page-item:active {
+  color: var(--el-color-primary-dark-2);
+}
+
+/* ---- 当前页 ---- */
+.semi-page-item.semi-page-item-active {
+  color: var(--el-color-white);
+  background-color: var(--el-color-primary);
+  border-color: var(--el-color-primary);
+  font-weight: 600;
+}
+
+.semi-page-item.semi-page-item-active:hover {
+  color: var(--el-color-white);
+  background-color: var(--el-color-primary-light-3);
+  border-color: var(--el-color-primary-light-3);
+}
+
+.semi-page-item.semi-page-item-active:active {
+  background-color: var(--el-color-primary-dark-2);
+  border-color: var(--el-color-primary-dark-2);
+}
+
+/* ---- 翻页按钮 ---- */
+.semi-page-item.semi-page-item-prev,
+.semi-page-item.semi-page-item-next {
+  font-size: 14px;
+  border-color: var(--el-border-color);
+  background: var(--el-color-white);
+}
+
+.semi-page-item.semi-page-item-prev:hover,
+.semi-page-item.semi-page-item-next:hover {
+  color: var(--el-color-primary);
+  border-color: var(--el-color-primary-light-7);
+  background-color: var(--el-color-primary-light-9);
+}
+
+/* ---- 禁用分页 ---- */
+.semi-page-item.semi-page-item-disabled,
+.semi-page-item.semi-page-item-disabled:hover {
+  cursor: not-allowed;
+  color: var(--el-color-text-placeholder);
+  border-color: var(--el-border-color-lighter);
+  background: var(--el-color-white);
+  opacity: 0.5;
+}
+
+/* ---- 省略号 ---- */
+.semi-page-item.semi-page-item-ellipsis {
+  border: none;
+  cursor: default;
+}
+
+/* ---- 每页条数选择器 ---- */
+.semi-select.semi-page-size-selector {
+  margin: 0 8px;
+  min-width: 90px;
+}
+
+/* ---- 分页信息文字 ---- */
+.semi-page-total {
+  font-size: var(--el-font-size-small);
+  color: var(--el-color-text-secondary);
+  margin: 0 8px;
+}
+
+/* =====================================================
+ * 暗色模式
+ * ===================================================== */
+html.dark .semi-table {
+  background: transparent;
+}
+
+html.dark .semi-table-thead > .semi-table-row-head {
+  background-color: #1d1e1f;
+  border-bottom-color: var(--el-border-color);
+}
+
+html.dark .semi-table-thead .semi-table-row-head > .semi-table-column {
+  background-color: #1d1e1f;
+  color: var(--el-color-text-secondary);
+}
+
+html.dark .semi-table-row {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+html.dark .semi-table-row:hover > .semi-table-column {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+html.dark .semi-table-column {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+html.dark .semi-table:not(.semi-table-bordered) .semi-table-row:nth-child(even) > .semi-table-column {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+html.dark .semi-table:not(.semi-table-bordered) .semi-table-row:nth-child(even):hover > .semi-table-column {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+html.dark .semi-table-column-fixed-left,
+html.dark .semi-table-column-fixed-right {
+  background: #1d1e1f;
+}
+
+html.dark .semi-table-row-expand {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+html.dark .semi-page-item {
+  color: rgba(255, 255, 255, 0.75);
+  background: transparent;
+}
+
+html.dark .semi-page-item:hover {
+  color: var(--el-color-primary-light-3);
+  background-color: rgba(64, 158, 255, 0.1);
+  border-color: rgba(64, 158, 255, 0.3);
+}
+
+html.dark .semi-page-item.semi-page-item-active {
+  color: var(--el-color-white);
+  background-color: var(--el-color-primary);
+  border-color: var(--el-color-primary);
+}
+
+html.dark .semi-page-item.semi-page-item-prev,
+html.dark .semi-page-item.semi-page-item-next {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+html.dark .semi-page-item.semi-page-item-prev:hover,
+html.dark .semi-page-item.semi-page-item-next:hover {
+  color: var(--el-color-primary-light-3);
+  border-color: var(--el-color-primary-light-3);
+  background-color: rgba(64, 158, 255, 0.1);
+}
+
+html.dark .semi-page-total {
+  color: var(--el-color-text-secondary);
+}
