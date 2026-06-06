@@ -50,6 +50,8 @@ var ChannelAuth = NewResolver("new-api:channel:auth", "new-api:auth", parseAuthV
 
 var GroupsAuth = NewResolver("new-api:groups:auth", "new-api:auth", parseAuthValue)
 
+var UsersAuth = NewResolver("new-api:users:auth", "new-api:auth", parseAuthValue)
+
 // GetScope extracts scope string from permission data
 func GetScope(data map[string]interface{}) string {
 	if scope, ok := data["scope"].(string); ok {
