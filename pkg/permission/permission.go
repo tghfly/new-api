@@ -1,6 +1,8 @@
 package permission
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -46,15 +48,18 @@ func NewResolver(primaryKey, fallbackKey string, parseFunc ParseFunc) *Resolver 
 func (r *Resolver) Resolve(c *gin.Context) Result {
 	otherRoleMapRaw, exists := c.Get("other_role_map")
 	if !exists {
+		log.Printf("Resolve - primaryKey: %s, fallbackKey: %s, result: HasAuth=false (no other_role_map)", r.primaryKey, r.fallbackKey)
 		return Result{HasAuth: false}
 	}
 	otherRoleMap, ok := otherRoleMapRaw.(map[string]string)
 	if !ok || len(otherRoleMap) == 0 {
+		log.Printf("Resolve - primaryKey: %s, fallbackKey: %s, result: HasAuth=false (other_role_map empty or wrong type)", r.primaryKey, r.fallbackKey)
 		return Result{HasAuth: false}
 	}
 
 	data := r.tryResolve(otherRoleMap)
 	if data == nil {
+		log.Printf("Resolve - primaryKey: %s, fallbackKey: %s, result: HasAuth=false (tryResolve returned nil)", r.primaryKey, r.fallbackKey)
 		return Result{HasAuth: false}
 	}
 
@@ -62,6 +67,7 @@ func (r *Resolver) Resolve(c *gin.Context) Result {
 		data["dept_id"] = deptId
 	}
 
+	log.Printf("Resolve - primaryKey: %s, fallbackKey: %s, result: HasAuth=true, data: %v", r.primaryKey, r.fallbackKey, data)
 	return Result{HasAuth: true, Data: data}
 }
 
