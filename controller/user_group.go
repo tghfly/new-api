@@ -15,6 +15,26 @@ import (
 )
 
 func GetUserGroupsList(c *gin.Context) {
+	// DCloud 认证用户走分权分域逻辑
+	dcloudAuth := resolveDCloudGroupsAuth(c)
+	if dcloudAuth.HasAuth {
+		scope := permission.GetScope(dcloudAuth.Data)
+		userId := c.GetInt("id")
+		log.Printf("GetUserGroupsList - scope: %s, userId: %d", scope, userId)
+
+		// me 模式下，只能查看自己的用户组
+		if scope == permission.ScopeMe {
+			handleGetUserGroupsList(c, userId)
+			return
+		}
+
+		// 非 me 模式下，使用 groupFilter 限制查询范围
+		groupFilter := permission.ExtractGroupFilterData(dcloudAuth, userId)
+		handleGetUserGroupsListWithFilter(c, groupFilter)
+		return
+	}
+
+	// 原有的用户组查询
 	var params model.SearchUserGroupParams
 	if err := c.ShouldBindQuery(&params); err != nil {
 		c.JSON(http.StatusOK, gin.H{
@@ -33,6 +53,40 @@ func GetUserGroupsList(c *gin.Context) {
 		return
 	}
 
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+		"data":    userGroups,
+	})
+}
+
+// handleGetUserGroupsList fetches user groups for a specific user
+func handleGetUserGroupsList(c *gin.Context, userId int) {
+	userGroups, err := model.GetUserGroupsByUserId(userId)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+		"data":    userGroups,
+	})
+}
+
+// handleGetUserGroupsListWithFilter fetches user groups with group filter
+func handleGetUserGroupsListWithFilter(c *gin.Context, groupFilter *permission.GroupFilterData) {
+	userGroups, err := model.GetUserGroupsWithFilter(groupFilter)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
@@ -786,6 +840,14 @@ func resolveDCloudUserGroupsAuth(c *gin.Context) permission.Result {
 		return permission.Result{HasAuth: false}
 	}
 	return permission.UserGroupsAuth.Resolve(c)
+}
+
+// resolveDCloudGroupsAuth resolves DCloud groups permission from context
+func resolveDCloudGroupsAuth(c *gin.Context) permission.Result {
+	if !common.DCloudIntegrationEnabled {
+		return permission.Result{HasAuth: false}
+	}
+	return permission.GroupsAuth.Resolve(c)
 }
 
 // GetAllUserGroupsWithAuth 获取所有用户组（支持分权分域）
