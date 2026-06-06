@@ -346,7 +346,7 @@ const UserGroupsPage = () => {
               {editingGroup ? t('编辑') : t('新建')}
             </Tag>
             <Title heading={4} className='m-0'>
-              {editingGroup ? t('编辑用户项目限额') : t('添加用户项目限额')}
+              {editingGroup ? t('编辑项目限流') : t('添加项目限流')}
             </Title>
           </Space>
         }
