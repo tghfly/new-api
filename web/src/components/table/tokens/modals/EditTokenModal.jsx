@@ -440,7 +440,7 @@ const EditTokenModal = (props) => {
                     {groups.length > 0 ? (
                       <Form.Select
                         field='group'
-                        label={t('API名称列表')}
+                        label={t('API列表')}
                         placeholder={t('令牌分组，默认为用户的分组')}
                         optionList={groups}
                         renderOptionItem={renderGroupOption}
@@ -454,7 +454,7 @@ const EditTokenModal = (props) => {
                       <Form.Select
                         placeholder={t('管理员未设置用户可选分组')}
                         disabled
-                        label={t('API名称列表')}
+                        label={t('API列表')}
                         style={{ width: '100%' }}
                       />
                     )}
