@@ -17,16 +17,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Modal, Tabs } from '@douyinfe/semi-ui';
 import { useTranslation } from 'react-i18next';
 import CodeViewer from '@/components/playground/CodeViewer';
 
 const { TabPane } = Tabs;
 
-const CHAT_VISION_EXAMPLE = `curl --location --request POST 'http://192.168.171.166:23370/v1/chat/completions' \\
+const CHAT_VISION_TEMPLATE = `curl --location --request POST '{BASE_URL}' \\
   --header 'Content-Type: application/json' \\
-  --header 'Authorization: Bearer sk-XMTCWJqG2GkU45rOD54a8843A80b46DaA7400696E721698c' \\
+  --header 'Authorization: Bearer {API_KEY}' \\
   --data-raw '{
     "model": "InternVL3-14B-AWQ",
     "messages": [
@@ -51,9 +51,9 @@ const CHAT_VISION_EXAMPLE = `curl --location --request POST 'http://192.168.171.
     "stream": false
   }'`;
 
-const CHAT_SIMPLE_EXAMPLE = `curl --location --request POST 'http://192.168.171.166:23370/v1/chat/completions' \\
+const CHAT_SIMPLE_TEMPLATE = `curl --location --request POST '{BASE_URL}' \\
   --header 'Content-Type: application/json' \\
-  --header 'Authorization: Bearer sk-XMTCWJqG2GkU45rOD54a8843A80b46DaA7400696E721698c' \\
+  --header 'Authorization: Bearer {API_KEY}' \\
   --data-raw '{
       "model": "Qwen3-30B-A3B-Thinking-2507",
       "messages": [
@@ -67,9 +67,9 @@ const CHAT_SIMPLE_EXAMPLE = `curl --location --request POST 'http://192.168.171.
       "stream": true
   }'`;
 
-const EMBEDDING_EXAMPLE = `curl --location --request POST 'http://192.168.171.166:23370/v1/embeddings' \\
+const EMBEDDING_TEMPLATE = `curl --location --request POST '{BASE_URL}' \\
   --header 'Content-Type: application/json' \\
-  --header 'Authorization: Bearer sk-XMTCWJqG2GkU45rOD54a8843A80b46DaA7400696E721698c' \\
+  --header 'Authorization: Bearer {API_KEY}' \\
   --data-raw '{
       "model": "Qwen3-Embedding-0.6B",
       "input": [
@@ -78,9 +78,9 @@ const EMBEDDING_EXAMPLE = `curl --location --request POST 'http://192.168.171.16
       ]
   }'`;
 
-const RERANK_EXAMPLE = `curl --location --request POST 'http://192.168.171.166:23370/v1/rerank' \\
+const RERANK_TEMPLATE = `curl --location --request POST '{BASE_URL}' \\
   --header 'Content-Type: application/json' \\
-  --header 'Authorization: Bearer sk-XMTCWJqG2GkU45rOD54a8843A80b46DaA7400696E721698c' \\
+  --header 'Authorization: Bearer {API_KEY}' \\
   --data-raw '{
       "model": "bge-reranker-v2-m3",
       "query": "机器学习的最佳实践",
@@ -91,9 +91,18 @@ const RERANK_EXAMPLE = `curl --location --request POST 'http://192.168.171.166:2
       ]
   }'`;
 
+const replaceBaseUrl = (template, baseUrl) => {
+  return template.replace(/\{BASE_URL\}/g, baseUrl || '{BASE_URL}');
+};
+
 const ExampleModal = (props) => {
   const { t } = useTranslation();
-  const { visible, handleClose } = props;
+  const { visible, handleClose, baseUrl } = props;
+
+  const chatVisionExample = useMemo(() => replaceBaseUrl(CHAT_VISION_TEMPLATE, baseUrl), [baseUrl]);
+  const chatSimpleExample = useMemo(() => replaceBaseUrl(CHAT_SIMPLE_TEMPLATE, baseUrl), [baseUrl]);
+  const embeddingExample = useMemo(() => replaceBaseUrl(EMBEDDING_TEMPLATE, baseUrl), [baseUrl]);
+  const rerankExample = useMemo(() => replaceBaseUrl(RERANK_TEMPLATE, baseUrl), [baseUrl]);
 
   return (
     <Modal
@@ -112,7 +121,7 @@ const ExampleModal = (props) => {
           itemKey='chat-vision'
         >
           <div style={{ height: '420px' }}>
-            <CodeViewer content={CHAT_VISION_EXAMPLE} title='chat-vision' language='bash' />
+            <CodeViewer content={chatVisionExample} title='chat-vision' language='bash' />
           </div>
         </TabPane>
         <TabPane
@@ -120,7 +129,7 @@ const ExampleModal = (props) => {
           itemKey='chat-simple'
         >
           <div style={{ height: '420px' }}>
-            <CodeViewer content={CHAT_SIMPLE_EXAMPLE} title='chat-simple' language='bash' />
+            <CodeViewer content={chatSimpleExample} title='chat-simple' language='bash' />
           </div>
         </TabPane>
         <TabPane
@@ -128,7 +137,7 @@ const ExampleModal = (props) => {
           itemKey='embedding'
         >
           <div style={{ height: '420px' }}>
-            <CodeViewer content={EMBEDDING_EXAMPLE} title='embedding' language='bash' />
+            <CodeViewer content={embeddingExample} title='embedding' language='bash' />
           </div>
         </TabPane>
         <TabPane
@@ -136,7 +145,7 @@ const ExampleModal = (props) => {
           itemKey='rerank'
         >
           <div style={{ height: '420px' }}>
-            <CodeViewer content={RERANK_EXAMPLE} title='rerank' language='bash' />
+            <CodeViewer content={rerankExample} title='rerank' language='bash' />
           </div>
         </TabPane>
       </Tabs>
