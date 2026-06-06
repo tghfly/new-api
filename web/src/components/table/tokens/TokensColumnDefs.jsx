@@ -154,10 +154,27 @@ const renderTokenKey = (text, record, showKeys, setShowKeys, copyText) => {
 };
 
 // Render model limits column
-const renderModelLimits = (text, record, t) => {
+const renderModelLimits = (text, record, t, copyText) => {
   if (record.model_limits_enabled && text) {
     const models = text.split(',').filter(Boolean);
     const categories = getModelCategories(t);
+
+    // 只有一个模型：直接展示名称，点击复制
+    if (models.length === 1) {
+      const single = models[0];
+      return (
+        <span
+          className='cursor-pointer text-blue-600 hover:underline'
+          title={t('点击复制')}
+          onClick={(e) => {
+            e.stopPropagation();
+            copyText && copyText(single);
+          }}
+        >
+          {single}
+        </span>
+      );
+    }
 
     const vendorAvatars = [];
     const matchedModels = new Set();
@@ -168,10 +185,26 @@ const renderModelLimits = (text, record, t) => {
         category.filter({ model_name: m }),
       );
       if (vendorModels.length > 0) {
+        const modelListStr = vendorModels.join(', ');
         vendorAvatars.push(
           <Tooltip
             key={key}
-            content={vendorModels.join(', ')}
+            content={
+              <div
+                className='cursor-pointer max-h-60 overflow-auto'
+                onClick={(e) => {
+                  e.stopPropagation();
+                  copyText && copyText(modelListStr);
+                }}
+                title={t('点击复制')}
+              >
+                {vendorModels.map((m) => (
+                  <div key={m} className='py-0.5'>
+                    {m}
+                  </div>
+                ))}
+              </div>
+            }
             position='top'
             showArrow
           >
@@ -179,6 +212,11 @@ const renderModelLimits = (text, record, t) => {
               size='extra-extra-small'
               alt={category.label}
               color='transparent'
+              style={{ cursor: 'pointer' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                copyText && copyText(modelListStr);
+              }}
             >
               {category.icon}
             </Avatar>
@@ -190,14 +228,38 @@ const renderModelLimits = (text, record, t) => {
 
     const unmatchedModels = models.filter((m) => !matchedModels.has(m));
     if (unmatchedModels.length > 0) {
+      const unmatchedStr = unmatchedModels.join(', ');
       vendorAvatars.push(
         <Tooltip
           key='unknown'
-          content={unmatchedModels.join(', ')}
+          content={
+            <div
+              className='cursor-pointer max-h-60 overflow-auto'
+              onClick={(e) => {
+                e.stopPropagation();
+                copyText && copyText(unmatchedStr);
+              }}
+              title={t('点击复制')}
+            >
+              {unmatchedModels.map((m) => (
+                <div key={m} className='py-0.5'>
+                  {m}
+                </div>
+              ))}
+            </div>
+          }
           position='top'
           showArrow
         >
-          <Avatar size='extra-extra-small' alt='unknown'>
+          <Avatar
+            size='extra-extra-small'
+            alt='unknown'
+            style={{ cursor: 'pointer' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              copyText && copyText(unmatchedStr);
+            }}
+          >
             {t('其他')}
           </Avatar>
         </Tooltip>,
@@ -504,7 +566,7 @@ export const getTokensColumns = ({
     {
       title: t('可用模型'),
       dataIndex: 'model_limits',
-      render: (text, record) => renderModelLimits(text, record, t),
+      render: (text, record) => renderModelLimits(text, record, t, copyText),
     },
     {
       title: t('IP白名单'),
