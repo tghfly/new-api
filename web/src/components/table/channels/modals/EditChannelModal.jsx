@@ -187,7 +187,7 @@ const EditChannelModal = (props) => {
     auto_ban: true,
     test_model: '',
     model_version: '',
-    groups: currentProjectCode ? [currentProjectCode] : ['default'],
+    groups: [],
     priority: 0,
     weight: 0,
     tag: '',
