@@ -67,6 +67,7 @@ function TokensPage() {
   const [ccSwitchVisible, setCCSwitchVisible] = useState(false);
   const [ccSwitchKey, setCCSwitchKey] = useState('');
   const [showExample, setShowExample] = useState(false);
+  const [exampleBaseUrl, setExampleBaseUrl] = useState('');
 
   // Keep latest data for handlers inside notifications
   useEffect(() => {
@@ -405,6 +406,7 @@ function TokensPage() {
             compactMode={compactMode}
             setCompactMode={setCompactMode}
             setShowExample={setShowExample}
+            setExampleBaseUrl={setExampleBaseUrl}
             t={t}
           />
         }
@@ -443,7 +445,7 @@ function TokensPage() {
         })}
         t={tokensData.t}
       >
-        <TokensTable {...tokensData} showExample={showExample} setShowExample={setShowExample} />
+        <TokensTable {...tokensData} showExample={showExample} setShowExample={setShowExample} exampleBaseUrl={exampleBaseUrl} />
       </CardPro>
     </>
   );

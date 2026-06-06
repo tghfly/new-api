@@ -854,7 +854,7 @@ html.dark .with-pastel-balls::before {
 }
 
 .table-scroll-card .semi-card-body::-webkit-scrollbar {
-  width: 6px;
+  width: 15px;
 }
 
 .table-scroll-card .semi-card-body::-webkit-scrollbar-thumb {

@@ -131,6 +131,7 @@ const TokensTable = (tokensData) => {
       <ExampleModal
         visible={showExample}
         handleClose={() => setShowExample(false)}
+        baseUrl={tokensData.exampleBaseUrl}
       />
     </>
   );

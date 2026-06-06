@@ -280,7 +280,7 @@ const UserGroupsPage = () => {
             {t('编辑')}
           </Button>
           )}
-          {hasSSOPerm('b:ai-web:modelstation:usergroup:delete') && (
+          {/* {hasSSOPerm('b:ai-web:modelstation:usergroup:delete') && (
           <Button
             type='danger'
             size='small'
@@ -288,7 +288,7 @@ const UserGroupsPage = () => {
           >
             {t('删除')}
           </Button>
-          )}
+          )} */}
         </Space>
       ),
     },
@@ -346,7 +346,7 @@ const UserGroupsPage = () => {
               {editingGroup ? t('编辑') : t('新建')}
             </Tag>
             <Title heading={4} className='m-0'>
-              {editingGroup ? t('编辑用户组') : t('添加用户组')}
+              {editingGroup ? t('编辑项目限流') : t('添加项目限流')}
             </Title>
           </Space>
         }
@@ -417,6 +417,7 @@ const UserGroupsPage = () => {
                   label={t('名称')}
                   placeholder={t('请输入分组名称')}
                   rules={[{ required: true, message: t('请输入分组名称') }]}
+                  disabled={!!editingGroup}
                   showClear
                 />
                 <Form.InputNumber

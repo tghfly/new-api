@@ -187,7 +187,7 @@ const EditChannelModal = (props) => {
     auto_ban: true,
     test_model: '',
     model_version: '',
-    groups: currentProjectCode ? [currentProjectCode] : ['default'],
+    groups: [],
     priority: 0,
     weight: 0,
     tag: '',
@@ -2125,7 +2125,7 @@ const EditChannelModal = (props) => {
   const batchAllowed = (!isEdit || isMultiKeyChannel) && inputs.type !== 57;
   const batchExtra = batchAllowed ? (
     <Space>
-      {!isEdit && (
+      {/* {!isEdit && (
         <Checkbox
           disabled={isEdit}
           checked={batch}
@@ -2216,7 +2216,7 @@ const EditChannelModal = (props) => {
             </Button>
           )}
         </>
-      )}
+      )} */}
     </Space>
   ) : null;
 
