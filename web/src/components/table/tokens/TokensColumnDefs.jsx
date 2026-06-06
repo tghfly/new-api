@@ -343,7 +343,7 @@ const renderOperations = (
 
   return (
     <Space wrap>
-      {hasSSOPerm('b:ai-web:modelstation:token:chat') && (
+      {/* {hasSSOPerm('b:ai-web:modelstation:token:chat') && (
         <SplitButtonGroup
           className='overflow-hidden'
           aria-label={t('项目操作按钮组')}
@@ -370,7 +370,7 @@ const renderOperations = (
             ></Button>
           </Dropdown>
         </SplitButtonGroup>
-      )}
+      )} */}
 
       {(hasSSOPerm('b:ai-web:modelstation:token:enable') || hasSSOPerm('b:ai-web:modelstation:token:disable')) && (
         <>
