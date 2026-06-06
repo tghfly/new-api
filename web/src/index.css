@@ -532,20 +532,21 @@ html.dark .sbg-variant-green {
 /* 表格滚动条样式 */
 .semi-table-body::-webkit-scrollbar {
   width: 6px;
-  height: 6px;
+  height: 15px;
 }
 
 .semi-table-body::-webkit-scrollbar-thumb {
-  background: rgba(var(--semi-grey-2), 0.3);
-  border-radius: 2px;
+  background: rgba(var(--semi-grey-2), 0.7);
+  border-radius: 4px;
 }
 
 .semi-table-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(var(--semi-grey-2), 0.5);
+  background: rgba(var(--semi-grey-2), 0.9);
 }
 
 .semi-table-body::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(var(--semi-grey-1), 0.2);
+  border-radius: 4px;
 }
 
 /* 侧边抽屉滚动条样式 */
