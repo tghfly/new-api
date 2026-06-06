@@ -66,6 +66,7 @@ function TokensPage() {
   const [prefillKey, setPrefillKey] = useState('');
   const [ccSwitchVisible, setCCSwitchVisible] = useState(false);
   const [ccSwitchKey, setCCSwitchKey] = useState('');
+  const [showExample, setShowExample] = useState(false);
 
   // Keep latest data for handlers inside notifications
   useEffect(() => {
@@ -403,6 +404,7 @@ function TokensPage() {
           <TokensDescription
             compactMode={compactMode}
             setCompactMode={setCompactMode}
+            setShowExample={setShowExample}
             t={t}
           />
         }
@@ -441,7 +443,7 @@ function TokensPage() {
         })}
         t={tokensData.t}
       >
-        <TokensTable {...tokensData} />
+        <TokensTable {...tokensData} showExample={showExample} setShowExample={setShowExample} />
       </CardPro>
     </>
   );

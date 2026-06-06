@@ -25,6 +25,7 @@ import {
   IllustrationNoResultDark,
 } from '@douyinfe/semi-illustrations';
 import { getTokensColumns } from './TokensColumnDefs';
+import ExampleModal from './modals/ExampleModal';
 
 const TokensTable = (tokensData) => {
   const {
@@ -49,6 +50,8 @@ const TokensTable = (tokensData) => {
     isAdminUser,
     showUserInfoFunc,
     t,
+    showExample,
+    setShowExample,
   } = tokensData;
 
   // Get all columns
@@ -94,36 +97,42 @@ const TokensTable = (tokensData) => {
   }, [compactMode, columns]);
 
   return (
-    <CardTable
-      columns={tableColumns}
-      dataSource={tokens}
-      scroll={compactMode ? undefined : { x: 'max-content' }}
-      pagination={{
-        currentPage: activePage,
-        pageSize: pageSize,
-        total: tokenCount,
-        showSizeChanger: true,
-        pageSizeOptions: [10, 20, 50, 100],
-        onPageSizeChange: handlePageSizeChange,
-        onPageChange: handlePageChange,
-      }}
-      hidePagination={true}
-      loading={loading}
-      rowSelection={rowSelection}
-      onRow={handleRow}
-      empty={
-        <Empty
-          image={<IllustrationNoResult style={{ width: 150, height: 150 }} />}
-          darkModeImage={
-            <IllustrationNoResultDark style={{ width: 150, height: 150 }} />
-          }
-          description={t('搜索无结果')}
-          style={{ padding: 30 }}
-        />
-      }
-      className='rounded-xl overflow-hidden'
-      size='middle'
-    />
+    <>
+      <CardTable
+        columns={tableColumns}
+        dataSource={tokens}
+        scroll={compactMode ? undefined : { x: 'max-content' }}
+        pagination={{
+          currentPage: activePage,
+          pageSize: pageSize,
+          total: tokenCount,
+          showSizeChanger: true,
+          pageSizeOptions: [10, 20, 50, 100],
+          onPageSizeChange: handlePageSizeChange,
+          onPageChange: handlePageChange,
+        }}
+        hidePagination={true}
+        loading={loading}
+        rowSelection={rowSelection}
+        onRow={handleRow}
+        empty={
+          <Empty
+            image={<IllustrationNoResult style={{ width: 150, height: 150 }} />}
+            darkModeImage={
+              <IllustrationNoResultDark style={{ width: 150, height: 150 }} />
+            }
+            description={t('搜索无结果')}
+            style={{ padding: 30 }}
+          />
+        }
+        className='rounded-xl overflow-hidden'
+        size='middle'
+      />
+      <ExampleModal
+        visible={showExample}
+        handleClose={() => setShowExample(false)}
+      />
+    </>
   );
 };
 
