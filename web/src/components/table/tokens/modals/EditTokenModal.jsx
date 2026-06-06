@@ -202,16 +202,20 @@ const EditTokenModal = (props) => {
     let res = await API.get(`/api/token/${props.editingToken.id}`);
     const { success, message, data } = res.data;
     if (success) {
-      if (data.expired_time !== -1) {
-        data.expired_time = timestamp2string(data.expired_time);
-      }
       if (data.model_limits !== '') {
         data.model_limits = data.model_limits.split(',');
       } else {
         data.model_limits = [];
       }
       if (formApiRef.current) {
-        formApiRef.current.setValues({ ...getInitValues(), ...data });
+        // -1 表示永不过期：从 data 中去掉 expired_time，用 getInitValues 的默认值
+        if (data.expired_time === -1) {
+          const { expired_time, ...rest } = data;
+          formApiRef.current.setValues({ ...getInitValues(), ...rest });
+        } else {
+          data.expired_time = timestamp2string(data.expired_time);
+          formApiRef.current.setValues({ ...getInitValues(), ...data });
+        }
         // 设置当前分组并加载对应模型
         setCurrentGroup(data.group);
       }
@@ -441,7 +445,7 @@ const EditTokenModal = (props) => {
                       <Form.Select
                         field='group'
                         label={t('API列表')}
-                        placeholder={t('令牌分组，默认为用户的分组')}
+                        placeholder={t('API列表，默认为用户的分组')}
                         optionList={groups}
                         renderOptionItem={renderGroupOption}
                         showClear
