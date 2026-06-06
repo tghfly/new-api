@@ -379,7 +379,6 @@ const renderOperations = (
   setShowEdit,
   manageToken,
   refresh,
-  showExampleModal,
   t,
 ) => {
   let chatsArray = [];
@@ -406,14 +405,6 @@ const renderOperations = (
 
   return (
     <Space wrap>
-      <Button
-        type='tertiary'
-        size='small'
-        onClick={() => showExampleModal && showExampleModal(record)}
-      >
-        {t('示例')}
-      </Button>
-
       {/* {hasSSOPerm('b:ai-web:modelstation:token:chat') && (
         <SplitButtonGroup
           className='overflow-hidden'
@@ -523,7 +514,6 @@ export const getTokensColumns = ({
   refresh,
   isAdminUser,
   showUserInfoFunc,
-  showExampleModal,
 }) => {
   return [
     {
@@ -614,7 +604,6 @@ export const getTokensColumns = ({
           setShowEdit,
           manageToken,
           refresh,
-          showExampleModal,
           t,
         ),
     },

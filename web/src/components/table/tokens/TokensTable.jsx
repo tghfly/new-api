@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Empty } from '@douyinfe/semi-ui';
 import CardTable from '../../common/ui/CardTable';
 import {
@@ -50,9 +50,9 @@ const TokensTable = (tokensData) => {
     isAdminUser,
     showUserInfoFunc,
     t,
+    showExample,
+    setShowExample,
   } = tokensData;
-
-  const [showExample, setShowExample] = useState(false);
 
   // Get all columns
   const columns = useMemo(() => {
@@ -68,7 +68,6 @@ const TokensTable = (tokensData) => {
       refresh,
       isAdminUser,
       showUserInfoFunc,
-      showExampleModal: () => setShowExample(true),
     });
   }, [
     t,

@@ -25,7 +25,7 @@ import { copy } from '../../../helpers/utils';
 
 const { Text } = Typography;
 
-const TokensDescription = ({ compactMode, setCompactMode, t }) => {
+const TokensDescription = ({ compactMode, setCompactMode, setShowExample, t }) => {
   const [copied, setCopied] = useState(false);
 
   // 获取基础URL
@@ -104,6 +104,15 @@ const TokensDescription = ({ compactMode, setCompactMode, t }) => {
               className='shrink-0'
             />
           </Tooltip>
+          <Button
+            theme='light'
+            type='tertiary'
+            size='small'
+            onClick={() => setShowExample && setShowExample(true)}
+            className='shrink-0'
+          >
+            {t('示例')}
+          </Button>
         </div>
       </div>
 
