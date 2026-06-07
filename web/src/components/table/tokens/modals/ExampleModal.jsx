@@ -24,7 +24,7 @@ import CodeViewer from '@/components/playground/CodeViewer';
 
 const { TabPane } = Tabs;
 
-const CHAT_VISION_TEMPLATE = `curl --location --request POST '{BASE_URL}' \\
+const CHAT_VISION_TEMPLATE = `curl --location --request POST '{BASE_URL}/chat/completions' \\
   --header 'Content-Type: application/json' \\
   --header 'Authorization: Bearer {API_KEY}' \\
   --data-raw '{
@@ -51,7 +51,7 @@ const CHAT_VISION_TEMPLATE = `curl --location --request POST '{BASE_URL}' \\
     "stream": false
   }'`;
 
-const CHAT_SIMPLE_TEMPLATE = `curl --location --request POST '{BASE_URL}' \\
+const CHAT_SIMPLE_TEMPLATE = `curl --location --request POST '{BASE_URL}/chat/completions' \\
   --header 'Content-Type: application/json' \\
   --header 'Authorization: Bearer {API_KEY}' \\
   --data-raw '{
@@ -67,7 +67,7 @@ const CHAT_SIMPLE_TEMPLATE = `curl --location --request POST '{BASE_URL}' \\
       "stream": true
   }'`;
 
-const EMBEDDING_TEMPLATE = `curl --location --request POST '{BASE_URL}' \\
+const EMBEDDING_TEMPLATE = `curl --location --request POST '{BASE_URL}/embeddings' \\
   --header 'Content-Type: application/json' \\
   --header 'Authorization: Bearer {API_KEY}' \\
   --data-raw '{
@@ -78,7 +78,7 @@ const EMBEDDING_TEMPLATE = `curl --location --request POST '{BASE_URL}' \\
       ]
   }'`;
 
-const RERANK_TEMPLATE = `curl --location --request POST '{BASE_URL}' \\
+const RERANK_TEMPLATE = `curl --location --request POST '{BASE_URL}/rerank' \\
   --header 'Content-Type: application/json' \\
   --header 'Authorization: Bearer {API_KEY}' \\
   --data-raw '{
