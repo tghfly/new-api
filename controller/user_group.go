@@ -11,6 +11,7 @@ import (
 	"github.com/QuantumNous/new-api/i18n"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/pkg/permission"
+	"github.com/QuantumNous/new-api/service"
 	"github.com/gin-gonic/gin"
 )
 
@@ -854,9 +855,10 @@ func resolveDCloudGroupsAuth(c *gin.Context) permission.Result {
 func GetAllUserGroupsWithAuth(c *gin.Context) {
 	dcloudAuth := resolveDCloudUserGroupsAuth(c)
 	log.Printf("GetAllUserGroupsWithAuth - HasAuth: %v, DCloudEnabled: %v", dcloudAuth.HasAuth, common.DCloudIntegrationEnabled)
+	userId := c.GetInt("id")
+	userGroup, _ := model.GetUserGroup(userId, false)
 	if dcloudAuth.HasAuth {
 		scope := permission.GetScope(dcloudAuth.Data)
-		userId := c.GetInt("id")
 		log.Printf("GetAllUserGroupsWithAuth - scope: %s, userId: %d", scope, userId)
 
 		var userGroups []*model.UserGroup
@@ -890,16 +892,16 @@ func GetAllUserGroupsWithAuth(c *gin.Context) {
 
 		// 核心：symbol 去重（用 map 记录已存在的 symbol）
 		existsMap := make(map[string]struct{})
-		list := make([]map[string]string, 0, len(userGroups)+len(publicGroups))
-
+		list := make([]GroupInfo, 0)
 		// 1. 添加公共用户组（自动跳过已存在的 symbol）
 		for _, ug := range publicGroups {
 			symbol := ug.Symbol
 			if _, exists := existsMap[symbol]; !exists {
 				existsMap[symbol] = struct{}{}
-				list = append(list, map[string]string{
-					"symbol": symbol,
-					"name":   ug.Name,
+				list = append(list, GroupInfo{
+					Symbol: symbol,
+					Name:   ug.Name,
+					Ratio:  service.GetUserGroupRatio(userGroup, symbol),
 				})
 			}
 		}
@@ -909,9 +911,10 @@ func GetAllUserGroupsWithAuth(c *gin.Context) {
 			symbol := ug.Symbol
 			if _, exists := existsMap[symbol]; !exists {
 				existsMap[symbol] = struct{}{}
-				list = append(list, map[string]string{
-					"symbol": symbol,
-					"name":   ug.Name,
+				list = append(list, GroupInfo{
+					Symbol: symbol,
+					Name:   ug.Name,
+					Ratio:  service.GetUserGroupRatio(userGroup, symbol),
 				})
 			}
 		}
@@ -946,6 +949,7 @@ func GetAllUserGroupsWithAuth(c *gin.Context) {
 			groups = append(groups, GroupInfo{
 				Symbol: ug.Symbol,
 				Name:   name,
+				Ratio:  service.GetUserGroupRatio(userGroup, ug.Symbol),
 			})
 		}
 

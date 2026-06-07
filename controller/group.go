@@ -14,12 +14,15 @@ import (
 // GroupInfo 用户组信息
 // swagger:model GroupInfo
 type GroupInfo struct {
-	Symbol string `json:"symbol"` // 用户组标识（如 project_code）
-	Name   string `json:"name"`   // 用户组名称（可读性更好）
+	Symbol string      `json:"symbol"` // 用户组标识（如 project_code）
+	Name   string      `json:"name"`   // 用户组名称（可读性更好）
+	Ratio  interface{} `json:"ratio"`  // 倍率
 }
 
 func GetGroups(c *gin.Context) {
 	groups := make([]GroupInfo, 0)
+	userId := c.GetInt("id")
+	userGroup, _ := model.GetUserGroup(userId, false)
 	for symbol := range ratio_setting.GetGroupRatioCopy() {
 		// 获取用户组的名称
 		name := setting.GetUsableGroupDescription(symbol)
@@ -29,6 +32,7 @@ func GetGroups(c *gin.Context) {
 		groups = append(groups, GroupInfo{
 			Symbol: symbol,
 			Name:   name,
+			Ratio:  service.GetUserGroupRatio(userGroup, symbol),
 		})
 	}
 	c.JSON(http.StatusOK, gin.H{

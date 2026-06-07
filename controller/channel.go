@@ -144,15 +144,31 @@ func GetAllChannels(c *gin.Context) {
 		}
 	}
 
+	// 获取公开用户组的 symbol 列表，用于在分权过滤时同时包含公开渠道
+	var publicGroupSymbols []string
+	if onlyMyChannels || groupFilter != nil {
+		publicGroups, _ := model.GetUserGroupsWithPublic()
+		for _, ug := range publicGroups {
+			publicGroupSymbols = append(publicGroupSymbols, ug.Symbol)
+		}
+	}
+
 	if enableTagMode {
 		baseQuery := model.DB.Model(&model.Channel{}).Where("tag != ''")
 		// 应用 ScopeMe 过滤
 		if onlyMyChannels {
-			baseQuery = baseQuery.Where("user_id = ?", c.GetInt("id"))
+			if len(publicGroupSymbols) > 0 {
+				baseQuery = baseQuery.Where("user_id = ? OR group IN ?", c.GetInt("id"), publicGroupSymbols)
+			} else {
+				baseQuery = baseQuery.Where("user_id = ?", c.GetInt("id"))
+			}
 		}
 		// 应用分组过滤
 		if groupFilter != nil {
 			baseQuery = model.ApplyChannelGroupFilter(baseQuery, groupFilter)
+			if len(publicGroupSymbols) > 0 {
+				baseQuery = baseQuery.Or("group IN ?", publicGroupSymbols)
+			}
 		}
 		if typeFilter >= 0 {
 			baseQuery = baseQuery.Where("type = ?", typeFilter)
@@ -180,11 +196,18 @@ func GetAllChannels(c *gin.Context) {
 		baseQuery := model.DB.Model(&model.Channel{})
 		// 应用 ScopeMe 过滤
 		if onlyMyChannels {
-			baseQuery = baseQuery.Where("user_id = ?", c.GetInt("id"))
+			if len(publicGroupSymbols) > 0 {
+				baseQuery = baseQuery.Where("user_id = ? OR group IN ?", c.GetInt("id"), publicGroupSymbols)
+			} else {
+				baseQuery = baseQuery.Where("user_id = ?", c.GetInt("id"))
+			}
 		}
 		// 应用分组过滤
 		if groupFilter != nil {
 			baseQuery = model.ApplyChannelGroupFilter(baseQuery, groupFilter)
+			if len(publicGroupSymbols) > 0 {
+				baseQuery = baseQuery.Or("group IN ?", publicGroupSymbols)
+			}
 		}
 		if typeFilter >= 0 {
 			baseQuery = baseQuery.Where("type = ?", typeFilter)
@@ -221,10 +244,17 @@ func GetAllChannels(c *gin.Context) {
 	}
 	// type_counts 也需要应用权限过滤
 	if onlyMyChannels {
-		countQuery = countQuery.Where("user_id = ?", c.GetInt("id"))
+		if len(publicGroupSymbols) > 0 {
+			countQuery = countQuery.Where("user_id = ? OR group IN ?", c.GetInt("id"), publicGroupSymbols)
+		} else {
+			countQuery = countQuery.Where("user_id = ?", c.GetInt("id"))
+		}
 	}
 	if groupFilter != nil {
 		countQuery = model.ApplyChannelGroupFilter(countQuery, groupFilter)
+		if len(publicGroupSymbols) > 0 {
+			countQuery = countQuery.Or("group IN ?", publicGroupSymbols)
+		}
 	}
 	if statusFilter == common.ChannelStatusEnabled {
 		countQuery = countQuery.Where("status = ?", common.ChannelStatusEnabled)
@@ -344,6 +374,15 @@ func SearchChannels(c *gin.Context) {
 		}
 	}
 
+	// 获取公开用户组的 symbol 列表，用于在分权过滤时同时包含公开渠道
+	var publicGroupSymbolsSearch []string
+	if onlyMyChannels || groupFilter != nil {
+		publicGroups, _ := model.GetUserGroupsWithPublic()
+		for _, ug := range publicGroups {
+			publicGroupSymbolsSearch = append(publicGroupSymbolsSearch, ug.Symbol)
+		}
+	}
+
 	order := "priority desc"
 	if idSort {
 		order = "id desc"
@@ -358,11 +397,18 @@ func SearchChannels(c *gin.Context) {
 
 	// 应用 ScopeMe 过滤
 	if onlyMyChannels {
-		baseQuery = baseQuery.Where("user_id = ?", c.GetInt("id"))
+		if len(publicGroupSymbolsSearch) > 0 {
+			baseQuery = baseQuery.Where("user_id = ? OR group IN ?", c.GetInt("id"), publicGroupSymbolsSearch)
+		} else {
+			baseQuery = baseQuery.Where("user_id = ?", c.GetInt("id"))
+		}
 	}
 	// 应用分组过滤
 	if groupFilter != nil {
 		baseQuery = model.ApplyChannelGroupFilter(baseQuery, groupFilter)
+		if len(publicGroupSymbolsSearch) > 0 {
+			baseQuery = baseQuery.Or("group IN ?", publicGroupSymbolsSearch)
+		}
 	}
 
 	// 应用状态过滤
@@ -409,10 +455,17 @@ func SearchChannels(c *gin.Context) {
 		countQuery = model.BuildSearchChannelQuery(keyword, groupQuery, modelKeyword)
 	}
 	if onlyMyChannels {
-		countQuery = countQuery.Where("user_id = ?", c.GetInt("id"))
+		if len(publicGroupSymbolsSearch) > 0 {
+			countQuery = countQuery.Where("user_id = ? OR group IN ?", c.GetInt("id"), publicGroupSymbolsSearch)
+		} else {
+			countQuery = countQuery.Where("user_id = ?", c.GetInt("id"))
+		}
 	}
 	if groupFilter != nil {
 		countQuery = model.ApplyChannelGroupFilter(countQuery, groupFilter)
+		if len(publicGroupSymbolsSearch) > 0 {
+			countQuery = countQuery.Or("group IN ?", publicGroupSymbolsSearch)
+		}
 	}
 	if statusFilter == common.ChannelStatusEnabled {
 		countQuery = countQuery.Where("status = ?", common.ChannelStatusEnabled)
