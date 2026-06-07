@@ -44,11 +44,13 @@ var LogsAuth = NewResolver("new-api:logs:auth", "new-api:auth", parseAuthValue)
 
 var TokensAuth = NewResolver("new-api:tokens:auth", "new-api:auth", parseAuthValue)
 
-var TokenGroupAuth = NewResolver("new-api:tokengroup:auth", "new-api:auth", parseAuthValue)
-
 var UserGroupsAuth = NewResolver("new-api:usergroups:auth", "new-api:auth", parseAuthValue)
 
-var ChannelAuth = NewResolver("new-api:channel:auth", "new-api:auth", parseAuthValue)
+var ChannelAuth = NewResolver("new-api:channels:auth", "new-api:auth", parseAuthValue)
+
+var GroupsAuth = NewResolver("new-api:groups:auth", "new-api:auth", parseAuthValue)
+
+var UsersAuth = NewResolver("new-api:users:auth", "new-api:auth", parseAuthValue)
 
 // GetScope extracts scope string from permission data
 func GetScope(data map[string]interface{}) string {

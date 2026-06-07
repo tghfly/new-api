@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -15,6 +16,7 @@ import (
 	"github.com/QuantumNous/new-api/i18n"
 	"github.com/QuantumNous/new-api/logger"
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/pkg/permission"
 	"github.com/QuantumNous/new-api/service"
 	"github.com/QuantumNous/new-api/setting"
 
@@ -27,6 +29,14 @@ import (
 type LoginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+// resolveDCloudUsersAuth resolves DCloud users permission from context
+func resolveDCloudUsersAuth(c *gin.Context) permission.Result {
+	if !common.DCloudIntegrationEnabled {
+		return permission.Result{HasAuth: false}
+	}
+	return permission.UsersAuth.Resolve(c)
 }
 
 func Login(c *gin.Context) {
@@ -227,6 +237,26 @@ func Register(c *gin.Context) {
 }
 
 func GetAllUsers(c *gin.Context) {
+	// DCloud 认证用户走分权分域逻辑
+	dcloudAuth := resolveDCloudUsersAuth(c)
+	if dcloudAuth.HasAuth {
+		scope := permission.GetScope(dcloudAuth.Data)
+		userId := c.GetInt("id")
+		log.Printf("GetAllUsers - scope: %s, userId: %d", scope, userId)
+
+		// me 模式下，只能查看自己的信息
+		if scope == permission.ScopeMe {
+			handleGetUserById(c, userId)
+			return
+		}
+
+		// 非 me 模式下，使用 groupFilter 限制查询范围
+		groupFilter := permission.ExtractGroupFilterData(dcloudAuth, userId)
+		handleGetAllUsersWithFilter(c, groupFilter)
+		return
+	}
+
+	// 原有逻辑
 	pageInfo := common.GetPageQuery(c)
 	users, total, err := model.GetAllUsers(pageInfo)
 	if err != nil {
@@ -242,6 +272,26 @@ func GetAllUsers(c *gin.Context) {
 }
 
 func SearchUsers(c *gin.Context) {
+	// DCloud 认证用户走分权分域逻辑
+	dcloudAuth := resolveDCloudUsersAuth(c)
+	if dcloudAuth.HasAuth {
+		scope := permission.GetScope(dcloudAuth.Data)
+		userId := c.GetInt("id")
+		log.Printf("SearchUsers - scope: %s, userId: %d", scope, userId)
+
+		// me 模式下，只能查看自己的信息
+		if scope == permission.ScopeMe {
+			handleGetUserById(c, userId)
+			return
+		}
+
+		// 非 me 模式下，使用 groupFilter 限制查询范围
+		groupFilter := permission.ExtractGroupFilterData(dcloudAuth, userId)
+		handleSearchUsersWithFilter(c, groupFilter)
+		return
+	}
+
+	// 原有逻辑
 	keyword := c.Query("keyword")
 	group := c.Query("group")
 	pageInfo := common.GetPageQuery(c)
@@ -257,6 +307,51 @@ func SearchUsers(c *gin.Context) {
 	return
 }
 
+// handleGetUserById fetches a single user by ID
+func handleGetUserById(c *gin.Context, userId int) {
+	user, err := model.GetUserById(userId, false)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+		"data":    user,
+	})
+}
+
+// handleGetAllUsersWithFilter fetches users with group filter
+func handleGetAllUsersWithFilter(c *gin.Context, groupFilter *permission.GroupFilterData) {
+	pageInfo := common.GetPageQuery(c)
+	users, total, err := model.GetAllUsersWithFilter(groupFilter, pageInfo)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	pageInfo.SetTotal(int(total))
+	pageInfo.SetItems(users)
+	common.ApiSuccess(c, pageInfo)
+}
+
+// handleSearchUsersWithFilter fetches users with keyword/group filter and group filter
+func handleSearchUsersWithFilter(c *gin.Context, groupFilter *permission.GroupFilterData) {
+	keyword := c.Query("keyword")
+	group := c.Query("group")
+	pageInfo := common.GetPageQuery(c)
+	users, total, err := model.SearchUsersWithFilter(groupFilter, keyword, group, pageInfo.GetStartIdx(), pageInfo.GetPageSize())
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	pageInfo.SetTotal(int(total))
+	pageInfo.SetItems(users)
+	common.ApiSuccess(c, pageInfo)
+}
+
 func GetUser(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -268,12 +363,12 @@ func GetUser(c *gin.Context) {
 		common.ApiError(c, err)
 		return
 	}
-	myRole := c.GetInt("role")
+	//myRole := c.GetInt("role")
 	// if myRole <= user.Role && myRole != common.RoleAdminUser && myRole != common.RoleRootUser {
-	if myRole <= user.Role && myRole != common.RoleRootUser {
-		common.ApiErrorI18n(c, i18n.MsgUserNoPermissionSameLevel)
-		return
-	}
+	//if myRole <= user.Role && myRole != common.RoleRootUser {
+	//	common.ApiErrorI18n(c, i18n.MsgUserNoPermissionSameLevel)
+	//	return
+	//}
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
@@ -623,11 +718,11 @@ func AdminClearUserBinding(c *gin.Context) {
 		return
 	}
 
-	myRole := c.GetInt("role")
-	if myRole <= user.Role && myRole != common.RoleRootUser {
-		common.ApiErrorI18n(c, i18n.MsgUserNoPermissionSameLevel)
-		return
-	}
+	//myRole := c.GetInt("role")
+	//if myRole <= user.Role && myRole != common.RoleRootUser {
+	//	common.ApiErrorI18n(c, i18n.MsgUserNoPermissionSameLevel)
+	//	return
+	//}
 
 	if err := user.ClearBinding(bindingType); err != nil {
 		common.ApiError(c, err)

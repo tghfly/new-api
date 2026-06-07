@@ -11,6 +11,7 @@ import (
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/dto"
 	"github.com/QuantumNous/new-api/logger"
+	"github.com/QuantumNous/new-api/pkg/permission"
 
 	"github.com/bytedance/gopkg/util/gopool"
 	"gorm.io/gorm"
@@ -289,6 +290,104 @@ func SearchUsers(keyword string, group string, startIdx int, num int) ([]*User, 
 	}
 
 	// 提交事务
+	if err = tx.Commit().Error; err != nil {
+		return nil, 0, err
+	}
+
+	return users, total, nil
+}
+func GetAllUsersWithFilter(groupFilter *permission.GroupFilterData, pageInfo *common.PageInfo) (users []*User, total int64, err error) {
+	tx := DB.Begin()
+	if tx.Error != nil {
+		return nil, 0, tx.Error
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	query := tx.Unscoped().Model(&User{})
+	if groupFilter != nil {
+		query = groupFilter.Apply(query, "users."+commonGroupCol, "users.user_id")
+	}
+
+	err = query.Count(&total).Error
+	if err != nil {
+		tx.Rollback()
+		return nil, 0, err
+	}
+
+	err = query.Omit("password").Order("id desc").Limit(pageInfo.GetPageSize()).Offset(pageInfo.GetStartIdx()).Find(&users).Error
+	if err != nil {
+		tx.Rollback()
+		return nil, 0, err
+	}
+
+	if err = tx.Commit().Error; err != nil {
+		return nil, 0, err
+	}
+
+	return users, total, nil
+}
+
+func SearchUsersWithFilter(groupFilter *permission.GroupFilterData, keyword string, group string, startIdx int, num int) ([]*User, int64, error) {
+	var users []*User
+	var total int64
+	var err error
+
+	tx := DB.Begin()
+	if tx.Error != nil {
+		return nil, 0, tx.Error
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	query := tx.Unscoped().Model(&User{})
+
+	// 构建搜索条件
+	likeCondition := "username LIKE ? OR email LIKE ? OR display_name LIKE ?"
+
+	keywordInt, _ := strconv.Atoi(keyword)
+	if keywordInt != 0 {
+		likeCondition = "id = ? OR " + likeCondition
+		if group != "" {
+			query = query.Where("("+likeCondition+") AND "+commonGroupCol+" = ?",
+				keywordInt, "%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%", group)
+		} else {
+			query = query.Where(likeCondition,
+				keywordInt, "%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%")
+		}
+	} else {
+		if group != "" {
+			query = query.Where("("+likeCondition+") AND "+commonGroupCol+" = ?",
+				"%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%", group)
+		} else {
+			query = query.Where(likeCondition,
+				"%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%")
+		}
+	}
+
+	// 应用 groupFilter
+	if groupFilter != nil {
+		query = groupFilter.Apply(query, "users."+commonGroupCol, "users.user_id")
+	}
+
+	err = query.Count(&total).Error
+	if err != nil {
+		tx.Rollback()
+		return nil, 0, err
+	}
+
+	err = query.Omit("password").Order("id desc").Limit(num).Offset(startIdx).Find(&users).Error
+	if err != nil {
+		tx.Rollback()
+		return nil, 0, err
+	}
+
 	if err = tx.Commit().Error; err != nil {
 		return nil, 0, err
 	}
