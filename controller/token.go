@@ -242,7 +242,7 @@ func AddToken(c *gin.Context) {
 		common.ApiError(c, err)
 		return
 	}
-	if len(token.Name) > 50 {
+	if len(token.Name) > 100 {
 		common.ApiErrorI18n(c, i18n.MsgTokenNameTooLong)
 		return
 	}
@@ -347,7 +347,7 @@ func UpdateToken(c *gin.Context) {
 		logger.LogInfo(c, fmt.Sprintf("[UpdateToken] actual token userId=%d, our userId=%d", actualToken.UserId, userId))
 	}
 
-	if len(token.Name) > 50 {
+	if len(token.Name) > 100 {
 		common.ApiErrorI18n(c, i18n.MsgTokenNameTooLong)
 		return
 	}
