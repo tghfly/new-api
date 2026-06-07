@@ -1275,15 +1275,334 @@
   border-radius: 4px;
 }
 
-/* 分页样式 */
-.semi-page-item {
-  border-radius: 4px;
-  margin: 0 4px;
+/* ==================== Element UI 分页样式全量覆盖 ==================== */
+
+/* 基础分页容器 */
+.semi-page {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  list-style: none !important;
 }
 
+/* ==================== 分页按钮/页码项 ==================== */
+
+.semi-page-item {
+  min-width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  padding: 0 6px !important;
+  margin: 0 !important;
+  border: 1px solid #dcdfe6 !important;
+  border-radius: 4px !important;
+  background-color: #ffffff !important;
+  color: #606266 !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  user-select: none !important;
+}
+
+.semi-page-item:hover {
+  background-color: #f5f7fa !important;
+  border-color: #dcdfe6 !important;
+  color: #409eff !important;
+}
+
+.semi-page-item:active {
+  background-color: #e6e8eb !important;
+  border-color: #c0c4cc !important;
+  color: #409eff !important;
+}
+
+/* 当前激活页 */
 .semi-page-item-active {
-  background-color: #409eff;
-  border-color: #409eff;
+  background-color: #409eff !important;
+  border-color: #409eff !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  cursor: default !important;
+}
+
+.semi-page-item-active:hover {
+  background-color: #409eff !important;
+  border-color: #409eff !important;
+  color: #ffffff !important;
+}
+
+/* 禁用状态 */
+.semi-page-item-disabled {
+  background-color: #ffffff !important;
+  border-color: #dcdfe6 !important;
+  color: #c0c4cc !important;
+  cursor: not-allowed !important;
+}
+
+.semi-page-item-disabled:hover {
+  background-color: #ffffff !important;
+  border-color: #dcdfe6 !important;
+  color: #c0c4cc !important;
+}
+
+/* 全部禁用状态 */
+.semi-page-item-all-disabled {
+  background-color: #ffffff !important;
+  border-color: #dcdfe6 !important;
+  color: #c0c4cc !important;
+  cursor: not-allowed !important;
+}
+
+.semi-page-item-all-disabled:hover {
+  background-color: #ffffff !important;
+  color: #c0c4cc !important;
+}
+
+.semi-page-item-all-disabled-active {
+  background-color: #f5f7fa !important;
+  border-color: #dcdfe6 !important;
+  color: #c0c4cc !important;
+  font-weight: 400 !important;
+}
+
+/* 小号分页 */
+.semi-page-item-small {
+  min-width: 24px !important;
+  height: 24px !important;
+  line-height: 24px !important;
+  padding: 0 4px !important;
+  font-size: 12px !important;
+  border-radius: 3px !important;
+}
+
+/* 更多页按钮 */
+.semi-page-item-rest-opening {
+  background-color: #f5f7fa !important;
+  border-color: #dcdfe6 !important;
+  color: #606266 !important;
+}
+
+/* ==================== 上一页/下一页按钮 ==================== */
+
+.semi-page-prev,
+.semi-page-next {
+  min-width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  padding: 0 6px !important;
+  margin: 0 !important;
+  border: 1px solid #dcdfe6 !important;
+  border-radius: 4px !important;
+  background-color: #ffffff !important;
+  color: #606266 !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.semi-page-prev:hover,
+.semi-page-next:hover {
+  background-color: #f5f7fa !important;
+  border-color: #dcdfe6 !important;
+  color: #409eff !important;
+}
+
+.semi-page-prev:active,
+.semi-page-next:active {
+  background-color: #e6e8eb !important;
+  border-color: #c0c4cc !important;
+  color: #409eff !important;
+}
+
+.semi-page-prev.semi-page-item-disabled,
+.semi-page-next.semi-page-item-disabled {
+  background-color: #ffffff !important;
+  border-color: #dcdfe6 !important;
+  color: #c0c4cc !important;
+  cursor: not-allowed !important;
+}
+
+.semi-page-prev.semi-page-item-disabled:hover,
+.semi-page-next.semi-page-item-disabled:hover {
+  background-color: #ffffff !important;
+  color: #c0c4cc !important;
+}
+
+/* ==================== 总数显示 ==================== */
+
+.semi-page-total {
+  font-size: 14px !important;
+  color: #606266 !important;
+  margin-right: 16px !important;
+  line-height: 32px !important;
+}
+
+/* ==================== 快速跳转 ==================== */
+
+.semi-page-quickjump {
+  display: inline-flex !important;
+  align-items: center !important;
+  margin-left: 16px !important;
+  font-size: 14px !important;
+  color: #606266 !important;
+  line-height: 32px !important;
+}
+
+.semi-page-quickjump-input-number {
+  max-width: 50px !important;
+  margin: 0 8px !important;
+}
+
+.semi-page-quickjump-input-number .semi-input {
+  height: 32px !important;
+  border-radius: 4px !important;
+  border: 1px solid #dcdfe6 !important;
+  padding: 0 8px !important;
+  text-align: center !important;
+}
+
+.semi-page-quickjump-input-number .semi-input:focus {
+  border-color: #409eff !important;
+}
+
+.semi-page-quickjump-disabled {
+  color: #c0c4cc !important;
+  cursor: not-allowed !important;
+}
+
+/* ==================== 更多页下拉列表 ==================== */
+
+.semi-page-rest-list {
+  padding: 8px 0 !important;
+  border-radius: 4px !important;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1) !important;
+  background-color: #ffffff !important;
+}
+
+.semi-page-rest-list > div {
+  position: relative !important;
+}
+
+.semi-page-rest-item {
+  height: 34px !important;
+  line-height: 34px !important;
+  padding: 0 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s !important;
+  color: #606266 !important;
+  font-size: 14px !important;
+}
+
+.semi-page-rest-item:hover {
+  background-color: #f5f7fa !important;
+  color: #409eff !important;
+}
+
+.semi-page-rest-item:active {
+  background-color: #e6e8eb !important;
+  color: #409eff !important;
+}
+
+/* ==================== 小号分页整体 ==================== */
+
+.semi-page-small {
+  font-size: 12px !important;
+}
+
+.semi-page-small .semi-page-item {
+  min-width: 24px !important;
+  height: 24px !important;
+  line-height: 24px !important;
+  font-size: 12px !important;
+  border-radius: 3px !important;
+}
+
+.semi-page-small .semi-page-prev,
+.semi-page-small .semi-page-next {
+  min-width: 24px !important;
+  height: 24px !important;
+  line-height: 24px !important;
+  font-size: 12px !important;
+  border-radius: 3px !important;
+}
+
+.semi-page-small .semi-page-total {
+  font-size: 12px !important;
+  line-height: 24px !important;
+}
+
+.semi-page-small .semi-page-quickjump {
+  font-size: 12px !important;
+  line-height: 24px !important;
+}
+
+/* ==================== 分页整体禁用 ==================== */
+
+.semi-page-disabled {
+  cursor: not-allowed !important;
+}
+
+.semi-page-disabled .semi-page-total {
+  color: #c0c4cc !important;
+}
+
+/* ==================== 分页布局优化 ==================== */
+
+/* 确保分页元素间距合理 */
+.semi-page > * {
+  margin: 0 !important;
+}
+
+/* 调整分页元素顺序间距 */
+.semi-page-total {
+  margin-right: 16px !important;
+}
+
+.semi-page-prev {
+  margin-right: 8px !important;
+}
+
+.semi-page-next {
+  margin-left: 8px !important;
+}
+
+.semi-page-quickjump {
+  margin-left: 24px !important;
+}
+
+/* ==================== 响应式分页 ==================== */
+
+@media (max-width: 768px) {
+  .semi-page {
+    gap: 4px !important;
+  }
+  
+  .semi-page-item {
+    min-width: 28px !important;
+    height: 28px !important;
+    line-height: 28px !important;
+    font-size: 12px !important;
+  }
+  
+  .semi-page-prev,
+  .semi-page-next {
+    min-width: 28px !important;
+    height: 28px !important;
+    line-height: 28px !important;
+    font-size: 12px !important;
+  }
 }
 
 /* 下拉菜单样式 */
