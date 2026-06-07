@@ -46,7 +46,7 @@ var TokensAuth = NewResolver("new-api:tokens:auth", "new-api:auth", parseAuthVal
 
 var UserGroupsAuth = NewResolver("new-api:usergroups:auth", "new-api:auth", parseAuthValue)
 
-var ChannelAuth = NewResolver("new-api:channel:auth", "new-api:auth", parseAuthValue)
+var ChannelAuth = NewResolver("new-api:channels:auth", "new-api:auth", parseAuthValue)
 
 var GroupsAuth = NewResolver("new-api:groups:auth", "new-api:auth", parseAuthValue)
 
