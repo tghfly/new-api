@@ -1,7 +1,10 @@
 /* Element UI 风格的样式覆盖 */
 
 /* ==================== Element UI 按钮样式全量覆盖 ==================== */
-
+.semi-card {
+  border: none !important;
+  box-shadow: none !important;
+}
 /* 基础按钮样式 */
 .semi-button {
   border-radius: 4px !important;
