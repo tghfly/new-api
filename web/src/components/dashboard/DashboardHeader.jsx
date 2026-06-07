@@ -37,7 +37,6 @@ const DashboardHeader = ({
         className='text-2xl font-semibold text-gray-800 transition-opacity duration-1000 ease-in-out'
         style={{ opacity: greetingVisible ? 1 : 0 }}
       >
-        {getGreeting}
       </h2>
       <div className='flex gap-3'>
         <Button
