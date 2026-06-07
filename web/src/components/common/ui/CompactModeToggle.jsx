@@ -44,15 +44,16 @@ const CompactModeToggle = ({
   }
 
   return (
-    <Button
-      type={type}
-      size={size}
-      className={`w-full md:w-auto ${className}`}
-      onClick={() => setCompactMode(!compactMode)}
-      {...props}
-    >
-      {compactMode ? t('自适应列表') : t('紧凑列表')}
-    </Button>
+    <></>
+    // <Button
+    //   type={type}
+    //   size={size}
+    //   className={`w-full md:w-auto ${className}`}
+    //   onClick={() => setCompactMode(!compactMode)}
+    //   {...props}
+    // >
+    //   {compactMode ? t('自适应列表') : t('紧凑列表')}
+    // </Button>
   );
 };
 
